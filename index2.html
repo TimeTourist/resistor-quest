@@ -140,15 +140,20 @@ html,body{overflow-x:clip}
   @keyframes press{0%,60%,100%{transform:translate(0,0) scale(1)}30%{transform:translate(-3px,-4px) scale(.88)}}
 }
 /* Stapeln överst på skärmen i slutet av varje svar */
-.gbar{position:fixed;left:50%;top:10px;z-index:30;width:min(420px,calc(100% - 32px));transform:translate(-50%,-150%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 12px 10px;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:transform .35s ease;pointer-events:none}
+.gbar{position:fixed;left:50%;top:10px;z-index:30;width:min(460px,calc(100% - 20px));transform:translate(-50%,-150%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 12px 10px;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:transform .35s ease;pointer-events:none}
 .gbar.show{transform:translate(-50%,0)}
 .gname{font-size:.9rem;color:var(--muted);margin-bottom:6px}
-.gname b{color:var(--ink);display:inline-block}
-.cells{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;height:18px}
-.cells i{display:block;border-radius:5px;border:2px solid var(--line);background:var(--bg)}
+.gname{font-weight:600;color:var(--ink)}
+.segs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.gseg span{display:block;text-align:center;font-size:.68rem;color:var(--muted);margin-top:3px;white-space:nowrap}
+.gseg.cur span{color:var(--ink);font-weight:700}
+.gseg.cur .cells{outline:2px solid var(--ink);outline-offset:2px;border-radius:5px}
+.cells{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;height:16px}
+.cells i{display:block;border-radius:3px;border:1.5px solid var(--line);background:var(--bg)}
 .cells i.on{background:var(--col);border-color:var(--col)}
+.cells i.was{background:var(--col);border-color:var(--col);opacity:.35}
 .cracks{position:absolute;inset:-3px 0;width:100%;height:calc(100% + 6px);pointer-events:none;overflow:visible}
-.cracks path{fill:none;stroke:var(--bad);stroke-width:2.4;stroke-linejoin:round;opacity:0;vector-effect:non-scaling-stroke}
+.cracks path{fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linejoin:round;opacity:0;vector-effect:non-scaling-stroke}
 .cracks path.on{opacity:1}
 .dust{position:fixed;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;z-index:31;pointer-events:none}
 .dust.in{background:#ffd84a;box-shadow:0 0 6px #ffcc33}
@@ -160,7 +165,7 @@ html,body{overflow-x:clip}
   @keyframes bshake{20%{transform:translate(calc(-50% - 6px),0)}40%{transform:translate(calc(-50% + 5px),0)}60%{transform:translate(calc(-50% - 3px),0)}80%{transform:translate(calc(-50% + 2px),0)}}
   .gbar.quake{animation:bquake .5s linear}
   @keyframes bquake{0%,100%{transform:translate(-50%,0)}10%{transform:translate(calc(-50% - 10px),3px) rotate(-2deg)}20%{transform:translate(calc(-50% + 9px),-3px) rotate(2deg)}30%{transform:translate(calc(-50% - 8px),2px) rotate(-1.5deg)}40%{transform:translate(calc(-50% + 7px),-2px) rotate(1.5deg)}50%{transform:translate(calc(-50% - 6px),2px) rotate(-1deg)}60%{transform:translate(calc(-50% + 5px),-1px)}70%{transform:translate(calc(-50% - 4px),1px)}80%{transform:translate(calc(-50% + 3px),0)}90%{transform:translate(calc(-50% - 2px),0)}}
-  .gbar.newgrade .gname b{animation:gpop .45s ease-out}
+  .gbar.newgrade .gseg.cur span{animation:gpop .45s ease-out}
   @keyframes gpop{50%{transform:scale(1.35)}}
   .cracks path.on{animation:crack .3s ease-out}
   @keyframes crack{from{stroke-dasharray:0 40}to{stroke-dasharray:40 0}}
@@ -1476,12 +1481,12 @@ function finish(ok){
   if (inExam()) {
     if (S.exam && !S.exam.done) recordExam(ok);
   } else {
-    const t = S.topic, before = S.done[t], from = {g: S.grade[t], up: S.up, down: S.down};
+    const t = S.topic, before = S.done[t], from = {g: S.grade[t], up: S.up, down: S.down, done: before};
     const r = ladder({g: S.grade[t], up: S.up, down: S.down, done: before}, ok);
     S.grade[t] = r.g; S.up = r.up; S.down = r.down; S.done[t] = r.done;
     S.moved = r.moved || (r.done === 5 && before < 5 ? 'top' : null);
     // Stapeln i slutet av svaret: från läget före till läget efter
-    S.barPlan = {ok, topic: t, from, to: {g: r.g, up: r.up, down: r.down}, moved: S.moved};
+    S.barPlan = {ok, topic: t, from, to: {g: r.g, up: r.up, down: r.down, done: r.done}, moved: S.moved};
     if (r.done > before) S.mapGrow = {lv: t, from: before};
     saveProgress();
     const nx = TOPICS[TOPICS.indexOf(t) + 1];
@@ -1554,7 +1559,8 @@ function outcomeFX(kind, party){
     : kind === 'lost' ? '<s></s><s></s><s></s>' : '';
   d.innerHTML = `<i></i>${bits}`;
 }
-// Stapeln: ämne, grad, tre fack för rätt i rad och sprickor för fel i rad. Syns bara i slutet av ett svar.
+// Stapeln: hela skalan med ämnets fem grader, tre fack per grad. Klarade grader är fyllda, den aktuella visar rätt i rad
+// och sprickor för fel i rad. Syns bara i slutet av ett svar.
 // Rätt: dammet från explosionen sugs in och fyller nästa fack. Upp en grad: stapeln skakar våldsamt och graden byts.
 // Fel: stapeln skakar av sig dammet från facken och får en spricka. Ner en grad: våldsammare, och graden byts.
 const BAR_WRONG = 1.1, BAR_DOWN = 1.9;
@@ -1569,9 +1575,13 @@ function clearBar(){
 function barDraw(st, topic, label){
   const b = document.getElementById('gbar');
   b.style.setProperty('--col', MAP_BANDS[topic][0]);
-  b.innerHTML = `<div class="gname">${topicName(topic)} · <b>${label || GRADE_NAME[st.g]}</b></div><div class="cells">${[0,1,2].map(i =>
-    `<i class="${i < st.up ? 'on' : ''}"></i>`).join('')}<svg class="cracks" viewBox="0 0 120 20" preserveAspectRatio="none">${CRACKS.map((d, i) =>
-    `<path class="${i < st.down ? 'on' : ''}" d="${d}"/>`).join('')}</svg></div>`;
+  // Under aktuell grad: fylld. Aktuell: rätt i rad. Över men klarad tidigare: blek. Annars tom.
+  const segs = GRADE_NAME.map((n, g) => {
+    const cur = g === st.g, fill = i => g < st.g ? 'on' : cur ? (i < st.up ? 'on' : '') : g < (st.done || 0) ? 'was' : '';
+    const cracks = cur ? `<svg class="cracks" viewBox="0 0 120 20" preserveAspectRatio="none">${CRACKS.map((d, i) => `<path class="${i < st.down ? 'on' : ''}" d="${d}"/>`).join('')}</svg>` : '';
+    return `<div class="gseg${cur ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(i => `<i class="${fill(i)}"></i>`).join('')}${cracks}</div><span>${cur && label ? label : n}</span></div>`;
+  }).join('');
+  b.innerHTML = `<div class="gname">${topicName(topic)}</div><div class="segs">${segs}</div>`;
 }
 // Damm som flyger till en punkt (to) eller faller och försvinner (to saknas). Punkterna är skärmkoordinater.
 function dust(from, to, n, cls){
@@ -1592,12 +1602,14 @@ function barFX(P, startAt){
   clearBar();
   if (!P) return;
   const b = document.getElementById('gbar'), calm = reduceMotion(), party = P.moved === 'up' || P.moved === 'top';
-  const cell = i => { const c = b.querySelectorAll('.cells i')[i]; if (!c) return null; const r = c.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+  // Fack i en grad: g är graden (0–4), i facket (0–2)
+  const cellEl = (g, i) => b.querySelectorAll('.gseg')[g]?.querySelectorAll('.cells i')[i];
+  const cell = (g, i) => { const c = cellEl(g, i); if (!c) return null; const r = c.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
   later(startAt, () => { barDraw(P.from, P.topic); b.className = 'gbar show'; });
   if (P.ok) {
-    const slot = Math.min(P.from.up, 2);
-    later(startAt + .35, () => { if (!calm) dust(S.ledAt, cell(slot), 10, 'in'); });
-    later(startAt + .85, () => { barDraw({...P.from, up: P.from.up + 1, down: 0}, P.topic); b.querySelectorAll('.cells i')[slot]?.classList.add('pop'); });
+    const slot = Math.min(P.from.up, 2), g = P.from.g;
+    later(startAt + .35, () => { if (!calm) dust(S.ledAt, cell(g, slot), 10, 'in'); });
+    later(startAt + .85, () => { barDraw({...P.from, up: P.from.up + 1, down: 0}, P.topic); cellEl(g, slot)?.classList.add('pop'); });
     if (party) {
       later(startAt + 1.05, () => b.classList.add('quake'));
       later(startAt + 1.55, () => { b.classList.remove('quake'); barDraw(P.to, P.topic, P.moved === 'top' ? 'klart ✓' : null); b.classList.add('newgrade'); });
@@ -1606,13 +1618,17 @@ function barFX(P, startAt){
   } else {
     const down = P.moved === 'down';
     later(startAt + .25, () => {
-      if (!calm) [0, 1, 2].filter(i => i < P.from.up).forEach(i => dust(cell(i), null, down ? 8 : 5, 'out'));
+      if (!calm) [0, 1, 2].filter(i => i < P.from.up).forEach(i => dust(cell(P.from.g, i), null, down ? 8 : 5, 'out'));
       barDraw({...P.from, up: 0, down: Math.min(P.from.down + 1, 3)}, P.topic);
       b.classList.add(down ? 'quake' : 'shake');
-      if (down && !calm) { const r = b.getBoundingClientRect(); dust({x: r.left + r.width / 2, y: r.bottom - 8}, null, 14, 'out'); }
     });
     if (down) {
-      later(startAt + .95, () => { b.classList.remove('quake'); barDraw(P.to, P.topic); b.classList.add('newgrade', 'fell'); });
+      // Ett helt snäpp ner: den lägre graden tappar allt sitt damm och blir den aktuella igen, tom
+      later(startAt + .95, () => {
+        b.classList.remove('quake');
+        if (!calm) [0, 1, 2].forEach(i => dust(cell(P.to.g, i), null, 7, 'out'));
+        barDraw(P.to, P.topic); b.classList.add('newgrade', 'fell');
+      });
       later(startAt + BAR_DOWN - .1, () => b.classList.remove('show'));
     } else later(startAt + BAR_WRONG - .1, () => b.classList.remove('show'));
   }

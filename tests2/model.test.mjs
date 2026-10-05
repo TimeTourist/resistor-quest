@@ -420,7 +420,10 @@ test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort',
   const bar = t.$('#gbar');
   assert.ok(bar.classList.contains('show'), 'stapeln syns');
   assert.match(bar.textContent, /Resistansen/);
-  assert.equal(bar.querySelectorAll('.cells i.on').length, 2, 'två rätt i rad');
+  assert.equal(bar.querySelectorAll('.gseg').length, 5, 'hela skalan, fem grader');
+  assert.equal(bar.querySelectorAll('.gseg.cur i.on').length, 2, 'två rätt i rad på aktuell grad');
+  assert.equal(bar.querySelectorAll('.gseg.cur')[0], bar.querySelectorAll('.gseg')[3], 'Mästare är aktuell');
+  assert.equal(bar.querySelectorAll('.gseg')[2].querySelectorAll('i.on').length, 3, 'Gesäll är klar');
   await new Promise(r => setTimeout(r, 1500));
   assert.equal(t.g('S.answered'), false, 'nästa fråga');
   assert.ok(!t.$('#gbar').classList.contains('show'), 'stapeln har glidit bort');
@@ -430,7 +433,7 @@ test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort',
   const lock = t.g('S.lockUntil - S.revealAt');
   assert.ok(lock >= 1200, `låst i ${lock} ms`);
   await new Promise(r => setTimeout(r, lock - 200));
-  assert.equal(t.$('#gbar').querySelectorAll('.cracks .on').length, 1, 'en spricka');
+  assert.equal(t.$('#gbar').querySelectorAll('.gseg.cur .cracks .on').length, 1, 'en spricka på aktuell grad');
   t.g('stopTimer(); clearBar()');
 });
 
