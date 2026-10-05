@@ -91,6 +91,7 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .lesson.ok{background:var(--ok-bg)}
 .lesson.bad{background:var(--bad-bg)}
 .lesson.tip{background:var(--tip-bg)}
+.examsign{margin:14px 0 0;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.4rem;font-weight:600}
 .more{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
 .more[hidden]{display:none}
 .more h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.5rem;line-height:1.1;margin:0 0 8px}
@@ -215,7 +216,7 @@ th{color:var(--muted);font-weight:500}
 @media (prefers-reduced-motion:no-preference){
   .res.turn svg{animation:turn .45s ease-out}
   @keyframes turn{from{transform:scaleX(-1)}}
-  .lesson{animation:pop .18s ease-out}
+  .lesson,.examsign{animation:pop .18s ease-out}
   @keyframes pop{from{transform:translateY(4px);opacity:0}}
 }
 </style>
@@ -748,8 +749,10 @@ function examQueue(){
   return shuffle(q);
 }
 function startExam(){ S.exam = {queue: examQueue(), i: 0, score: {}, done: false}; S.streak = 0; next(); }
+const examTotals = () => Object.values(S.exam.score).reduce((a, x) => ({ok: a.ok + x.ok, n: a.n + x.n}), {ok:0, n:0});
 function recordExam(ok){
   const sc = S.exam.score, add = (k, g) => { sc[k] = sc[k] || {ok:0, n:0}; sc[k].n++; if (g) sc[k].ok++; };
+  const before = examTotals();
   if (S.type === 'dir') add(S.examItem.hard ? 'dirx' : 'dir', ok);
   else if (S.type === 'series') add('e', ok);
   else {
@@ -758,6 +761,8 @@ function recordExam(ok){
     add('t', g('Tolerans'));
     if (S.n === 6) add('k', g('Temperaturkoefficient'));
   }
+  const after = examTotals();
+  S.examLast = {ok: after.ok - before.ok, n: after.n - before.n};
   S.exam.i++;
   if (S.exam.i >= EXAM_N) S.exam.done = true;
 }
@@ -1016,7 +1021,12 @@ function lessonText(){
   return t + flipped + turned;
 }
 function lessonHTML(){
-  if (!S.answered || S.level === 'ultra') return '';
+  if (!S.answered) return '';
+  // Eldprovet: inget facit, bara poängen
+  if (S.level === 'ultra') {
+    const L = S.examLast, T = examTotals();
+    return `<p class="examsign" role="status">${L.ok} av ${L.n} ${L.n === 1 ? 'del' : 'delar'} · totalt ${T.ok}/${T.n} poäng</p>`;
+  }
   const cost = S.ok && S.usedHint ? ` Tipset kostade: sviten står kvar på ${S.streak}.` : '';
   return `<p class="lesson ${fbClass(S.ok)}" role="status"><b>${fbHead(S.ok)}</b> ${lessonText()}${cost}</p>`;
 }
