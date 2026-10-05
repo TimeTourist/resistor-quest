@@ -26,5 +26,31 @@ export function answer(t, correct = true) {
     if (typeof r === 'number') return pickBy('[data-vpick]', 'vpick', r);
     return g("S.focus === 'k'") ? pickBy('[data-kpick]', 'kpick', r) : pickBy('[data-tpick]', 'tpick', r);
   }
+  if (fmt === 'hard' && type === 'read' && g('S.level') !== 'ultra') {
+    const fs = Array.from(g('entryFields()'));
+    fs.forEach((f, j) => {
+      const wrong = !correct && j === 0;
+      t.$(`[data-field="${f}"]`).click();
+      if (f === 'v') {
+        const d = g('digitStr(S.q)'), typed = wrong ? String(+d + 1) : d;
+        for (const ch of typed) t.$(`[data-key="${ch}"]`).click();
+      } else {
+        const truth = g(`({x: C[S.q[nd(S.q)]].m, t: tolOf(S.q), k: tcOf(S.q)})['${f}']`);
+        const btn = $$('[data-fval]').find(b => (+b.dataset.fval === truth) !== wrong);
+        btn.click();
+      }
+    });
+    return t.$('#main').click();
+  }
+  if (fmt === 'hard' && type === 'build') {
+    const ask = Array.from(g('S.askSlots ? [...S.askSlots] : [...Array(S.n).keys()]'));
+    ask.forEach((i, j) => {
+      t.$(`[data-slot="${i}"]`).click();
+      const truth = g(`truthAt(${i})`);
+      const color = correct || j > 0 ? truth : (truth === 'red' ? 'brown' : 'red');
+      t.$(`[data-color="${color}"]`).click();
+    });
+    return;
+  }
   throw new Error(`answer: ${type}/${fmt} stöds inte än`);
 }

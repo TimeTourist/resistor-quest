@@ -83,10 +83,7 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .opt.bad{border-color:var(--bad);background:var(--bad-bg)}
 .opt:disabled{cursor:default}
 @media (max-width:440px){.opts.rgrid{grid-template-columns:1fr}}
-.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:16px}
 .big .tc{display:block;font-size:.5em;color:var(--muted);font-weight:500}
-.field label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:4px}
-.field input{width:100%;font:inherit;font-size:1.2rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
 .primary{margin-top:16px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;padding:12px 22px;cursor:pointer}
 .primary:disabled{opacity:.45;cursor:default}
 .hint{color:var(--bad);font-size:.95rem;margin:8px 0 0}
@@ -145,12 +142,17 @@ details[hidden]{display:none}
 .entry{margin-top:14px;display:grid;gap:12px}
 .eboxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
 .ebox{display:block;text-align:left;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:8px 12px;font:inherit;cursor:pointer}
-.ebox.solo{cursor:default}
 .ebox.active{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.ebox.ok,.slot.ok{border-color:var(--ok);background:var(--ok-bg)}
+.ebox.bad,.slot.bad{border-color:var(--bad);background:var(--bad-bg)}
+.ebox s,.slot s{color:var(--muted)}
+.ebox .right{color:var(--ink)}
+.entry .chiprow{gap:8px}
+.entry .chip{font-size:1.05rem;padding:8px 14px}
+p.epre{margin:0}
 .elab{display:block;font-size:.8rem;color:var(--muted)}
 .eval{display:block;font-family:"Share Tech Mono",ui-monospace,Menlo,Consolas,monospace;font-size:1.6rem;line-height:1.3;min-height:1.3em;white-space:nowrap;overflow-x:auto}
 .eunit{color:var(--muted)}
-.emul{color:var(--accent);margin-left:12px}
 .epre{display:block;color:var(--muted);font-size:.95rem;min-height:1.4em}
 .caret{display:inline-block;width:2px;height:1em;background:var(--accent);vertical-align:-3px;margin-left:1px}
 @media (prefers-reduced-motion:no-preference){.caret{animation:blink 1s steps(1) infinite}@keyframes blink{50%{opacity:0}}}
@@ -888,17 +890,15 @@ const needsSubmit = () => S.type === 'read' && S.plan.fmt === 'hard';
 function entryReady(){
   const E = S.entry;
   if (S.level === 'ultra') return E.v !== '' && E.t !== '' && (S.n !== 6 || E.k !== '');
-  const hf = hardFocus();
-  if (hf === 't') return E.tol != null;
-  if (hf === 'k') return E.tc != null;
-  const v = E.v !== '' && E.mult != null;
-  return hf === 'v' ? v : v && E.tol != null && (S.n !== 6 || E.tc != null);
+  return entryFields().every(fieldFilled);
 }
 function mainBtnHTML(){
   if (S.answered) return `<button class="primary" id="main">${S.level === 'ultra' && S.exam && S.exam.done ? 'Se resultatet' : 'Nästa'}</button>`;
   if (needsSubmit()) return `<button class="primary" id="main"${entryReady() ? '' : ' disabled'}>Svara</button>`;
   return '<button class="primary" id="main" disabled>Nästa</button>';
 }
+// Bygg med palett: rätt färg för plats i som den byggs (Band 1 är toleransänden när motståndet sitter vänt)
+const truthAt = i => S.bflip ? S.q[S.n - 1 - i] : S.q[i];
 function render(){
   updateScore();
   const q = document.getElementById('q'), n = S.n;
@@ -918,7 +918,7 @@ ${hintsHTML()}
     const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
       d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?', all:'Vilket värde har motståndet?'}[S.focus];
     h += `<p class="prompt">${rq}</p><div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>${hintsHTML()}`;
-    h += S.plan.fmt === 'hard' ? entryHTML() : mcHTML();
+    h += S.plan.fmt !== 'hard' ? mcHTML() : S.level === 'ultra' ? entryHTML() : fieldsHTML();
     if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet är temperaturkoefficienten. Den behöver du inte kunna på den här nivån.</p>';
   } else {
     const bq = {v:'Vilket motstånd har värdet', all:'Vilket motstånd har värdet', t:'Vilket toleransband ger', k:'Vilket sjätte band ger',
@@ -938,7 +938,11 @@ ${hintsHTML()}
       h += `<div class="slots">${labels.map((l,i) => {
         const k = S.build[i];
         const locked = S.askSlots && !S.askSlots.includes(i);
-        return `<button class="slot" data-slot="${i}" aria-pressed="${S.slot===i}"${locked || S.answered ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}<span>${k?C[k].n:'Välj'}</span></button>`;
+        const mark = S.answered && S.level !== 'ultra' && !locked ? (k === truthAt(i) ? ' ok' : ' bad') : '';
+        const val = mark === ' bad'
+          ? `<span><s>${C[k].n}</s> <span class="sw" style="${swStyle(truthAt(i))}"></span>${C[truthAt(i)].n}</span>`
+          : `<span>${k ? C[k].n : 'Välj'}</span>`;
+        return `<button class="slot${mark}" data-slot="${i}" aria-pressed="${S.slot===i && !S.answered}"${locked || S.answered ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}${val}</button>`;
       }).join('')}</div>`;
       // Stormästare och Eldprovet: alla tolv färger i en blandad ordning som ligger still under hela frågan.
       // Ingen hjälp med vilka färger som passar bandet. Svaret rättas när sista bandet är valt.
@@ -1065,30 +1069,15 @@ function answerRead(){
     if (isNaN(vIn)) return say('Skriv resistansen, t.ex. 470, 4,7k eller 4k7.');
     if (isNaN(tIn)) return say('Skriv toleransen i procent, t.ex. 5.');
     if (six && isNaN(kIn)) return say('Skriv temperaturkoefficienten, t.ex. 50.');
-  } else if (hardFocus()) {
-    const xf = hardFocus();
-    let ok, part;
-    if (xf === 'v') {
-      const d = parseFloat(E.v.replace(',', '.'));
-      if (isNaN(d)) return say('Skriv in siffrorna på knappsatsen.');
-      if (E.mult == null) return say('Välj en multiplikator.');
-      vIn = d * E.mult; ok = close(vIn, valueOf(S.q)); S.parts = compareValues(vIn, valueOf(S.q));
-    } else if (xf === 't') {
-      if (E.tol == null) return say('Välj en tolerans.');
-      ok = close(E.tol, tolOf(S.q)); S.parts = null;
-    } else {
-      if (E.tc == null) return say('Välj en temperaturkoefficient.');
-      ok = close(E.tc, tcOf(S.q)); S.parts = null;
-    }
-    hint.hidden = true;
-    return finish(ok);
   } else {
-    const d = parseFloat(E.v.replace(',', '.'));
-    if (isNaN(d)) return say('Skriv in siffrorna på knappsatsen.');
-    if (E.mult == null) return say('Välj en multiplikator.');
-    if (E.tol == null) return say('Välj en tolerans.');
-    if (six && E.tc == null) return say('Välj en temperaturkoefficient.');
-    vIn = d * E.mult; tIn = E.tol; kIn = E.tc;
+    const fs = entryFields();
+    if (!fs.every(fieldFilled)) return;
+    const ok = {}, vT = valueOf(S.q);
+    if (fs.includes('v')) { const [d, m] = compareValues(digitsIn() * E.mult, vT); ok.v = d.ok; ok.x = m.ok; }
+    if (fs.includes('t')) ok.t = close(E.tol, tolOf(S.q));
+    if (fs.includes('k')) ok.k = close(E.tc, tcOf(S.q));
+    S.fieldOk = ok;
+    return finish(fs.every(f => ok[f]));
   }
   hint.hidden = true;
   S.parts = compareValues(vIn, valueOf(S.q)).concat(
@@ -1102,36 +1091,58 @@ const MULTS = [0.01, 0.1, 1, 10, 100, 1e3, 1e4, 1e5, 1e6];
 const TOL_VALS = [10, 5, 2, 1, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01];
 const TC_VALS = [250, 100, 50, 25, 20, 15, 10, 5, 1];
 const newEntry = () => ({v:'', t:'', k:'', mult:null, tol:null, tc:null, field:'v'});
+// Eldprovet: resistans, tolerans och TK skrivs in fritt
 function entryHTML(){
-  const E = S.entry, ultra = S.level === 'ultra', six = S.n === 6;
-  const caret = f => (ultra ? E.field === f : f === 'v') ? '<span class="caret"></span>' : '';
+  const E = S.entry, six = S.n === 6;
+  const caret = f => E.field === f && !S.answered ? '<span class="caret"></span>' : '';
   const keys = ['7','8','9','4','5','6','1','2','3',',','0','⌫'];
   const keyBtn = (k, cls = '', dis = false) => `<button class="key ${cls}" data-key="${k}"${dis || S.answered ? ' disabled' : ''} aria-label="${k === '⌫' ? 'Radera' : k === 'next' ? 'Nästa fält' : k}">${k === 'next' ? 'Nästa' : k}</button>`;
-  let h = '<div class="entry">';
-  if (ultra) {
-    const box = (f, lab, pre, val, unit) => `<button class="ebox${E.field === f ? ' active' : ''}" data-field="${f}"${disAttr()}><span class="elab">${lab}</span><span class="eval">${pre}${val}${caret(f)}<span class="eunit">${unit}</span></span></button>`;
-    const vTxt = /[kM]$/.test(E.v) ? E.v.slice(0, -1) + ' ' + E.v.slice(-1) : E.v;
-    const vUnit = /[kM]$/.test(E.v) ? 'Ω' : ' Ω';
-    h += `<div class="eboxes">${box('v', 'Resistans', '', vTxt, vUnit)}${box('t', 'Tolerans', '±', E.t, ' %')}${six ? box('k', 'Temp.koeff.', '', E.k, ' ppm/K') : ''}</div>`;
-    h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}${keyBtn('k', 'fn', E.field !== 'v')}${keyBtn('M', 'fn', E.field !== 'v')}${keyBtn('next', 'fn')}</div>`;
-  } else {
-    const d = parseFloat(E.v.replace(',', '.'));
-    const pre = !isNaN(d) && E.mult != null ? `= ${fmtVal(Math.round(d * E.mult * 1e6) / 1e6)}` : '';
-    if (!hardFocus() || hardFocus() === 'v') h += `<div class="ebox active solo"><span class="elab">Siffror</span><span class="eval">${E.v}${caret('v')}<span class="emul">${E.mult != null ? fmtMult(E.mult) : '× ?'}</span></span><span class="epre">${pre}</span></div>`;
-    if (!hardFocus() || hardFocus() === 'v') h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}</div>`;
-    const chips = (attr, vals, cur, lab) => `<div><p class="grp-lbl">${lab}</p><div class="chiprow">${vals.map(v =>
-      `<button class="chip" data-${attr}="${v}" aria-pressed="${cur === v}"${disAttr()}>${attr === 'mult' ? fmtMult(v) : attr === 'tol' ? fmtTol(v) : fmtTc(v)}</button>`).join('')}</div></div>`;
-    const xf = hardFocus();
-    if (!xf || xf === 'v') h += chips('mult', MULTS, E.mult, 'Multiplikator');
-    if (!xf || xf === 't') h += chips('tol', TOL_VALS, E.tol, 'Tolerans');
-    if ((!xf && six) || xf === 'k') h += chips('tc', TC_VALS, E.tc, 'Temperaturkoefficient');
+  const box = (f, lab, pre, val, unit) => `<button class="ebox${E.field === f && !S.answered ? ' active' : ''}" data-field="${f}"${disAttr()}><span class="elab">${lab}</span><span class="eval">${pre}${val}${caret(f)}<span class="eunit">${unit}</span></span></button>`;
+  const vTxt = /[kM]$/.test(E.v) ? E.v.slice(0, -1) + ' ' + E.v.slice(-1) : E.v;
+  const vUnit = /[kM]$/.test(E.v) ? 'Ω' : ' Ω';
+  return `<div class="entry"><div class="eboxes">${box('v', 'Resistans', '', vTxt, vUnit)}${box('t', 'Tolerans', '±', E.t, ' %')}${six ? box('k', 'Temp.koeff.', '', E.k, ' ppm/K') : ''}</div>
+    <div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}${keyBtn('k', 'fn', E.field !== 'v')}${keyBtn('M', 'fn', E.field !== 'v')}${keyBtn('next', 'fn')}</div></div>
+    <p class="hint" id="hint" hidden></p>`;
+}
+// Svår variant, läs av: rutor överst och ett inmatningsfält i taget under.
+// Siffror har knappsats, de andra hela värdelistan. Val i en lista går vidare till nästa tomma ruta.
+const FIELD_LBL = {v:'Siffror', x:'Multiplikator', t:'Tolerans', k:'Temp.koeff.'};
+const FIELD_PROP = {v:'v', x:'mult', t:'tol', k:'tc'};
+const FIELD_VALS = {x:MULTS, t:TOL_VALS, k:TC_VALS};
+const FIELD_FMT = {x:fmtMult, t:fmtTol, k:fmtTc};
+const entryFields = () => S.focus === 'all' ? ['v','x','t'].concat(S.n === 6 ? ['k'] : []) : S.focus === 'v' ? ['v','x'] : [S.focus];
+const digitsIn = () => parseFloat(S.entry.v.replace(',', '.'));
+const fieldFilled = f => f === 'v' ? !isNaN(digitsIn()) : S.entry[FIELD_PROP[f]] != null;
+const fieldTruth = f => f === 'v' ? digitStr(S.q) : f === 'x' ? fmtMult(C[S.q[nd(S.q)]].m) : f === 't' ? fmtTol(tolOf(S.q)) : fmtTc(tcOf(S.q));
+function fieldsHTML(){
+  const E = S.entry, fs = entryFields(), done = S.answered;
+  if (!fs.includes(E.field)) E.field = fs[0];
+  const boxes = fs.map(f => {
+    const p = FIELD_PROP[f], raw = f === 'v' ? E.v : E[p] != null ? FIELD_FMT[f](E[p]) : '';
+    let txt = raw + (!done && E.field === f && f === 'v' ? '<span class="caret"></span>' : '');
+    let cls = !done && E.field === f ? ' active' : '';
+    if (done) {
+      cls += S.fieldOk[f] ? ' ok' : ' bad';
+      if (!S.fieldOk[f]) txt = `<s>${raw || '–'}</s> <span class="right">${fieldTruth(f)}</span>`;
+    }
+    return `<button class="ebox${cls}" data-field="${f}"${disAttr()}><span class="elab">${FIELD_LBL[f]}</span><span class="eval">${txt}</span></button>`;
+  }).join('');
+  const pre = fs.includes('v') && !isNaN(digitsIn()) && E.mult != null ? `<p class="epre">= ${fmtVal(Math.round(digitsIn() * E.mult * 1e6) / 1e6)}</p>` : '';
+  let panel = '';
+  if (!done && E.field === 'v') {
+    panel = `<div class="keypad">${['7','8','9','4','5','6','1','2','3',',','0','⌫'].map(k =>
+      `<button class="key${/[,⌫]/.test(k) ? ' fn' : ''}" data-key="${k}" aria-label="${k === '⌫' ? 'Radera' : k}">${k}</button>`).join('')}</div>`;
+  } else if (!done) {
+    const f = E.field, p = FIELD_PROP[f];
+    panel = `<div class="chiprow" role="group" aria-label="${FIELD_LBL[f]}">${FIELD_VALS[f].map(x =>
+      `<button class="chip" data-fval="${x}" aria-pressed="${E[p] === x}">${FIELD_FMT[f](x)}</button>`).join('')}</div>`;
   }
-  h += '</div><p class="hint" id="hint" hidden></p>';
-  return h;
+  return `<div class="entry"><div class="eboxes">${boxes}</div>${pre}${panel}</div><p class="hint" id="hint" hidden></p>`;
 }
 function keyPress(k){
   if (S.answered) return;
   const E = S.entry, ultra = S.level === 'ultra';
+  if (!ultra) E.field = 'v';
   const f = ultra ? E.field : 'v';
   const order = S.n === 6 ? ['v','t','k'] : ['v','t'];
   if (k === 'next') { E.field = order[(order.indexOf(E.field) + 1) % order.length]; render(); return; }
@@ -1189,12 +1200,12 @@ document.getElementById('q').addEventListener('click', e => {
     keyPress(btn.dataset.key);
   } else if (btn.dataset.field) {
     S.entry.field = btn.dataset.field; render();
-  } else if (btn.dataset.mult != null) {
-    S.entry.mult = +btn.dataset.mult; render();
-  } else if (btn.dataset.tol != null) {
-    S.entry.tol = +btn.dataset.tol; render();
-  } else if (btn.dataset.tc != null) {
-    S.entry.tc = +btn.dataset.tc; render();
+  } else if (btn.dataset.fval != null) {
+    const E = S.entry, fs = entryFields();
+    E[FIELD_PROP[E.field]] = +btn.dataset.fval;
+    const after = fs.slice(fs.indexOf(E.field) + 1).concat(fs).find(f => !fieldFilled(f));
+    if (after) E.field = after;
+    render();
   } else if (btn.dataset.hint) {
     useHint(btn.dataset.hint);
   } else if (btn.id === 'main') {
@@ -1207,7 +1218,7 @@ document.addEventListener('keydown', e => {
   if (typing) {
     const map = {Backspace:'⌫', ',':',', '.':',', k:'k', K:'k', m:'M', M:'M', Tab:'next'};
     const k = /^\d$/.test(e.key) ? e.key : map[e.key];
-    if (k && (S.level === 'ultra' || !['k','M','next'].includes(k))) { e.preventDefault(); keyPress(k); return; }
+    if (k && (S.level === 'ultra' || (!['k','M','next'].includes(k) && entryFields().includes('v')))) { e.preventDefault(); keyPress(k); return; }
   }
   if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return;
   if (S.answered) { next(); return; }
