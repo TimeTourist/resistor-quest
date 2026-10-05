@@ -4,16 +4,19 @@ import { readFileSync } from 'node:fs';
 const html = readFileSync(new URL('../index2.html', import.meta.url), 'utf8');
 
 // Laddar spelet i jsdom. storage fylls i localStorage innan scriptet körs.
-export function load({ storage = {}, url = 'http://localhost/' } = {}) {
+export function load({ storage = {}, url = 'http://localhost/', instant = true, audio = null } = {}) {
   const errors = [];
   const dom = new JSDOM(html, {
     url, runScripts: 'dangerously', pretendToBeVisual: true,
     beforeParse(w) {
       for (const [k, v] of Object.entries(storage)) w.localStorage.setItem(k, v);
+      if (audio) w.AudioContext = audio;
       w.addEventListener('error', e => errors.push(e.error || e.message));
     }
   });
   const w = dom.window, doc = w.document;
+  // Utan animeringar och väntan: svaret visas direkt och rätt svar väntar på Nästa
+  if (instant) w.eval('S.instant = true');
   return { w, doc, errors, g: expr => w.eval(expr), $: s => doc.querySelector(s), $$: s => [...doc.querySelectorAll(s)] };
 }
 

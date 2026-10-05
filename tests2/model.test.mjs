@@ -75,19 +75,48 @@ test('Progress sparas under fargkoden2-', () => {
 });
 
 for (const topic of TOPICS) {
-  test(`${topic}: Nykomling är Hitta felet, exakt ett fel, facit tre gröna och ett rött`, () => {
+  test(`${topic}: Nykomling är Vilken ska bort?, rätt poppar kortet och tre blir gröna`, () => {
+    const t = atGrade(topic, 0);
+    for (let i = 0; i < 20; i++) {
+      t.g(`S.grade['${topic}'] = 0; S.up = 0; next()`);
+      assert.match(t.$('#q').textContent, /Vilken ska bort\?/);
+      assert.equal(t.$$('[data-c]').length, 4);
+      const right = t.g('S.cq.right');
+      answer(t, true);
+      assert.ok(t.$(`[data-c="${right}"]`).classList.contains('gone'));
+      assert.equal(t.$$('#q .opt.ok').length, 3);
+      assert.equal(t.$$('#q .opt.bad').length, 0);
+    }
+  });
+  test(`${topic}: Vilken ska bort? fel: ditt kort grönt med röd ram, det udda poppar`, () => {
     const t = atGrade(topic, 0);
     for (let i = 0; i < 20; i++) {
       t.g('next()');
-      assert.match(t.$('#q').textContent, /Hitta felet/);
-      assert.equal(t.$$('[data-c]').length, 4);
-      answer(t, i % 2 === 0);
+      const right = t.g('S.cq.right');
+      answer(t, false);
+      const picked = t.g('S.pickC');
+      assert.ok(t.$(`[data-c="${right}"]`).classList.contains('gone'));
+      assert.ok(t.$(`[data-c="${picked}"]`).classList.contains('picked'));
+      assert.ok(t.$(`[data-c="${picked}"]`).classList.contains('ok'));
       assert.equal(t.$$('#q .opt.ok').length, 3);
-      assert.equal(t.$$('#q .opt.bad').length, 1);
-      assert.equal(t.$$('#q .opt.chosen').length, 1);
+      assert.equal(t.$$('#q .opt.bad').length, 0);
+      assert.equal(t.$$('#q .lesson').length, 1);
     }
   });
 }
+
+test('Det rätta svaret får aldrig klassen bad', () => {
+  for (const topic of TOPICS) for (let g = 0; g < 4; g++) {
+    const t = atGrade(topic, g);
+    for (let i = 0; i < 10; i++) {
+      t.g('next()');
+      if (t.g('S.type') !== 'choice') continue;
+      const right = t.g('S.cq.right');
+      answer(t, i % 2 === 0);
+      assert.ok(!t.$(`[data-c="${right}"]`).classList.contains('bad'), `${topic} ${g}`);
+    }
+  }
+});
 
 test('Motståndet Lärling: den felaktiga färgen är aldrig en riktig färg och aldrig rosa', () => {
   const t = atGrade('body', 1);
@@ -111,15 +140,16 @@ test('Motståndet Nykomling: det udda har 2, 7 eller 8 band', () => {
   }
 });
 
-test('Peka på band: rätt band, även när motståndet sitter vänt', () => {
+test('Peka på band: Motståndets Stormästare frågar efter första bandet, även när motståndet sitter vänt', () => {
   const t = atGrade('body', 4);
   let flipped = 0;
   for (let i = 0; i < 40; i++) {
     t.g('next()');
     assert.equal(t.g('S.type'), 'point');
     if (t.g('S.style.flip')) flipped++;
-    const role = t.g('S.pointRole'), at = t.g('S.pointAt'), k = t.g('nd(S.q)');
-    assert.equal(at, role === 'first' ? 0 : role === 'mult' ? k : k + 1);
+    assert.equal(t.g('S.pointRole'), 'first');
+    assert.equal(t.g('S.pointAt'), 0);
+    assert.match(t.$('#q .prompt').textContent, /första bandet/);
     answer(t, true);
     assert.equal(t.g('S.ok'), true);
   }
@@ -135,6 +165,99 @@ test('Text: rätt svar ger ingen text, fel svar ger exakt en rad', () => {
     t.g('next()'); answer(t, false);
     assert.equal(t.$$('#q .lesson').length, 1, `${topic} ${g} fel`);
   }
+});
+
+test('Resistansen: klammern, fyra band till och med Mästare, fem band på Stormästare', () => {
+  const t0 = atGrade('ohm', 0);
+  for (let i = 0; i < 30; i++) {
+    t0.g('next()');
+    const br = t0.g('S.cq.brackets'), right = t0.g('S.cq.right');
+    br.forEach(([n, to], j) => {
+      const k = n === 4 ? 2 : 3;
+      if (j === right) assert.notEqual(to, k); else assert.equal(to, k);
+    });
+  }
+  for (const g of [2, 3]) {
+    const t = atGrade('ohm', g);
+    for (let i = 0; i < 30; i++) {
+      t.g('next()');
+      assert.equal(t.g('S.n'), 4, `grad ${g}`);
+      assert.ok(t.$('#q .res .bracket'), `grad ${g} har klammer`);
+      if (g === 3) assert.ok(!['gold', 'silver'].includes(t.g('S.q[2]')));
+    }
+  }
+  const t2 = atGrade('ohm', 2);
+  let labels = false;
+  for (let i = 0; i < 20; i++) { t2.g('next()'); if (/nollor/.test(t2.$('#q .res').textContent)) labels = true; }
+  assert.ok(labels, 'Gesäll har etiketterna siffra, siffra, nollor');
+  const t4 = atGrade('ohm', 4);
+  for (let i = 0; i < 20; i++) { t4.g('next()'); assert.equal(t4.g('S.n'), 5); assert.equal(t4.$('#q .res .bracket'), null); }
+});
+
+test('Rätt svar: nästa fråga kommer av sig själv, fel svar väntar på Nästa', async () => {
+  const t = atGrade('ohm', 1, {}, );
+  t.g('S.instant = false');
+  t.g('next()');
+  const before = t.g('S.cq.prompt + S.cq.right');
+  answer(t, true);
+  assert.equal(t.g('S.busy'), true, 'spänningsfasen låser');
+  // Klick under spänningen gör inget annat svar
+  t.$$('[data-c]')[0].click();
+  assert.equal(t.g('S.answered'), true);
+  await new Promise(r => setTimeout(r, 2600));
+  assert.equal(t.g('S.answered'), false, 'ny fråga');
+  t.g('next()');
+  answer(t, false);
+  await new Promise(r => setTimeout(r, 2600));
+  assert.equal(t.g('S.answered'), true, 'väntar på Nästa');
+  assert.equal(t.$$('#q .lesson').length, 1);
+});
+
+test('Hoppa över: Enter under spänningen visar utfallet direkt', () => {
+  const t = atGrade('ohm', 1);
+  t.g('S.instant = false');
+  t.g('next()');
+  answer(t, false);
+  assert.equal(t.g('S.busy'), true);
+  t.doc.body.dispatchEvent(new t.w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  assert.equal(t.g('S.busy'), false);
+  assert.equal(t.$$('#q .lesson').length, 1);
+  t.g('clearTimeout(S.timer)');
+});
+
+test('Ljud: knappen sparar läget, och med ljudet av spelas inget', () => {
+  let made = 0;
+  class FakeAC {
+    constructor() { this.currentTime = 0; this.state = 'running'; this.destination = {}; }
+    resume() {}
+    createOscillator() { made++; return { type: '', frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {} }, connect: x => x, start() {}, stop() {} }; }
+    createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {} }, connect: x => x }; }
+    createBiquadFilter() { return { type: '', frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, Q: { value: 0 }, connect: x => x }; }
+    createBuffer() { return { getChannelData: () => new Float32Array(10) }; }
+    createBufferSource() { return { connect: x => x, start() {}, stop() {} }; }
+  }
+  const t = load({ storage: { ...ALL_OPEN, 'fargkoden2-topic': 'body' }, audio: FakeAC });
+  t.g('next()'); answer(t, true);
+  assert.ok(made > 0, 'ljud spelas');
+  const btn = t.$('#soundBtn');
+  assert.equal(btn.getAttribute('aria-pressed'), 'true');
+  btn.click();
+  assert.equal(btn.getAttribute('aria-pressed'), 'false');
+  assert.equal(t.w.localStorage.getItem('fargkoden2-sound'), 'off');
+  made = 0;
+  t.g('next()'); answer(t, false);
+  assert.equal(made, 0, 'inget ljud när det är av');
+});
+
+test('Eldprovet: nästa fråga kommer av sig själv även vid fel', async () => {
+  const t = load({ storage: ALL_OPEN });
+  t.g("goTopic('ultra')"); t.$('#examStart').click();
+  t.g('S.instant = false');
+  answer(t, false);
+  await new Promise(r => setTimeout(r, 2600));
+  assert.equal(t.g('S.exam.i'), 1);
+  assert.equal(t.g('S.answered'), false);
+  t.g('clearTimeout(S.timer)');
 });
 
 test('Glödlampan och Öva finns inte', () => {
@@ -154,7 +277,7 @@ test('Allt om motståndet finns kvar efter svar på en fråga med ett motstånd'
 test('Beroenderegeln: frågorna per ämne och grad använder rätt sorts frågor', () => {
   const kinds = {
     body: [['choice'], ['choice'], ['choice'], ['dir'], ['point']],
-    ohm: [['choice'], ['choice'], ['choice'], ['read', 'build'], ['read', 'build']],
+    ohm: [['choice'], ['choice'], ['choice', 'point'], ['choice'], ['read', 'build']],
     tol: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
     tc: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
     e: [['choice'], ['choice'], ['choice'], ['series'], ['series']]
