@@ -172,6 +172,7 @@ details[hidden]{display:none}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .lvlist{margin:0;padding-left:0;list-style:none;display:grid;gap:8px}
 .testbar{margin-top:24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
+.testbar[hidden]{display:none}
 .testbar button{font:inherit;font-size:.85rem;padding:6px 10px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
 .dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));z-index:10}
 .dlg[hidden]{display:none}
@@ -327,7 +328,7 @@ th{color:var(--muted);font-weight:500}
     <p class="enote" id="eNote"></p>
     <div class="egrid" id="eGrid"></div>
   </details>
-  <div class="testbar">
+  <div class="testbar" hidden>
     <span>Test</span>
     <button id="tGive">Lås upp nästa nivå</button>
     <button id="tReset">Lås alla nivåer igen</button>
@@ -1250,6 +1251,8 @@ function bindSeg(attr, prop, store){
   sync();
 }
 bindSeg('level', 'level', 'fargkoden-level');
+// Testraden visas bara med ?test=true i adressen
+if (new URLSearchParams(location.search).get('test') === 'true') document.querySelector('.testbar').hidden = false;
 document.getElementById('tGive').addEventListener('click', () => {
   const lv = ORDER.find(l => l !== 'ultra' && !unlocked(l));
   if (lv) { S.lvBest[ORDER[ORDER.indexOf(lv) - 1]] = UNLOCK_AT; save('fargkoden-stars', JSON.stringify(S.lvBest)); }
