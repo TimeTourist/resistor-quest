@@ -379,13 +379,10 @@ const GEN = {
   tc:['brown','brown','red','red','orange','yellow','blue','violet']
 };
 const BODIES = ['#dcc596','#d4b07f','#e8bda6','#9cc3e6','#5f93d6','#a9d3c0'];
+// varied: motstånden ser olika ut (kroppsfärg, form, nyans)
 const LV = {
-  intro:{choice:true, varied:true, flip:false},
-  easy:{choice:true, varied:false, flip:false},
-  medium:{choice:true, varied:true, flip:false},
-  tc:{choice:true, varied:true, flip:false},
-  hard:{choice:false, varied:true, flip:false},
-  ultra:{choice:false, varied:true, flip:true}
+  intro:{varied:true}, easy:{varied:false}, medium:{varied:true},
+  tc:{varied:true}, hard:{varied:true}, ultra:{varied:true}
 };
 const LV_KEYS = Object.keys(LV);
 const E24 = [10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91];
@@ -394,8 +391,6 @@ const E96 = [100,102,105,107,110,113,115,118,121,124,127,130,133,137,140,143,147
 // Öva: välj en del och öva på den på nivåns sätt (Lärling, Gesäll, Mästare, Stormästare)
 const partActive = () => S.mode === 'practice' && ['easy','medium','tc','hard'].includes(S.level);
 const partsFor = lv => lv === 'easy' ? ['v','d','x'] : lv === 'medium' ? ['v','t'] : lv === 'tc' ? ['v','t','k'] : lv === 'hard' ? ['v','t','k','e'] : [];
-// focus som gäller i Stormästare-frågor (null = hela svaret)
-const xFocus = () => partActive() && S.level === 'hard' && S.part !== 'e' ? S.part : null;
 function syncPartAvail(){
   document.getElementById('partSeg').hidden = !partActive();
   const avail = partsFor(S.level);
@@ -403,7 +398,7 @@ function syncPartAvail(){
   if (avail.length && !avail.includes(S.part)) S.part = 'v';
   document.querySelectorAll('[data-part]').forEach(x => x.setAttribute('aria-pressed', x.dataset.part === S.part));
 }
-const S = {level:'intro',kind:'mix',right:0,total:0,streak:0,best:0,q:null,n:4,type:null,answered:false,opts:null,optStyles:null,build:null,slot:0,style:null,eCase:false};
+const S = {level:'intro',right:0,total:0,streak:0,best:0,q:null,n:4,type:null,answered:false,build:null,slot:0,style:null,eCase:false};
 try {
   S.best = +localStorage.getItem('fargkoden-best') || 0;
   const lv = localStorage.getItem('fargkoden-level');
@@ -425,6 +420,48 @@ const ORDER = ['intro','easy','medium','tc','hard','ultra'];
 const lvName = lv => document.querySelector(`[data-level="${lv}"] span`).textContent;
 const unlocked = lv => { if (lv === 'ultra') return true; const i = ORDER.indexOf(lv); return i <= 0 || (S.lvBest[ORDER[i - 1]] || 0) >= UNLOCK_AT; };
 const cleared = lv => lv !== 'ultra' && (S.lvBest[lv] || 0) >= UNLOCK_AT;
+
+// Nivåmodell: varje nivå lär ut en ny färdighet. Förra nivåns färdighet kommer som flerval,
+// äldre färdigheter i svår variant (knappsats, hela listan, palett, vända motstånd).
+const SKILL_ORDER = ['dir','v','t','k','e'];
+const NEW_SKILL = {intro:'dir', easy:'v', medium:'t', tc:'k', hard:'e'};
+const NEW_SHARE = 0.6;
+// 'new', 'mc', 'hard' eller null (färdigheten kommer först senare)
+function skillFormat(level, skill){
+  if (level === 'ultra') return 'hard';
+  // Stormästare: allt i svår variant utom E-serien, som är nivåns nya färdighet
+  if (level === 'hard') return skill === 'e' ? 'new' : 'hard';
+  const li = ORDER.indexOf(level), si = SKILL_ORDER.indexOf(skill);
+  return si > li ? null : si === li ? 'new' : si === li - 1 ? 'mc' : 'hard';
+}
+// Vända motstånd i läs- och byggfrågor när läsriktningen är två nivåer gammal
+const flipOK = () => skillFormat(S.level, 'dir') === 'hard';
+// Bara rätt på det nya räknar upp. Fel på vad som helst nollställer. Rätt med tips står still.
+const nextStreak = (streak, ok, usedHint, counts) => !ok ? 0 : counts && !usedHint ? streak + 1 : streak;
+// Vad nästa fråga gäller: färdighet, del, format och frågetyp
+function planQuestion(){
+  const lv = S.level;
+  if (lv === 'ultra') return {skill:'all', focus:'all', fmt:'hard', type:S.examItem.t, counts:false};
+  if (partActive()) {
+    const skill = ['d','x'].includes(S.part) ? 'v' : S.part;
+    const fmt = skillFormat(lv, skill) === 'hard' ? 'hard' : 'mc';
+    return {skill, focus: skill === 'e' ? null : S.part, fmt, type: skill === 'e' ? 'series' : rnd(['read','build']), counts:true};
+  }
+  if (lv === 'intro') return {skill:'dir', focus:null, fmt:'mc', type:'dir', counts:true};
+  if (lv === 'hard') return Math.random() < 0.4
+    ? {skill:'e', focus:null, fmt:'mc', type:'series', counts:true}
+    : {skill:'all', focus:'all', fmt:'hard', type:rnd(['read','build']), counts:true};
+  const fresh = NEW_SKILL[lv];
+  // Riktning i svår variant är ingen egen fråga, den syns som vända motstånd
+  const old = SKILL_ORDER.filter(s => s !== fresh && (skillFormat(lv, s) === 'mc' || (skillFormat(lv, s) === 'hard' && s !== 'dir')));
+  const skill = !old.length || Math.random() < NEW_SHARE ? fresh : rnd(old);
+  const fmt = skillFormat(lv, skill) === 'hard' ? 'hard' : 'mc';
+  if (skill === 'dir') return {skill, focus:null, fmt, type:'dir', counts:false};
+  const focus = skill === 'v' && lv === 'easy' ? rnd(['v','d','x']) : skill;
+  return {skill, focus, fmt, type:rnd(['read','build']), counts: skill === fresh};
+}
+// Svår variant som gäller en del (Mästare: resistans, Öva på Stormästare), annars null
+const hardFocus = () => S.plan && S.plan.fmt === 'hard' && S.focus !== 'all' ? S.focus : null;
 function syncLocks(){
   document.querySelectorAll('[data-level]').forEach(b => {
     const lv = b.dataset.level, open = unlocked(lv);
@@ -757,21 +794,23 @@ function next(){
   syncPartAvail();
   if (S.level === 'ultra' && (!S.exam || S.exam.done)) { S.answered = true; S.type = 'exam'; showExamCard(); return; }
   S.examItem = S.level === 'ultra' ? S.exam.queue[S.exam.i] : null;
-  const n = S.examItem && S.examItem.n ? S.examItem.n : partActive() && S.part === 'k' ? 6 : pickN(), L = LV[S.level];
+  S.plan = planQuestion();
+  S.type = S.plan.type; S.focus = S.plan.focus;
+  const n = S.examItem && S.examItem.n ? S.examItem.n : S.focus === 'k' ? 6 : pickN(), L = LV[S.level];
   S.n = n; S.q = genBands(n);
-  const kinds = ['read','build'].concat(seriesOK() ? ['series'] : [], S.level === 'ultra' ? ['dir'] : []);
-  S.type = S.examItem ? S.examItem.t : partActive() ? (S.part === 'e' ? 'series' : rnd(['read','build'])) : S.kind === 'mix' ? rnd(kinds) : S.kind;
-  S.answered = false; S.opts = null; S.optStyles = null;
-  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.palOrder = {}; S.palAll = null; S.entry = newEntry(); S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.ambig = false; S.bflip = false; S.vText = valueNotation(valueOf(S.q)); S.focus = partActive() && S.part !== 'e' ? S.part : S.level === 'easy' ? rnd(['v','d','x']) : S.level === 'tc' && n === 6 ? rnd(['v','t','k','k']) : rnd(['v','t']);
+  S.answered = false; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.ambig = false; S.bflip = false;
+  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.palOrder = {}; S.palAll = null; S.entry = newEntry();
+  S.vText = valueNotation(valueOf(S.q));
+  S.flipQ = flipOK() && S.type !== 'dir' && Math.random() < 0.5;
   S.build = Array(n).fill(null); S.slot = 0; S.eCase = false;
   if (S.type === 'series') {
     S.sr = genSeriesRead();
     S.ser = {v: S.sr.v, m3: S.sr.m3, set: seriesOf(S.sr.m3)};
   }
-  if (S.level === 'ultra' && S.type === 'build') S.bflip = Math.random() < 0.5;
-  const xf = xFocus();
-  if (xf && S.type === 'build') {
-    const k0 = nd(S.q), ask = xf === 'v' ? [...Array(k0 + 1).keys()] : xf === 't' ? [k0 + 1] : [5];
+  S.bflip = S.type === 'build' && S.plan.fmt === 'hard' && S.flipQ;
+  const hf = hardFocus();
+  if (hf && S.type === 'build') {
+    const k0 = nd(S.q), ask = hf === 'v' ? [...Array(k0 + 1).keys()] : hf === 't' ? [k0 + 1] : [5];
     S.build = S.q.map((c, i) => ask.includes(i) ? null : c);
     S.slot = ask[0]; S.askSlots = ask;
   } else S.askSlots = null;
@@ -795,19 +834,17 @@ function next(){
     }
     S.style.flip = flip;
   } else {
-    S.style = L.varied ? variedStyle(S.q, L.flip && S.type === 'read' && Math.random() < 0.5) : stdStyle(n);
+    const fl = S.type === 'read' && S.flipQ;
+    S.style = L.varied ? variedStyle(S.q, fl) : {...stdStyle(n), flip: fl};
   }
   render();
 }
 
-// Seriefrågor finns bara på Stormästare och i Eldprovet
-const seriesOK = () => S.level === 'hard' || S.level === 'ultra';
 // Två lägen: Spela (allt blandat, låser upp nivåer) och Öva (en del i taget).
 // Öva finns från Lärling till Stormästare. Nykomling har bara en sorts fråga, och Eldprovet har ett eget upplägg.
 const practiceOK = () => ['easy','medium','tc','hard'].includes(S.level);
 function syncModes(){
   if (!practiceOK() && S.mode === 'practice') S.mode = 'play';
-  S.kind = S.level === 'intro' ? 'dir' : 'mix';
   // Färgkod och standardvärden är hjälp som bara visas när man övar
   document.querySelectorAll('[data-mode]').forEach(b => {
     b.setAttribute('aria-pressed', b.dataset.mode === S.mode);
@@ -842,7 +879,7 @@ function slotKeys(n, i){
 
 function render(){
   updateScore();
-  const q = document.getElementById('q'), L = LV[S.level], n = S.n;
+  const q = document.getElementById('q'), n = S.n;
   const v = valueOf(S.q), t = tolOf(S.q), tc = tcOf(S.q);
   let h = '';
   if (S.type === 'series') {
@@ -854,37 +891,20 @@ ${hintsHTML()}
     h += `<p class="prompt">Från vilket håll ska motståndet läsas?</p><div class="res">${svg(S.q,{style:S.style})}</div>${hintsHTML()}
       <div class="opts"><button class="opt" data-dir="left">Från vänster</button><button class="opt" data-dir="right">Från höger</button>${S.level === 'ultra' ? '<button class="opt wide" data-dir="none">Går ej att avgöra utan multimeter</button>' : ''}</div>`;
   } else if (S.type === 'read') {
-    const oneQ = S.level === 'medium' || S.level === 'tc' || (S.level === 'easy' && S.focus !== 'v');
-    const fq = oneQ ? S.focus : xFocus();
-    const rq = fq ? ({v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?', d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?'})[fq] : 'Vilket värde har motståndet?';
+    const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
+      d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?', all:'Vilket värde har motståndet?'}[S.focus];
     h += `<p class="prompt">${rq}</p><div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>${hintsHTML()}`;
-    if (oneQ) {
-      h += mcHTML();
-      if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet är temperaturkoefficienten. Den behöver du inte kunna på den här nivån.</p>';
-    } else if (L.choice) {
-      // Lärling: bara resistansen i alternativen, alla med olika värden
-      if (!S.opts) S.opts = shuffle([S.q, ...valueDistractors(S.q)]);
-      h += `<div class="opts">${S.opts.map((o,i) =>
-        `<button class="opt" data-opt="${i}">${fmtVal(valueOf(o))}</button>`).join('')}</div>`;
-    } else {
-      h += entryHTML();
-    }
+    h += S.plan.fmt === 'hard' ? entryHTML() : mcHTML();
+    if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet är temperaturkoefficienten. Den behöver du inte kunna på den här nivån.</p>';
   } else {
-    const oneB = S.level === 'medium' || S.level === 'tc' || (S.level === 'easy' && S.focus !== 'v');
-    const bf = oneB ? S.focus : xFocus();
-    const bq = bf === 't' ? 'Vilket toleransband ger' : bf === 'k' ? 'Vilket sjätte band ger' : bf === 'd' ? 'Vilka band ger siffrorna' : bf === 'x' ? 'Vilket band ger multiplikatorn' : 'Vilket motstånd har värdet';
-    const bigTxt = S.level === 'ultra' ? `${S.vText} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}` : null;
-    h += `<p class="prompt">${bq}</p><p class="big">${bigTxt ? bigTxt : S.level === 'easy' && S.focus === 'd' ? digitStr(S.q).split('').join(' ') : S.level === 'easy' && S.focus === 'x' ? fmtMult(C[S.q[nd(S.q)]].m) : S.level === 'easy' ? fmtVal(v) : bf && !oneB ? ({v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc)})[bf] : oneB ? ({v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc)})[S.focus] : `${fmtVal(v)} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`}</p>${hintsHTML()}`;
-    if (oneB) {
+    const bq = {v:'Vilket motstånd har värdet', all:'Vilket motstånd har värdet', t:'Vilket toleransband ger', k:'Vilket sjätte band ger',
+      d:'Vilka band ger siffrorna', x:'Vilket band ger multiplikatorn'}[S.focus];
+    const big = S.level === 'ultra' ? `${S.vText} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`
+      : {v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc), d:digitStr(S.q).split('').join(' '), x:fmtMult(C[S.q[nd(S.q)]].m),
+         all:`${fmtVal(v)} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`}[S.focus];
+    h += `<p class="prompt">${bq}</p><p class="big">${big}</p>${hintsHTML()}`;
+    if (S.plan.fmt !== 'hard') {
       h += bmcHTML();
-    } else if (L.choice) {
-      if (!S.opts) {
-        // Lärling: bara ohm i frågan, så alternativen måste skilja sig i värde
-        S.opts = shuffle([S.q, ...(S.level === 'easy' ? valueDistractors(S.q) : distractors(S.q))]);
-        S.optStyles = S.opts.map(o => o === S.q ? S.style : (L.varied ? variedStyle(o, false) : stdStyle(n)));
-      }
-      h += `<div class="opts rgrid">${S.opts.map((o,i) =>
-        `<button class="opt r" data-opt="${i}">${svg(o,{style:S.optStyles[i],label:'Motstånd: '+colorNames(o)})}</button>`).join('')}</div>`;
     } else {
       // Eldprovet: ibland sitter motståndet vänt, och då byggs det baklänges (Band 1 är toleransänden).
       // Bredden och mellanrummet på de tomma banden visar alltid åt vilket håll det sitter.
@@ -922,7 +942,8 @@ const close = (a,b) => Math.abs(a-b) < 1e-6 * Math.max(1, Math.abs(b));
 
 function finish(ok){
   S.answered = true; S.total++;
-  if (ok) { S.right++; if (!S.usedHint) S.streak++; } else S.streak = 0;
+  if (ok) S.right++;
+  S.streak = nextStreak(S.streak, ok, S.usedHint, S.plan.counts);
   if (S.streak > S.best) { S.best = S.streak; save('fargkoden-best', S.best); }
   const prevLv = S.lvBest[S.level] || 0;
   S.unlockedNow = null;
@@ -950,8 +971,8 @@ function finish(ok){
     ${S.type === 'build' && S.bflip && !ok ? (S.build.join() === b.join()
       ? '<p><b>Rätt färger, men åt fel håll.</b> Motståndet satt vänt: det breda toleransbandet satt till vänster, så Band 1 var slutet. Du byggde det som om det satt rättvänt.</p>'
       : '<p>Motståndet satt vänt: det breda toleransbandet satt till vänster, så Band 1 var slutet.</p>') : ''}
-    ${(!ok && S.type==='build' && !L.choice && bandsValid(readBuild())) ? `<p>Ditt motstånd är ogiltigt: ${bandsValid(readBuild())}.</p>` : ''}
-    ${(!ok && S.type==='build' && (!L.choice || S.level === 'medium')) ? `<div class="res">${svg(b,{label:'Rätt motstånd: '+colorNames(b)})}</div>` : ''}
+    ${(!ok && S.type==='build' && S.plan.fmt === 'hard' && bandsValid(readBuild())) ? `<p>Ditt motstånd är ogiltigt: ${bandsValid(readBuild())}.</p>` : ''}
+    ${(!ok && S.type==='build') ? `<div class="res">${svg(b,{label:'Rätt motstånd: '+colorNames(b)})}</div>` : ''}
     ${(S.style.flip && S.type !== 'build' && !S.ambig) ? `<p>Rättvänt ser det ut så här:</p><div class="res">${svg(b,{style:{...S.style,flip:false},label:'Rättvänt motstånd: '+colorNames(b)})}</div>` : ''}
     ${S.ambig ? meterFB(v, t, `Med en multimeter avgör du det. Visar den något i stil med det här är det ${fmtAll(b)}:`) : meterFB(v, t)}
     ${tipCost(ok)}
@@ -1008,8 +1029,8 @@ function answerRead(){
     if (isNaN(vIn)) return say('Skriv resistansen, t.ex. 470, 4,7k eller 4k7.');
     if (isNaN(tIn)) return say('Skriv toleransen i procent, t.ex. 5.');
     if (six && isNaN(kIn)) return say('Skriv temperaturkoefficienten, t.ex. 50.');
-  } else if (xFocus()) {
-    const xf = xFocus();
+  } else if (hardFocus()) {
+    const xf = hardFocus();
     let ok, part;
     if (xf === 'v') {
       const d = parseFloat(E.v.replace(',', '.'));
@@ -1060,11 +1081,11 @@ function entryHTML(){
   } else {
     const d = parseFloat(E.v.replace(',', '.'));
     const pre = !isNaN(d) && E.mult != null ? `= ${fmtVal(Math.round(d * E.mult * 1e6) / 1e6)}` : '';
-    if (!xFocus() || xFocus() === 'v') h += `<div class="ebox active solo"><span class="elab">Siffror</span><span class="eval">${E.v}${caret('v')}<span class="emul">${E.mult != null ? fmtMult(E.mult) : '× ?'}</span></span><span class="epre">${pre}</span></div>`;
-    if (!xFocus() || xFocus() === 'v') h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}</div>`;
+    if (!hardFocus() || hardFocus() === 'v') h += `<div class="ebox active solo"><span class="elab">Siffror</span><span class="eval">${E.v}${caret('v')}<span class="emul">${E.mult != null ? fmtMult(E.mult) : '× ?'}</span></span><span class="epre">${pre}</span></div>`;
+    if (!hardFocus() || hardFocus() === 'v') h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}</div>`;
     const chips = (attr, vals, cur, lab) => `<div><p class="grp-lbl">${lab}</p><div class="chiprow">${vals.map(v =>
       `<button class="chip" data-${attr}="${v}" aria-pressed="${cur === v}">${attr === 'mult' ? fmtMult(v) : attr === 'tol' ? fmtTol(v) : fmtTc(v)}</button>`).join('')}</div></div>`;
-    const xf = xFocus();
+    const xf = hardFocus();
     if (!xf || xf === 'v') h += chips('mult', MULTS, E.mult, 'Multiplikator');
     if (!xf || xf === 't') h += chips('tol', TOL_VALS, E.tol, 'Tolerans');
     if ((!xf && six) || xf === 'k') h += chips('tc', TC_VALS, E.tc, 'Temperaturkoefficient');
@@ -1090,18 +1111,7 @@ function keyPress(k){
 document.getElementById('q').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn || btn.disabled) return;
-  if (btn.dataset.opt != null) {
-    if (S.answered) return;
-    const i = +btn.dataset.opt, ok = key(S.opts[i]) === key(S.q);
-    S.parts = S.type === 'read'
-      ? compareValues(valueOf(S.opts[i]), valueOf(S.q))
-      : compareBands(S.opts[i], S.q, {tol: S.level !== 'easy', tc: S.level !== 'easy'});
-    document.querySelectorAll('[data-opt]').forEach(b => {
-      if (key(S.opts[+b.dataset.opt]) === key(S.q)) b.classList.add('ok');
-    });
-    if (!ok) btn.classList.add('bad');
-    finish(ok);
-  } else if (btn.id === 'examStart') {
+  if (btn.id === 'examStart') {
     startExam();
   } else if (btn.id === 'examGo') {
     document.querySelector(`[data-level="${btn.dataset.go}"]`).click();
@@ -1144,10 +1154,6 @@ document.getElementById('q').addEventListener('click', e => {
   } else if (btn.dataset.tpick) {
     if (S.answered) return;
     answerBMC(btn.dataset.tpick);
-  } else if (btn.id === 'bSubmit') {
-    answerBMC();
-  } else if (btn.id === 'mcSubmit') {
-    answerMC();
   } else if (btn.dataset.key) {
     keyPress(btn.dataset.key);
   } else if (btn.dataset.field) {
@@ -1168,7 +1174,7 @@ document.getElementById('q').addEventListener('click', e => {
 });
 
 document.addEventListener('keydown', e => {
-  const typing = S.type === 'read' && !LV[S.level].choice && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
+  const typing = S.type === 'read' && S.plan && S.plan.fmt === 'hard' && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
   if (typing) {
     const map = {Backspace:'⌫', ',':',', '.':',', k:'k', K:'k', m:'M', M:'M', Tab:'next'};
     const k = /^\d$/.test(e.key) ? e.key : map[e.key];
@@ -1176,7 +1182,7 @@ document.addEventListener('keydown', e => {
   }
   if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return;
   if (S.answered) { next(); return; }
-  if (S.type === 'read' && !LV[S.level].choice) answerRead();
+  if (S.type === 'read' && S.plan.fmt === 'hard') answerRead();
 });
 
 function bindSeg(attr, prop, store){
@@ -1265,9 +1271,9 @@ function buildMC(){
   const mc = {
     v: shuffle([v, ...vals]),
     t: shuffle([t, ...pickWrong(tolPool, t, 3)]),
-    d: S.level === 'easy' ? shuffle([digitStr(b), ...digitDistractors(b).map(digitStr)]) : null,
-    x: S.level === 'easy' ? shuffle([C[b[nd(b)]].m, ...multChoices(b).filter(c => c !== b[nd(b)]).map(c => C[c].m)]) : null,
-    k: S.level === 'tc' && tc != null ? shuffle([tc, ...pickWrong([100, 50, 25, 15, 10, 5, 250, 20, 1], tc, 3)]) : null
+    d: S.focus === 'd' ? shuffle([digitStr(b), ...digitDistractors(b).map(digitStr)]) : null,
+    x: S.focus === 'x' ? shuffle([C[b[nd(b)]].m, ...multChoices(b).filter(c => c !== b[nd(b)]).map(c => C[c].m)]) : null,
+    k: tc != null ? shuffle([tc, ...pickWrong([100, 50, 25, 15, 10, 5, 250, 20, 1], tc, 3)]) : null
   };
   return mc;
 }
@@ -1416,6 +1422,13 @@ function answerBMC(pick){
   finish(ok);
 }
 
+// Rätt val i byggflervalet: index för motståndsbilder (v, d), färg för ett enskilt band (x, t, k)
+function bmcRight(){
+  const k = nd(S.q);
+  if (S.focus === 'd') return S.bopts.d.findIndex(o => o.join() === S.q.slice(0, k).join());
+  if (S.focus === 'v') return S.bopts.v.findIndex(o => o.join() === S.q.slice(0, k+1).join());
+  return S.focus === 'x' ? S.q[k] : S.focus === 'k' ? S.q[5] : S.q[k+1];
+}
 function tcFact(b){
   const tc = tcOf(b), v = valueOf(b), d = v * tc * 1e-6;
   const small = d >= 1 ? fmtVal(Math.round(d * 100) / 100)
