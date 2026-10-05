@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { load, atGrade, ALL_OPEN } from './harness.mjs';
-import { answer, until, tap } from './answer.mjs';
+import { answer, until, tap, cont } from './answer.mjs';
 
 const TOPICS = ['body', 'ohm', 'tol', 'tc', 'e'];
 const st = (t, topic) => JSON.parse(t.g(`JSON.stringify({g: S.grade['${topic}'], done: S.done['${topic}']})`));
@@ -44,7 +44,7 @@ test('Upplåsning: Mästare nådd öppnar nästa ämne, Stormästare klar ger �
 test('Spela: 3 rätt höjer graden och statusraden säger det', () => {
   const t = load({ storage: { 'fargkoden2-topic': 'body' } });
   t.$('#play')?.click();
-  for (let i = 0; i < 3; i++) { answer(t, true); if (i < 2) t.$('#main').click(); }
+  for (let i = 0; i < 3; i++) { answer(t, true); if (i < 2) cont(t); }
   assert.deepEqual(st(t, 'body'), {g: 1, done: 1});
   assert.match(t.$('#score').textContent, /Upp till Lärling/);
 });
@@ -52,7 +52,7 @@ test('Spela: 3 rätt höjer graden och statusraden säger det', () => {
 test('Från Gesäll till Mästare låser upp nästa ämne och visar dess kort', () => {
   const t = load({ storage: { 'fargkoden2-grade': JSON.stringify({ body: 2 }), 'fargkoden2-done': JSON.stringify({ body: 2 }) } });
   t.$('#play')?.click();
-  for (let i = 0; i < 3; i++) { answer(t, true); t.$('#main').click(); }
+  for (let i = 0; i < 3; i++) { answer(t, true); cont(t); }
   assert.equal(t.g("unlocked('ohm')"), true);
   assert.equal(t.g('S.view'), 'ohm');
   assert.match(t.$('#q').textContent, /Resistansen/);
@@ -69,7 +69,7 @@ test('Sparad progress: gamla nycklar läses inte', () => {
 test('Progress sparas under fargkoden2-', () => {
   const t = load({ storage: { 'fargkoden2-topic': 'body' } });
   t.$('#play')?.click();
-  for (let i = 0; i < 3; i++) { answer(t, true); t.$('#main').click(); }
+  for (let i = 0; i < 3; i++) { answer(t, true); cont(t); }
   assert.equal(JSON.parse(t.w.localStorage.getItem('fargkoden2-done')).body, 1);
   assert.equal(JSON.parse(t.w.localStorage.getItem('fargkoden2-grade')).body, 1);
 });
@@ -260,6 +260,49 @@ test('Eldprovet: nästa fråga kommer av sig själv även vid fel', async () => 
   t.g('clearTimeout(S.timer)');
 });
 
+test('Ingen Nästa-knapp: efter fel svar fortsätter man med ett tryck på kortet', () => {
+  const t = atGrade('ohm', 1);
+  t.g('next()');
+  assert.equal(t.$('#main'), null);
+  answer(t, false);
+  assert.equal(t.$('#main'), null);
+  const box = t.$('#q .lesson');
+  assert.equal(box.tagName, 'BUTTON');
+  assert.ok(box.querySelector('.ar'), 'pilen ▼ finns i rutan');
+  t.$('#q .prompt').dispatchEvent(new t.w.MouseEvent('click', { bubbles: true }));
+  assert.equal(t.g('S.answered'), false, 'ny fråga');
+});
+
+test('Tryck direkt efter utfallet ignoreras, så att man inte hoppar förbi förklaringen', () => {
+  const t = atGrade('ohm', 1);
+  t.g('S.instant = false');
+  t.g('next()'); answer(t, false);
+  t.g('reveal()');
+  cont(t);
+  assert.equal(t.g('S.answered'), true, 'trycket för tidigt ignoreras');
+  t.g('S.revealAt = 0');
+  cont(t);
+  assert.equal(t.g('S.answered'), false);
+});
+
+test('Handen visas de tre första gångerna man svarar fel, sedan inte', () => {
+  const t = atGrade('ohm', 1);
+  for (let i = 0; i < 4; i++) {
+    t.g('next()'); answer(t, false);
+    assert.equal(!!t.$('#q .lesson .hand'), i < 3, `gång ${i + 1}`);
+    cont(t);
+  }
+  assert.equal(t.w.localStorage.getItem('fargkoden2-hand'), '3');
+});
+
+test('Svår variant: Svara sitter under inmatningen', () => {
+  const t = atGrade('ohm', 4);
+  until(t, p => p.type === 'read');
+  const sub = t.$('#submit');
+  assert.ok(sub && sub.closest('.entry'), 'Svara finns i inmatningen');
+  assert.equal(t.$('#q .qtop button'), null, 'ingen knapp uppe till höger');
+});
+
 test('Glödlampan och Öva finns inte', () => {
   const t = atGrade('ohm', 1);
   assert.equal(t.$('[data-hint]'), null);
@@ -325,7 +368,7 @@ test('Eldprovet: inget rätt/fel och ingen text under provet', () => {
     assert.equal(t.$$('#q .ok, #q .bad').length, 0, t.g('S.type'));
     assert.equal(t.$$('#q .lesson').length, 0);
     assert.equal(t.$('#more').hidden, true);
-    t.$('#main').click();
+    cont(t);
   }
   assert.match(t.$('#q').textContent, /Eldprovet är klart/);
   assert.deepEqual(t.errors.map(String), []);

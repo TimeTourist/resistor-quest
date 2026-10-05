@@ -9,6 +9,9 @@ export function until(t, pred, max = 800) {
   throw new Error('hittade ingen sådan fråga');
 }
 
+// Fortsätt efter svar: ett tryck var som helst på kortet
+export const cont = t => t.$('#q').click();
+
 // SVG-element har ingen click(), så klicket skickas som ett event
 export const tap = (t, el) => el.dispatchEvent(new t.w.MouseEvent('click', { bubbles: true }));
 
@@ -50,7 +53,7 @@ export function answer(t, correct = true) {
         btn.click();
       }
     });
-    return t.$('#main').click();
+    return t.$('#submit').click();
   }
   if (fmt === 'hard' && type === 'build') {
     const ask = Array.from(g('S.askSlots ? [...S.askSlots] : [...Array(S.n).keys()]'));
