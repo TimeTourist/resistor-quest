@@ -158,11 +158,21 @@ details[hidden]{display:none}
 .lcd small{font-size:.55em;margin-left:6px}
 .probe{width:10px;height:10px;border-radius:50%;display:inline-block}
 .probe.r{background:#c62828}.probe.b{background:#111;border:1px solid #666}
-.hints{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.hint-out{margin-top:10px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:.98rem}
-.hint-out:empty{display:none}
-.hint-out p{margin:0}
-.hint-out p+p{margin-top:4px}
+.qbtns{display:flex;gap:8px;align-items:center;flex:none}
+.bulb{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;cursor:pointer;padding:0}
+.bulb svg{width:22px;height:22px}
+.bulb:hover{border-color:var(--accent);color:var(--ink)}
+.bulb.lit{background:var(--tip-bg);border-color:#d9a400;color:var(--ink)}
+#q{position:relative}
+.hintlayer{position:absolute;top:0;left:0;right:0;min-height:100%;z-index:5;border-radius:14px;background:rgba(10,20,28,.35);display:flex;align-items:flex-start;padding:64px 12px 12px}
+.hintbox{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px 14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.hinthead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.hinthead h3{margin:0;display:flex;gap:8px;align-items:center;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.35rem}
+.hinthead svg{width:22px;height:22px}
+.hintx{border:0;background:transparent;color:var(--muted);font-size:1.6rem;line-height:1;width:36px;height:36px;border-radius:8px;cursor:pointer}
+.hintx:hover{background:var(--bg);color:var(--ink)}
+.hintbox p{margin:0 0 6px}
+.hintbox .cost{margin:8px 0 0;font-size:.9rem;color:var(--muted)}
 .entry{margin-top:14px;display:grid;gap:12px}
 .eboxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
 .ebox{display:block;text-align:left;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:8px 12px;font:inherit;cursor:pointer}
@@ -870,7 +880,7 @@ function next(){
   S.n = n; S.q = genBands(n);
   S.answered = false; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.ambig = false; S.bflip = false;
   S.bpick = null; S.pickDir = null; S.pickSr = null; S.ok = null;
-  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.palAll = null; S.entry = newEntry();
+  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.hintOpen = false; S.palAll = null; S.entry = newEntry();
   S.vText = valueNotation(valueOf(S.q));
   S.flipQ = flipOK() && S.type !== 'dir' && Math.random() < 0.5;
   S.build = Array(n).fill(null); S.slot = 0; S.eCase = false;
@@ -964,7 +974,7 @@ function mainBtnHTML(){
 // Bygg med palett: rätt färg för plats i som den byggs (Band 1 är toleransänden när motståndet sitter vänt)
 const truthAt = i => S.bflip ? S.q[S.n - 1 - i] : S.q[i];
 // Frågan med huvudknappen uppe till höger, så att knappen står still när facit dyker upp
-const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p>${mainBtnHTML()}</div>`;
+const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p><div class="qbtns">${bulbHTML()}${mainBtnHTML()}</div></div>`;
 function render(){
   updateScore();
   const q = document.getElementById('q'), n = S.n;
@@ -973,18 +983,18 @@ function render(){
   if (S.type === 'series') {
     const full = S.level === 'hard' ? `<p class="big">${fmtVal(S.sr.v)} ${fmtTol(bandsTol(S.sr.bands))}</p>` : '';
     h += `${topHTML('Vilken E-serie hör motståndet hemma i?')}${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
-${hintsHTML()}
+
       <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
     const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
     const turn = S.answered && S.level !== 'ultra' && S.style.flip && !S.ambig;
-    h += `${topHTML('Från vilket håll ska motståndet läsas?')}<div class="res${turn ? ' turn' : ''}">${svg(S.q, {style: turn ? {...S.style, flip:false} : S.style})}</div>${hintsHTML()}
+    h += `${topHTML('Från vilket håll ska motståndet läsas?')}<div class="res${turn ? ' turn' : ''}">${svg(S.q, {style: turn ? {...S.style, flip:false} : S.style})}</div>
       <div class="opts">${dBtn('left', 'Från vänster')}${dBtn('right', 'Från höger')}${S.level === 'ultra' ? dBtn('none', 'Går ej att avgöra utan multimeter', ' wide') : ''}</div>`;
   } else if (S.type === 'read') {
     const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
       d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?', all:'Vilket värde har motståndet?'}[S.focus];
-    h += `${topHTML(rq)}<div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>${hintsHTML()}`;
+    h += `${topHTML(rq)}<div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>`;
     h += S.plan.fmt !== 'hard' ? mcHTML() : S.level === 'ultra' ? entryHTML() : fieldsHTML();
     if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet är temperaturkoefficienten. Den behöver du inte kunna på den här nivån.</p>';
   } else {
@@ -993,7 +1003,7 @@ ${hintsHTML()}
     const big = S.level === 'ultra' ? `${S.vText} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`
       : {v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc), d:digitStr(S.q).split('').join(' '), x:fmtMult(C[S.q[nd(S.q)]].m),
          all:`${fmtVal(v)} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`}[S.focus];
-    h += `${topHTML(bq)}<p class="big">${big}</p>${hintsHTML()}`;
+    h += `${topHTML(bq)}<p class="big">${big}</p>`;
     if (S.plan.fmt !== 'hard') {
       h += bmcHTML();
     } else {
@@ -1018,7 +1028,7 @@ ${hintsHTML()}
         `<button class="pc" data-color="${k}"${disAttr()}><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
     }
   }
-  h += lessonHTML();
+  h += lessonHTML() + hintDlgHTML();
   q.innerHTML = h;
   const more = document.getElementById('more');
   more.innerHTML = moreHTML(); more.hidden = !more.innerHTML;
@@ -1215,6 +1225,8 @@ function keyPress(k){
 }
 
 document.getElementById('q').addEventListener('click', e => {
+  // Tryck utanför tipsrutan stänger den
+  if (e.target.id === 'hintDlg') { closeHint(); return; }
   const btn = e.target.closest('button');
   if (!btn || btn.disabled) return;
   if (btn.id === 'examStart') {
@@ -1268,6 +1280,8 @@ document.getElementById('q').addEventListener('click', e => {
     const after = fs.slice(fs.indexOf(E.field) + 1).concat(fs).find(f => !fieldFilled(f));
     if (after) E.field = after;
     render();
+  } else if (btn.dataset.hintclose != null) {
+    closeHint();
   } else if (btn.dataset.hint) {
     useHint(btn.dataset.hint);
   } else if (btn.id === 'main') {
@@ -1276,7 +1290,8 @@ document.getElementById('q').addEventListener('click', e => {
 });
 
 document.addEventListener('keydown', e => {
-  const typing = !S.view && S.type === 'read' && S.plan && S.plan.fmt === 'hard' && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
+  if (S.hintOpen) { if (e.key === 'Escape') closeHint(); return; }
+  const typing = !S.view && !S.hintOpen && S.type === 'read' && S.plan && S.plan.fmt === 'hard' && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
   if (typing) {
     const map = {Backspace:'⌫', ',':',', '.':',', k:'k', K:'k', m:'M', M:'M', Tab:'next'};
     const k = /^\d$/.test(e.key) ? e.key : map[e.key];
@@ -1549,28 +1564,30 @@ function hintList(){
   return S.type === 'read' ? [['bands','Förklara banden']] : [['colors','Vilka färger behövs?']];
 }
 const hintsOn = () => S.level !== 'ultra';
-function hintsHTML(){
-  if (!hintsOn()) return '';
-  const list = hintList();
-  return `<div class="hints">${list.map(([k,l]) =>
-    `<button class="ghost" data-hint="${k}"${S.hintsUsed.has(k) ? ' disabled' : ''}>${HINT_ICON}${l}</button>`).join('')}</div>
-    <div class="hint-out" id="hintOut" aria-live="polite">${S.hintOut}</div>`;
+// Tipset: en glödlampa före Nästa som öppnar en dialog över kortet. Efter användning lyser lampan och tipset kan läsas igen.
+function bulbHTML(){
+  if (!hintsOn() || S.answered) return '';
+  const h = hintList()[0];
+  if (!h) return '';
+  const used = S.hintsUsed.has(h[0]);
+  return `<button class="bulb${used ? ' lit' : ''}" data-hint="${h[0]}" aria-label="Tips: ${h[1]}" title="${h[1]}">${HINT_ICON}</button>`;
 }
-function neighbors(v, mants){
-  const d0 = Math.pow(10, Math.floor(Math.log10(v)));
-  const all = [];
-  for (const d of [d0/100, d0/10, d0, d0*10]) for (const m of mants) all.push(Math.round(m / 100 * d * 100) / 100);
-  all.sort((a,b) => a - b);
-  const hit = all.find(x => close(x, v));
-  if (hit != null) return `${fmtVal(hit)} (träff)`;
-  const lo = all.filter(x => x < v).pop(), hi = all.find(x => x > v);
-  return `${fmtVal(lo)} och ${fmtVal(hi)}`;
+function hintDlgHTML(){
+  if (!S.hintOpen) return '';
+  const cost = S.usedHint ? '<p class="cost">Tipset kostar: sviten står still på den här frågan.</p>' : '';
+  return `<div class="hintlayer" id="hintDlg"><div class="hintbox" role="dialog" aria-modal="true" aria-labelledby="hintTitle">
+    <div class="hinthead"><h3 id="hintTitle">${HINT_ICON}${hintList()[0][1]}</h3><button class="hintx" data-hintclose aria-label="Stäng tipset">×</button></div>
+    ${S.hintOut}${cost}</div></div>`;
+}
+function closeHint(){
+  S.hintOpen = false; render();
+  document.querySelector('#q .bulb')?.focus({preventScroll:true});
 }
 function useHint(k){
   if (S.answered || !hintsOn()) return;
+  if (S.hintsUsed.has(k)) { openHint(); return; }
   S.usedHint = true;
   S.hintsUsed.add(k);
-  const out = document.getElementById('hintOut');
   if (k === 'colors') {
     // Bygg: vilka färger behövs för det som frågan gäller
     const b = S.q, n = b.length, kk = nd(b);
@@ -1589,8 +1606,6 @@ function useHint(k){
       ? (() => { const digits = b.slice(0, kk).map(x => C[x].d).join(''), m = C[b[kk]].m; return `${fmtVal(valueOf(b))} = ${digits} × ${m < 1 ? num(m) : m.toLocaleString('sv-SE')}. Du behöver:`; })()
       : focus === 't' ? `${fmtTol(tolOf(b))} är toleransbandet längst bort. Du behöver:` : `${fmtTc(tcOf(b))} är det sjätte bandet. Du behöver:`;
     S.hintOut = `<p>${head}</p><ul class="chips bandexp">${rows}</ul>`;
-    render();
-    return;
   } else if (k === 'bands') {
     // Visa vad färgerna betyder på de band som frågan gäller, och markera dem på motståndet
     const b = S.q, n = b.length, kk = nd(b);
@@ -1611,8 +1626,6 @@ function useHint(k){
       : focus === 't' ? 'Toleransen säger hur mycket det verkliga värdet får avvika från det märkta.'
       : 'Temperaturkoefficienten säger hur mycket resistansen högst ändras per grad, i miljondelar (ppm).';
     S.hintOut = `<p>${dirTxt} ${idx.length > 1 ? 'De markerade banden är de' : 'Det markerade bandet är det'} du behöver:</p><ul class="chips bandexp">${rows}</ul><p>${how}</p>`;
-    render();
-    return;
   } else if (k === 'explain') {
     // Nykomling: en vänlig förklaring utifrån ledtrådarna på just det här motståndet. Kostar inget.
     S.usedHint = false;
@@ -1627,9 +1640,11 @@ function useHint(k){
     const v = S.ser.v;
     S.hintOut = `<p>Närmaste i E24: ${neighbors(v, E24.map(x => x*10))}</p><p>Närmaste i E96: ${neighbors(v, E96)}</p>`;
   }
-  out.innerHTML = S.hintOut;
-  const btn = document.querySelector(`[data-hint="${k}"]`);
-  if (btn) btn.disabled = true;
+  openHint();
+}
+function openHint(){
+  S.hintOpen = true; render();
+  document.querySelector('[data-hintclose]')?.focus({preventScroll:true});
 }
 
 // Exempel i guiden

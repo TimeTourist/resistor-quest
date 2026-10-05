@@ -121,10 +121,10 @@ test('Huvudknappen sitter uppe till höger bredvid frågan, före och efter svar
     const t = atLevel(lv);
     for (let i = 0; i < 10; i++) {
       t.g('next()');
-      assert.ok(t.$('#q .qtop .prompt + #main'), `${lv}: ${t.g('S.type')} före svar`);
+      assert.ok(t.$('#q .qtop .prompt + .qbtns #main'), `${lv}: ${t.g('S.type')} före svar`);
       if (t.g('S.plan.fmt') === 'mc' || t.g('S.type') === 'build') {
         answer(t, false);
-        assert.ok(t.$('#q .qtop .prompt + #main'), `${lv}: ${t.g('S.type')} efter svar`);
+        assert.ok(t.$('#q .qtop .prompt + .qbtns #main'), `${lv}: ${t.g('S.type')} efter svar`);
         assert.equal(t.$$('#q #main').length, 1);
       }
     }
