@@ -66,3 +66,26 @@ test('Ingen lampa på frågor utan tips eller efter svar', () => {
   answer(t, true);
   assert.equal(t.$('.bulb'), null);
 });
+
+test('Lampan är en tänd glödlampa med strålar', () => {
+  const t = atLevel('medium');
+  until(t, p => p.skill === 't' && p.type === 'read');
+  assert.ok(t.$('.bulb svg .rays'));
+  assert.ok(t.$('.bulb svg .glass'));
+});
+
+for (const type of ['read', 'build']) {
+  test(`Tipset döljer svarsalternativen men inte motståndet (${type})`, () => {
+    const t = atLevel('medium');
+    until(t, p => p.skill === 't' && p.type === type);
+    t.$('.bulb').click();
+    const opts = t.$$('#q [data-pick], #q [data-tpick], #q [data-vpick]');
+    assert.ok(opts.length);
+    assert.ok(opts.every(b => b.closest('[inert]')), 'alternativen är dolda och går inte att välja');
+    assert.equal(t.$('#q .res').closest('[inert]'), null, 'motståndet syns');
+    assert.equal(t.$('#hintDlg').closest('[inert]'), null, 'tipset går att läsa');
+    assert.equal(t.$('#main').closest('[inert]'), null);
+    t.$('[data-hintclose]').click();
+    assert.equal(t.$$('#q [inert]').length, 0);
+  });
+}
