@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { atLevel, load } from './harness.mjs';
 import { answer, until } from './answer.mjs';
 
+// SVG-element har ingen click(), så klicket skickas som ett event
+const tap = (t, sel) => t.$(sel).dispatchEvent(new t.w.MouseEvent('click', { bubbles: true }));
+
 const enter = t => t.doc.body.dispatchEvent(new t.w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
 test('Nästa är grå före svar och aktiv efter, på samma plats', () => {
@@ -79,19 +82,14 @@ test('Tips och sedan rätt: sviten står still och raden säger att tipset kosta
   assert.match(t.$('.lesson').textContent, /Tipset kostade/);
 });
 
-test('Stanna kvar i upplåsningsdialogen ger fokus till huvudknappen', () => {
-  const t = load({ storage: { 'fargkoden-stars': JSON.stringify({ intro: 5, easy: 5 }), 'fargkoden-level': 'medium' } });
-  for (let i = 0; i < 5; i++) { until(t, p => p.skill === 't'); answer(t, true); }
-  assert.equal(t.$('#unlockDlg').hidden, false);
-  t.$('#dlgStay').click();
-  assert.equal(t.doc.activeElement, t.$('#main'));
-});
-
 test('Byta nivå efter svar: Allt om motståndet försvinner och Nästa är grå', () => {
   const t = atLevel('medium');
   until(t, p => p.type === 'read');
   answer(t, true);
-  t.$('[data-level="tc"]').click();
+  tap(t, '#map [data-level="tc"]');
+  assert.equal(t.$('#more').hidden, true);
+  t.$('#play').click();
+  assert.equal(t.g('S.level'), 'tc');
   assert.equal(t.$('#more').hidden, true);
   assert.equal(t.$('#main').disabled, true);
 });

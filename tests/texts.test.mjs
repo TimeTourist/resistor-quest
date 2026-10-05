@@ -4,12 +4,12 @@ import { load } from './harness.mjs';
 
 test('Poängraden säger vad sviten räknar', () => {
   const t = load({ storage: { 'fargkoden-stars': JSON.stringify({ intro: 5, easy: 5 }), 'fargkoden-level': 'medium' } });
-  assert.match(t.$('#score').textContent, /0 av 5 i rad på tolerans till Mästare/);
+  assert.match(t.$('#score').textContent, /0 av 5 i rad på tolerans → Mästare/);
 });
 
 test('Om nivåerna beskriver den nya svitregeln', () => {
   const t = load();
-  assert.match(t.$('details .gnote').textContent, /nollställer/);
+  assert.match(t.$$('details .gnote').map(e => e.textContent).join(' '), /nollställer/);
 });
 
 test('Raden om det frågan lär ut böjer färgen efter bandet (rött, inte röd)', () => {

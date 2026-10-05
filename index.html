@@ -34,22 +34,42 @@ body{
   font:16px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
-h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:clamp(2.6rem,9vw,3.8rem);line-height:1;margin:0 0 6px}
-.lede{color:var(--muted);margin:0 0 20px;max-width:60ch}
-.controls{display:flex;flex-wrap:wrap;gap:12px 24px;margin-bottom:16px}
+.top{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:clamp(1.9rem,7vw,2.6rem);line-height:1;margin:0;display:flex;align-items:center;gap:8px}
+.brandbands{display:inline-flex;gap:3px}
+.brandbands b{width:5px;height:.75em;border-radius:1px;display:block}
 .seg{display:flex;flex-direction:column;gap:6px}
 .seg>span{font-size:.85rem;color:var(--muted)}
 .seg>div{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
 .seg button{border:0;background:transparent;color:var(--ink);padding:8px 14px;font:inherit;font-size:.95rem;cursor:pointer}
 .seg button+button{border-left:1px solid var(--line)}
-.seg button.lv{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px}
-.examwrap{display:flex;align-items:flex-end}
-.exambtn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:12px 20px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.45rem;letter-spacing:.03em;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);background:linear-gradient(135deg,#ffb020 0%,#ff6a1a 45%,#c8261b 100%);box-shadow:0 4px 16px rgba(200,38,27,.4);cursor:pointer}
-.exambtn svg{width:24px;height:24px;flex:none}
-.exambtn:hover{filter:brightness(1.08)}
-.exambtn[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:3px}
-.lvicon{display:inline-flex;height:14px}
-.lvicon svg{width:14px;height:14px;display:block}
+.modeseg button{padding:6px 12px}
+.map{display:block;width:100%;max-width:520px;height:auto}
+.map [data-level]{cursor:pointer}
+.map [data-level]:focus{outline:none}
+.map [data-level]:focus-visible .hit{stroke:var(--accent);stroke-width:2}
+.map text{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:11px;fill:var(--muted)}
+.map .done{fill:var(--ok)}
+.map .on text{fill:var(--ink);font-weight:600}
+.map .boss text{fill:#d9381e;font-weight:600}
+.pips{display:inline-flex;gap:3px;vertical-align:-3px;margin-right:6px}
+.pips b{width:7px;height:16px;border-radius:2px;border:1.5px solid var(--line);display:block}
+.lvcard h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.2rem;line-height:1;margin:0 0 10px}
+.lvcard p{margin:0 0 10px}
+.lvcard .state{border-radius:10px;padding:8px 12px;background:var(--bg)}
+.lvcard .state.done{background:var(--ok-bg)}
+.lvbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+.lvbtns .primary{margin:0}
+.fresh{display:inline-block;margin-bottom:8px;font-size:.8rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--ok);color:var(--surface);border-radius:6px;padding:3px 8px}
+.card.bosscard{color:#ffe8d2;border:0;background:radial-gradient(120% 90% at 50% 110%,#ff9a3c,#d9381e 45%,#2a1712 85%)}
+.bosscard .primary{background:#ffe8d2;color:#2a1712}
+@media (prefers-reduced-motion:no-preference){
+  .map .pulse{animation:mpulse 1.6s ease-in-out infinite}
+  @keyframes mpulse{50%{opacity:.4}}
+  .map .glow{animation:mglow 2.4s ease-in-out infinite}
+  @keyframes mglow{50%{opacity:.75}}
+}
 .stars{display:inline-flex;gap:2px}
 .stars svg{width:13px;height:13px;display:block}
 .star-on{fill:#f2c230;stroke:#9a7410;stroke-width:1.2}
@@ -64,8 +84,8 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .seg>div[aria-labelledby="lvlLbl"] button:nth-child(3n+1){border-left:0}
 .seg>div[aria-labelledby="lvlLbl"] button:nth-child(n+4){border-top:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
-.score{display:flex;flex-wrap:wrap;gap:4px 20px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.2rem;color:var(--muted);margin:0 0 12px}
-.score b{color:var(--ink);font-weight:600}
+.score{margin:0;font-size:.95rem;color:var(--muted);min-height:1.5em}
+.score>b{color:var(--ink);font-weight:600}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
 .prompt{font-size:1.05rem;margin:0 0 8px;color:var(--muted)}
 .qtop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
@@ -181,14 +201,6 @@ p.epre{margin:0}
 .testbar{margin-top:24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
 .testbar[hidden]{display:none}
 .testbar button{font:inherit;font-size:.85rem;padding:6px 10px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
-.dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));z-index:10}
-.dlg[hidden]{display:none}
-.dlg-box{background:var(--surface);color:var(--ink);border-radius:16px;padding:22px 22px 18px;max-width:440px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.3)}
-.dlg-kicker{margin:0;font-weight:700;color:var(--ok);letter-spacing:.04em;text-transform:uppercase;font-size:.8rem}
-.dlg-box h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.2rem;line-height:1.05;margin:4px 0 10px}
-.dlg-box p{margin:0 0 12px}
-.dlg-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.dlg-btns .primary{margin-top:0}
 .exam h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.4rem;line-height:1.05;margin:0 0 8px}
 .exam .verdict{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.6rem;line-height:1.05;margin:4px 0 8px}
 .skills{list-style:none;padding:0;margin:12px 0;display:grid;gap:6px}
@@ -225,28 +237,16 @@ th{color:var(--muted);font-weight:500}
 </head>
 <body>
 <main>
-  <h1>Färgkoden</h1>
-  <p class="lede">Läs av och bygg motstånd med fyra, fem eller sex färgband: siffror, multiplikator, tolerans och ibland temperaturkoefficient.</p>
-
-  <div class="controls">
-    <div class="seg"><span id="lvlLbl">Nivå</span>
-      <div role="group" aria-labelledby="lvlLbl">
-        <button class="lv" data-level="intro" aria-pressed="false"><span>Nykomling</span><span class="lvicon" data-icon="intro"></span></button>
-        <button class="lv" data-level="easy" aria-pressed="true"><span>Lärling</span><span class="lvicon" data-icon="easy"></span></button>
-        <button class="lv" data-level="medium" aria-pressed="false"><span>Gesäll</span><span class="lvicon" data-icon="medium"></span></button>
-        <button class="lv" data-level="tc" aria-pressed="false"><span>Mästare</span><span class="lvicon" data-icon="tc"></span></button>
-        <button class="lv" data-level="hard" aria-pressed="false"><span>Stormästare</span><span class="lvicon" data-icon="hard"></span></button>
-      </div>
-    </div>
-    <div class="examwrap">
-      <button class="exambtn" data-level="ultra" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffe7a3" d="M12 2c1 3.5-1.5 5-1.5 7.5 0 1.4 1 2.5 2.3 2.5 1.6 0 2.4-1.3 2.2-3 2.5 1.8 4 4.4 4 7 0 3.9-3.1 6-7 6s-7-2.6-7-6.3C5 10.5 10.6 7.4 12 2z"/><path fill="#fff" opacity=".85" d="M12 13.5c.4 1.4-.6 2.2-.6 3.2 0 .7.5 1.3 1.2 1.3 1 0 1.5-.8 1.4-1.8 1 .8 1.5 1.8 1.5 2.8 0 1.8-1.5 3-3.5 3s-3.5-1.3-3.5-3.1c0-2.3 2.3-3.6 3.5-5.4z"/></svg><span>Eldprovet</span></button>
-    </div>
-    <div class="seg"><span id="modeLbl">Läge</span>
-      <div role="group" aria-labelledby="modeLbl">
+  <header class="top">
+    <div class="toprow">
+      <h1 class="brand"><span class="brandbands" aria-hidden="true"><b style="background:#7a4a21"></b><b style="background:#c62828"></b><b style="background:#ef7d1a"></b><b style="background:#f2d024"></b><b style="background:#2e8b3d"></b></span>Färgkoden</h1>
+      <div class="seg modeseg"><div role="group" aria-label="Läge">
         <button data-mode="play" aria-pressed="true">Spela</button>
         <button data-mode="practice" aria-pressed="false">Öva</button>
-      </div>
+      </div></div>
     </div>
+    <svg class="map" id="map" viewBox="0 0 330 88" role="group" aria-label="Nivåer"></svg>
+    <p class="score" id="score"></p>
     <div class="seg" id="partSeg" hidden><span id="partLbl">Öva på</span>
       <div role="group" aria-labelledby="partLbl">
         <button data-part="v" aria-pressed="true">Resistans</button>
@@ -257,14 +257,14 @@ th{color:var(--muted);font-weight:500}
         <button data-part="x" aria-pressed="false">Multiplikator</button>
       </div>
     </div>
-  </div>
+  </header>
 
-  <p class="score" id="score"></p>
   <section class="card" id="q" aria-live="polite"></section>
   <section class="more" id="more" aria-label="Allt om motståndet" hidden></section>
 
   <details>
     <summary>Om nivåerna</summary>
+    <p class="gnote">Färgkoden lär dig läsa av och bygga motstånd med fyra, fem eller sex färgband: siffror, multiplikator, tolerans och ibland temperaturkoefficient. Nivåkartan högst upp är själv ett motstånd: varje färgband är en nivå, och lågan längst ut är Eldprovet. Tryck på ett band för att läsa om nivån.</p>
     <p class="gnote">Nivåerna heter efter hur långt du kommit, från Nykomling till Stormästare. Varje nivå lär ut en ny sak, och det mesta du får gäller just den. <b>5 rätt i rad</b> på det nya låser upp nästa nivå. Frågor om det du lärt dig tidigare räknas inte upp, men ett fel på vad som helst nollställer sviten. Eldprovet är alltid öppet.</p>
     <ul class="lvlist">
       <li><b>Nykomling:</b> läsriktning. Du avgör om motståndet ska läsas från vänster eller höger. Det finns alltid en tydlig ledtråd, och tipset kostar inget.</li>
@@ -344,15 +344,6 @@ th{color:var(--muted);font-weight:500}
     <button id="tReset">Lås alla nivåer igen</button>
   </div>
 </main>
-<div class="dlg" id="unlockDlg" hidden>
-  <div class="dlg-box" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
-    <p class="dlg-kicker">Upplåst!</p>
-    <h2 id="dlgTitle"></h2>
-    <p id="dlgText"></p>
-    <div class="dlg-btns"><button class="primary" id="dlgGo"></button><button class="ghost" id="dlgStay">Stanna kvar</button></div>
-  </div>
-</div>
-
 <script>
 const C = {
   black:{n:'Svart',hex:'#1b1b1b',d:0,m:1,tc:250},
@@ -414,6 +405,7 @@ const S = {level:'intro',right:0,total:0,streak:0,best:0,q:null,n:4,type:null,an
 try {
   S.best = +localStorage.getItem('fargkoden-best') || 0;
   const lv = localStorage.getItem('fargkoden-level');
+  S.firstVisit = !lv;
   if (lv && LV_KEYS.includes(lv)) S.level = lv;
   const md = localStorage.getItem('fargkoden-mode');
   if (md === 'play' || md === 'practice') S.mode = md;
@@ -425,11 +417,10 @@ S.hintsUsed = new Set();
 S.lvBest = {intro:0, easy:0, medium:0, tc:0, hard:0, ultra:0}; if (!['v','t','k','e','d','x'].includes(S.part)) S.part = 'v'; S.mode = S.mode || 'play';
 try { Object.assign(S.lvBest, JSON.parse(localStorage.getItem('fargkoden-stars') || '{}')); } catch(e) {}
 const UNLOCK_AT = 5;
-const LOCK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7.5" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
-const CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="var(--ok)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 // Nivåerna låses upp i tur och ordning: 5 rätt i rad (när man spelar) öppnar nästa. Eldprovet är alltid öppet.
 const ORDER = ['intro','easy','medium','tc','hard','ultra'];
-const lvName = lv => document.querySelector(`[data-level="${lv}"] span`).textContent;
+const LV_NAME = {intro:'Nykomling', easy:'Lärling', medium:'Gesäll', tc:'Mästare', hard:'Stormästare', ultra:'Eldprovet'};
+const lvName = lv => LV_NAME[lv];
 const unlocked = lv => { if (lv === 'ultra') return true; const i = ORDER.indexOf(lv); return i <= 0 || (S.lvBest[ORDER[i - 1]] || 0) >= UNLOCK_AT; };
 const cleared = lv => lv !== 'ultra' && (S.lvBest[lv] || 0) >= UNLOCK_AT;
 
@@ -474,20 +465,79 @@ function planQuestion(){
 }
 // Svår variant som gäller en del (Mästare: resistans, Öva på Stormästare), annars null
 const hardFocus = () => S.plan && S.plan.fmt === 'hard' && S.focus !== 'all' ? S.focus : null;
-function syncLocks(){
-  document.querySelectorAll('[data-level]').forEach(b => {
-    const lv = b.dataset.level, open = unlocked(lv);
-    b.disabled = !open;
-    b.title = open ? '' : `Klara 5 rätt i rad på ${lvName(ORDER[ORDER.indexOf(lv) - 1])} för att låsa upp`;
-    const ic = b.querySelector('.lvicon');
-    if (ic) ic.innerHTML = !open ? LOCK_SVG : cleared(lv) ? CHECK_SVG : '';
-    if (ic) ic.setAttribute('aria-label', !open ? 'låst' : cleared(lv) ? 'klarad' : '');
-  });
+// Nivåkartan: ett motstånd där varje färgband är en nivå och lågan längst ut är Eldprovet.
+// Bandet som visas just nu (kort eller fråga) har en pulserande ram. Låsta nivåer är utgråade med ett lås.
+const MAP_BANDS = {intro:['#7a4a21', 88], easy:['#c62828', 114], medium:['#ef7d1a', 140], tc:['#f2d024', 166], hard:['#2e8b3d', 202]};
+const MAP_LOCK = '<path d="M3 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="1" y="7" width="10" height="7" rx="1.5" fill="currentColor"/>';
+const MAP_FLAME = '<path fill="currentColor" d="M12 2c1 3.5 4.5 5.5 4.5 10a4.5 4.5 0 0 1-9 0c0-1.9.8-3.2 1.8-4.2.2 1.6 1 2.6 2.2 3 0-3.6-1.6-5.7.5-8.8z"/>';
+function renderMap(){
   if (!unlocked(S.level)) {
     S.level = [...ORDER].reverse().find(l => l !== 'ultra' && unlocked(l));
     save('fargkoden-level', S.level);
-    document.querySelectorAll('[data-level]').forEach(x => x.setAttribute('aria-pressed', x.dataset.level === S.level));
   }
+  const shown = S.view || S.level;
+  const bands = Object.entries(MAP_BANDS).map(([lv, [c, x]], i) => {
+    const open = unlocked(lv), done = cleared(lv), on = shown === lv;
+    return `<g data-level="${lv}" role="button" tabindex="0" class="${on ? 'on' : ''}" aria-label="${lvName(lv)}${!open ? ', låst' : done ? ', klar' : ''}"${on ? ' aria-current="true"' : ''}>
+      <rect class="hit" x="${x - 5}" y="2" width="26" height="80" rx="3" fill="transparent"/>
+      <rect x="${x}" y="10" width="16" height="44" fill="${c}" opacity="${open ? 1 : .3}"/>
+      ${open ? '' : `<svg class="lock" x="${x + 2}" y="25" width="12" height="14" viewBox="0 0 12 14" style="color:var(--ink)">${MAP_LOCK}</svg>`}
+      ${on ? `<rect class="pulse" x="${x - 5}" y="5" width="26" height="54" rx="3" fill="none" stroke="var(--ink)" stroke-width="2.5"/>` : ''}
+      <text x="${x + 8}" y="72" text-anchor="middle" class="${done ? 'done' : ''}">${done ? '✓' : i + 1}</text></g>`;
+  }).join('');
+  const bossOn = shown === 'ultra';
+  document.getElementById('map').innerHTML = `
+    <defs><radialGradient id="ember" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="#ff9a3c"/><stop offset=".6" stop-color="#d9381e"/><stop offset="1" stop-color="#5a1c10"/></radialGradient></defs>
+    <line x1="0" y1="32" x2="66" y2="32" stroke="var(--lead)" stroke-width="4"/>
+    <line x1="244" y1="32" x2="290" y2="32" stroke="var(--lead)" stroke-width="4" stroke-dasharray="6 5"/>
+    <rect x="66" y="10" width="178" height="44" rx="18" fill="var(--body)"/>
+    ${bands}
+    <g data-level="ultra" role="button" tabindex="0" class="boss${bossOn ? ' on' : ''}" aria-label="Eldprovet"${bossOn ? ' aria-current="true"' : ''}>
+      <circle class="hit" cx="308" cy="34" r="24" fill="transparent"/>
+      <circle cx="308" cy="32" r="19" fill="url(#ember)" class="glow"/>
+      <svg x="296" y="20" width="24" height="24" viewBox="0 0 24 24" style="color:#fff6e8">${MAP_FLAME}</svg>
+      ${bossOn ? '<circle class="pulse" cx="308" cy="32" r="23" fill="none" stroke="var(--ink)" stroke-width="2.5"/>' : ''}
+      <text x="308" y="72" text-anchor="middle">Eldprov</text></g>`;
+}
+// Nivåkortet: vad nivån lär ut, var man står och Spela. Visas där frågan brukar sitta.
+function levelCardHTML(lv, fresh){
+  if (lv === 'ultra') {
+    const going = S.level === 'ultra' && S.exam && !S.exam.done;
+    return `<div class="lvcard"><h2>Eldprovet</h2>
+      <p>20 frågor som testar allt: läsriktning, resistans, tolerans, temperaturkoefficient och E-serier. Inga tips, inga färdiga värden, och motstånden kan sitta vända.</p>
+      <p>Efter provet får du ett utlåtande om vilken nivå du behärskar. Eldprovet är alltid öppet, så du kan utmana bossen när du vill.</p>
+      <div class="lvbtns">${going ? '<button class="primary" id="play" data-go="ultra">Fortsätt eldprovet</button>' : '<button class="primary" id="examStart">Starta eldprovet</button>'}</div></div>`;
+  }
+  const i = ORDER.indexOf(lv), prev = ORDER[i - 1], nx = ORDER[i + 1], open = unlocked(lv);
+  const state = cleared(lv) ? `<p class="state done">Klar! Du har haft 5 rätt i rad här. Du kan spela nivån igen när du vill.</p>`
+    : !open ? `<p class="state">Låst. Klara ${lvName(prev)} först: 5 rätt i rad på ${SKILL_WORD[prev]}.</p>`
+    : nx === 'ultra' ? `<p class="state">Spela tills du känner dig redo för Eldprovet.</p>`
+    : `<p class="state">${S.level === lv && S.mode === 'play' ? `<b>${Math.min(S.streak, UNLOCK_AT)} av ${UNLOCK_AT}</b> i rad. ` : ''}5 rätt i rad på ${SKILL_WORD[lv]} låser upp ${lvName(nx)}.</p>`;
+  return `<div class="lvcard">${fresh ? '<span class="fresh">Ny nivå upplåst!</span>' : ''}<h2>${lvName(lv)}</h2><p>${LEARN[lv]}</p>${state}
+    <div class="lvbtns"><button class="primary" id="play" data-go="${lv}"${open ? '' : ' disabled'}>${open ? 'Spela' : 'Låst'}</button>
+    ${fresh ? `<button class="ghost" id="stay">Stanna på ${lvName(S.level)}</button>` : ''}</div></div>`;
+}
+function showLevelCard(lv, fresh = false){
+  S.view = lv;
+  const q = document.getElementById('q');
+  q.classList.toggle('bosscard', lv === 'ultra');
+  q.innerHTML = levelCardHTML(lv, fresh);
+  document.getElementById('more').hidden = true;
+  updateScore();
+  (document.getElementById('play') || document.getElementById('examStart'))?.focus({preventScroll:true});
+}
+// Byt nivå (Spela på ett nivåkort). Samma nivå: fortsätt där man var.
+function goLevel(lv){
+  S.view = null;
+  document.getElementById('q').classList.remove('bosscard');
+  if (lv === S.level && S.plan && S.type !== 'exam') { render(); return; }
+  if (lv !== S.level) { S.streak = 0; S.right = 0; S.total = 0; S.exam = null; S.level = lv; save('fargkoden-level', lv); }
+  next();
+}
+// Efter svar: har man låst upp en nivå visas dess kort, annars nästa fråga
+function advance(){
+  if (S.unlockedNow) { const lv = S.unlockedNow; S.unlockedNow = null; showLevelCard(lv, true); }
+  else next();
 }
 
 const rnd = a => a[Math.floor(Math.random()*a.length)];
@@ -724,20 +774,21 @@ function directionText(b, st){
 // Det som sviten räknar på varje nivå
 const SKILL_WORD = {intro:'läsriktning', easy:'resistans', medium:'tolerans', tc:'temperaturkoefficient', hard:'allt'};
 function updateScore(){
-  let tail = '';
-  if (S.level === 'ultra') {
-    tail = S.exam && !S.exam.done ? `<span>Fråga <b>${Math.min(S.exam.i + 1, EXAM_N)}</b> av <b>${EXAM_N}</b></span>`
-      : bestTitle() ? `<span>Bästa resultat: <b>${bestTitle()}</b></span>` : '';
-  } else if (S.mode !== 'play') tail = '<span>Nivåer låses upp när du spelar</span>';
+  let h = '';
+  if (S.level === 'ultra' && !S.view) {
+    h = S.exam && !S.exam.done ? `Eldprovet: fråga <b>${Math.min(S.exam.i + 1, EXAM_N)}</b> av <b>${EXAM_N}</b>`
+      : bestTitle() ? `Bästa resultat i Eldprovet: <b>${bestTitle()}</b>` : '';
+  } else if (S.mode !== 'play') h = 'Nivåer låses upp när du spelar';
   else {
-    const nx = ORDER[ORDER.indexOf(S.level) + 1];
-    tail = nx === 'ultra' ? '<span>Redo? Testa dig i Eldprovet</span>'
-      : !unlocked(nx) ? `<span><b>${Math.min(S.streak, UNLOCK_AT)}</b> av ${UNLOCK_AT} i rad på ${SKILL_WORD[S.level]} till ${lvName(nx)}</span>`
-      : `<span>${lvName(nx)} är upplåst</span>`;
+    const nx = ORDER[ORDER.indexOf(S.level) + 1], n = Math.min(S.streak, UNLOCK_AT);
+    const col = (MAP_BANDS[S.level] || [])[0];
+    const pips = `<span class="pips" aria-hidden="true">${[0,1,2,3,4].map(i => i < n ? `<b class="on" style="background:${col};border-color:${col}"></b>` : '<b></b>').join('')}</span>`;
+    h = nx === 'ultra' ? `${pips}<b>${n} av ${UNLOCK_AT}</b> i rad · redo? Utmana Eldprovet`
+      : unlocked(nx) ? `<b>Klar!</b> ${lvName(nx)} är upplåst. Tryck på bandet för att gå vidare.`
+      : `${pips}<b>${n} av ${UNLOCK_AT}</b> i rad på ${SKILL_WORD[S.level]} → ${lvName(nx)}`;
   }
-  document.getElementById('score').innerHTML =
-    (S.level === 'ultra' ? '' : `<span>Rätt <b>${S.right}</b> av <b>${S.total}</b></span><span>Svit <b>${S.streak}</b></span>`) + tail;
-  syncLocks();
+  document.getElementById('score').innerHTML = h;
+  renderMap();
 }
 
 // Eldprovet: 20 frågor, poäng per färdighet, utlåtande till sist
@@ -782,11 +833,9 @@ try { if (!localStorage.getItem('fargkoden-title-v2')) { localStorage.removeItem
 function showExamCard(){
   const q = document.getElementById('q');
   let h;
+  q.classList.toggle('bosscard', !S.exam);
   if (!S.exam) {
-    h = `<div class="exam"><h2>Eldprovet</h2>
-      <p>20 frågor som testar allt: läsriktning, resistans, tolerans, temperaturkoefficient och standardserier. Inga tips och inga färdiga värden, och motstånd kan sitta vända.</p>
-      <p>Du får en poäng för varje del du klarar. Till sist får du ett utlåtande om vilken nivå du behärskar, från Nykomling till Stormästare.</p>
-      <button class="primary" id="examStart">Starta eldprovet</button></div>`;
+    h = levelCardHTML('ultra');
   } else {
     const idx = verdict();
     try { if (idx > +(localStorage.getItem('fargkoden-title') ?? -1)) localStorage.setItem('fargkoden-title', idx); } catch(e) {}
@@ -802,13 +851,15 @@ function showExamCard(){
     h = `<div class="exam"><p class="prompt">Eldprovet är klart</p><p class="verdict">${title}</p>
       <ul class="skills">${skills}</ul><p>${tip}</p>
       <div class="exam-btns"><button class="primary" id="examStart">Gör om eldprovet</button>
-      ${goLv && unlocked(goLv) ? `<button class="primary" id="examGo" data-go="${goLv}">Öva som ${lvName(goLv)}</button>` : ''}</div></div>`;
+      ${goLv && unlocked(goLv) ? `<button class="primary" id="examGo" data-go="${goLv}">Spela som ${lvName(goLv)}</button>` : ''}</div></div>`;
   }
   q.innerHTML = h;
   document.getElementById('more').hidden = true;
   updateScore();
 }
 function next(){
+  S.view = null;
+  document.getElementById('q').classList.remove('bosscard');
   syncModes();
   syncPartAvail();
   if (S.level === 'ultra' && (!S.exam || S.exam.done)) { S.answered = true; S.type = 'exam'; showExamCard(); return; }
@@ -1001,7 +1052,6 @@ function finish(ok){
   if (S.level === 'ultra' && S.exam && !S.exam.done) recordExam(ok);
   render();
   document.getElementById('main').focus({preventScroll:true});
-  afterFeedback();
 }
 const fbClass = ok => !ok ? 'bad' : S.usedHint ? 'tip' : 'ok';
 const fbHead = ok => !ok ? 'Inte riktigt.' : S.usedHint ? 'Rätt, men med tips.' : 'Rätt!';
@@ -1059,28 +1109,12 @@ function moreHTML(){
 }
 // Upplåst-dialog som berättar vad nästa nivå lär ut
 const LEARN = {
+  intro: 'Som Nykomling lär du dig åt vilket håll ett motstånd ska läsas. Det breda toleransbandet och mellanrummet visar vägen, och här finns alltid en tydlig ledtråd.',
   easy: 'Som Lärling läser du av resistansen. De första banden är siffror och bandet efter är multiplikatorn, alltså hur många nollor som ska till. Du övar på siffrorna, multiplikatorn och hela värdet. Ibland kommer en riktningsfråga, men det är resistansfrågorna som för dig framåt.',
   medium: 'Som Gesäll lär du dig toleransen, det breda bandet i slutet som säger hur mycket värdet får avvika. Resistansen kommer som flerval, motstånden ser olika ut och kan sitta vända. Det är toleransfrågorna som räknas, men ett fel på vad som helst nollställer sviten.',
   tc: 'Som Mästare lär du dig det sjätte bandet: temperaturkoefficienten i ppm/K, som säger hur mycket resistansen ändras per grad. Toleransen kommer som flerval, och resistansen knappar du nu in själv eller bygger ur paletten.',
   hard: 'Som Stormästare kommer allt i svår variant: du knappar in hela värden och bygger motstånd band för band ur en blandad palett. Nytt är standardvärdena och E-serierna. Här räknas alla frågor. När du känner dig redo väntar Eldprovet.'
 };
-function afterFeedback(){
-  if (!S.unlockedNow) return;
-  const lv = S.unlockedNow, dlg = document.getElementById('unlockDlg');
-  document.getElementById('dlgTitle').textContent = `${lvName(lv)}`;
-  document.getElementById('dlgText').textContent = `5 rätt i rad! Du har låst upp nästa nivå. ${LEARN[lv]}`;
-  const go = document.getElementById('dlgGo');
-  go.textContent = `Gå till ${lvName(lv)}`;
-  go.onclick = () => { dlg.hidden = true; document.querySelector(`[data-level="${lv}"]`).click(); };
-  document.getElementById('dlgStay').onclick = () => { dlg.hidden = true; document.getElementById('main')?.focus({preventScroll:true}); };
-  dlg.hidden = false;
-  go.focus();
-}
-document.addEventListener('keydown', e => {
-  const dlg = document.getElementById('unlockDlg');
-  if (!dlg.hidden && e.key === 'Escape') { dlg.hidden = true; e.stopImmediatePropagation(); }
-}, true);
-
 function answerRead(){
   if (S.answered) return;
   const E = S.entry, ultra = S.level === 'ultra', six = S.n === 6;
@@ -1184,9 +1218,12 @@ document.getElementById('q').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn || btn.disabled) return;
   if (btn.id === 'examStart') {
+    if (S.level !== 'ultra') { S.streak = 0; S.right = 0; S.total = 0; S.level = 'ultra'; save('fargkoden-level', 'ultra'); }
     startExam();
-  } else if (btn.id === 'examGo') {
-    document.querySelector(`[data-level="${btn.dataset.go}"]`).click();
+  } else if (btn.id === 'play' || btn.id === 'examGo') {
+    goLevel(btn.dataset.go);
+  } else if (btn.id === 'stay') {
+    next();
   } else if (btn.dataset.sr) {
     if (S.answered) return;
     S.pickSr = btn.dataset.sr; finish(btn.dataset.sr === S.sr.answer);
@@ -1234,19 +1271,20 @@ document.getElementById('q').addEventListener('click', e => {
   } else if (btn.dataset.hint) {
     useHint(btn.dataset.hint);
   } else if (btn.id === 'main') {
-    if (S.answered) next(); else if (needsSubmit()) answerRead();
+    if (S.answered) advance(); else if (needsSubmit()) answerRead();
   }
 });
 
 document.addEventListener('keydown', e => {
-  const typing = S.type === 'read' && S.plan && S.plan.fmt === 'hard' && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
+  const typing = !S.view && S.type === 'read' && S.plan && S.plan.fmt === 'hard' && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
   if (typing) {
     const map = {Backspace:'⌫', ',':',', '.':',', k:'k', K:'k', m:'M', M:'M', Tab:'next'};
     const k = /^\d$/.test(e.key) ? e.key : map[e.key];
     if (k && (S.level === 'ultra' || (!['k','M','next'].includes(k) && entryFields().includes('v')))) { e.preventDefault(); keyPress(k); return; }
   }
   if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return;
-  if (S.answered) { next(); return; }
+  if (S.view) return;
+  if (S.answered) { advance(); return; }
   if (needsSubmit() && entryReady()) answerRead();
 });
 
@@ -1260,7 +1298,12 @@ function bindSeg(attr, prop, store){
   }));
   sync();
 }
-bindSeg('level', 'level', 'fargkoden-level');
+const mapEl = document.getElementById('map');
+mapEl.addEventListener('click', e => { const g = e.target.closest('[data-level]'); if (g) showLevelCard(g.dataset.level); });
+mapEl.addEventListener('keydown', e => {
+  const g = e.target.closest('[data-level]');
+  if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); showLevelCard(g.dataset.level); }
+});
 // Testraden visas bara med ?test=true i adressen
 if (new URLSearchParams(location.search).get('test') === 'true') document.querySelector('.testbar').hidden = false;
 document.getElementById('tGive').addEventListener('click', () => {
@@ -1272,7 +1315,6 @@ document.getElementById('tReset').addEventListener('click', () => {
   ORDER.forEach(lv => S.lvBest[lv] = 0);
   save('fargkoden-stars', JSON.stringify(S.lvBest));
   S.streak = 0; S.right = 0; S.total = 0; S.exam = null; S.level = 'intro'; save('fargkoden-level', 'intro');
-  document.querySelectorAll('[data-level]').forEach(x => x.setAttribute('aria-pressed', x.dataset.level === 'intro'));
   next();
 });
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
@@ -1752,6 +1794,8 @@ document.getElementById('eSeg').addEventListener('click', e => {
 renderE();
 
 next();
+// Ny spelare: börja med Nykomlings kort
+if (S.firstVisit) showLevelCard('intro');
 </script>
 </body>
 </html>
