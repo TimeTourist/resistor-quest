@@ -90,6 +90,15 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .primary{margin-top:16px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;padding:12px 22px;cursor:pointer}
 .primary:disabled{opacity:.45;cursor:default}
 .hint{color:var(--bad);font-size:.95rem;margin:8px 0 0}
+.lesson{margin:14px 0 0;border-radius:10px;padding:10px 14px;line-height:1.45}
+.lesson.ok{background:var(--ok-bg)}
+.lesson.bad{background:var(--bad-bg)}
+.lesson.tip{background:var(--tip-bg)}
+.more{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+.more[hidden]{display:none}
+.more h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.5rem;line-height:1.1;margin:0 0 8px}
+.more p{margin:0 0 6px}
+.opt.chosen{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
 .slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:8px;margin-top:8px}
 .slot{border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:8px 4px;font:inherit;font-size:.8rem;line-height:1.2;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
 .slot[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
@@ -99,18 +108,9 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .pc{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px;font:inherit;font-size:.92rem;cursor:pointer;text-align:left}
 .pc small{color:var(--muted);margin-left:auto}
 .pc:hover:not(:disabled){border-color:var(--accent)}
-.feedback{margin-top:18px;border-radius:10px;padding:14px 16px}
-.feedback.ok{background:var(--ok-bg)}
-.feedback.bad{background:var(--bad-bg)}
-.feedback.tip{background:var(--tip-bg)}
-.cost{font-weight:600}
-.parts{list-style:none;padding:0;margin:8px 0 10px;display:grid;gap:6px}
-.parts li{display:flex;gap:8px;align-items:baseline;line-height:1.4}
 .pill{flex:none;font-size:.75rem;font-weight:700;padding:1px 8px;border-radius:999px;color:#fff;min-width:3.2em;text-align:center}
 .p-ok{background:var(--ok)}
 .p-bad{background:var(--bad)}
-.feedback h2{margin:0 0 4px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.7rem;line-height:1.1}
-.feedback p{margin:0 0 6px}
 .calc{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.3rem}
 .chips{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 0;padding:0;list-style:none;font-size:.95rem}
 .dir{margin-top:10px!important;font-size:.95rem;color:var(--muted)}
@@ -207,7 +207,7 @@ th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-
 th{color:var(--muted);font-weight:500}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){
-  .feedback{animation:pop .18s ease-out}
+  .lesson{animation:pop .18s ease-out}
   @keyframes pop{from{transform:translateY(4px);opacity:0}}
 }
 </style>
@@ -250,6 +250,7 @@ th{color:var(--muted);font-weight:500}
 
   <p class="score" id="score"></p>
   <section class="card" id="q" aria-live="polite"></section>
+  <section class="more" id="more" aria-label="Allt om motståndet" hidden></section>
 
   <details>
     <summary>Om nivåerna</summary>
@@ -787,6 +788,7 @@ function showExamCard(){
       ${goLv && unlocked(goLv) ? `<button class="primary" id="examGo" data-go="${goLv}">Öva som ${lvName(goLv)}</button>` : ''}</div></div>`;
   }
   q.innerHTML = h;
+  document.getElementById('more').hidden = true;
   updateScore();
 }
 function next(){
@@ -799,6 +801,7 @@ function next(){
   const n = S.examItem && S.examItem.n ? S.examItem.n : S.focus === 'k' ? 6 : pickN(), L = LV[S.level];
   S.n = n; S.q = genBands(n);
   S.answered = false; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.ambig = false; S.bflip = false;
+  S.bpick = null; S.pickDir = null; S.pickSr = null; S.ok = null;
   S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.palOrder = {}; S.palAll = null; S.entry = newEntry();
   S.vText = valueNotation(valueOf(S.q));
   S.flipQ = flipOK() && S.type !== 'dir' && Math.random() < 0.5;
@@ -838,6 +841,9 @@ function next(){
     S.style = L.varied ? variedStyle(S.q, fl) : {...stdStyle(n), flip: fl};
   }
   render();
+  // Ingen automatisk skroll efter svar. Har man skrollat ner till Allt om motståndet tas kortet tillbaka i bild.
+  const card = document.getElementById('q');
+  if (card.getBoundingClientRect().top < 0 && card.scrollIntoView) card.scrollIntoView({block:'start', behavior: reduceMotion() ? 'auto' : 'smooth'});
 }
 
 // Två lägen: Spela (allt blandat, låser upp nivåer) och Öva (en del i taget).
@@ -877,6 +883,22 @@ function slotKeys(n, i){
   return r === 'digit' ? (i === 0 ? BAND1 : DIG) : r === 'mult' ? MO : r === 'tol' ? TOL : TCS;
 }
 
+// Huvudknappen: samma plats i varje fråga. Svara där svaret måste bekräftas, annars Nästa (grå tills man svarat).
+const needsSubmit = () => S.type === 'read' && S.plan.fmt === 'hard';
+function entryReady(){
+  const E = S.entry;
+  if (S.level === 'ultra') return E.v !== '' && E.t !== '' && (S.n !== 6 || E.k !== '');
+  const hf = hardFocus();
+  if (hf === 't') return E.tol != null;
+  if (hf === 'k') return E.tc != null;
+  const v = E.v !== '' && E.mult != null;
+  return hf === 'v' ? v : v && E.tol != null && (S.n !== 6 || E.tc != null);
+}
+function mainBtnHTML(){
+  if (S.answered) return `<button class="primary" id="main">${S.level === 'ultra' && S.exam && S.exam.done ? 'Se resultatet' : 'Nästa'}</button>`;
+  if (needsSubmit()) return `<button class="primary" id="main"${entryReady() ? '' : ' disabled'}>Svara</button>`;
+  return '<button class="primary" id="main" disabled>Nästa</button>';
+}
 function render(){
   updateScore();
   const q = document.getElementById('q'), n = S.n;
@@ -886,10 +908,12 @@ function render(){
     const full = S.level === 'hard' ? `<p class="big">${fmtVal(S.sr.v)} ${fmtTol(bandsTol(S.sr.bands))}</p>` : '';
     h += `<p class="prompt">Vilken E-serie hör motståndet hemma i?</p>${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
 ${hintsHTML()}
-      <div class="opts">${SER_OPTS.map(k => `<button class="opt" data-sr="${k}">${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
+      <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
+    const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left';
+    const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
     h += `<p class="prompt">Från vilket håll ska motståndet läsas?</p><div class="res">${svg(S.q,{style:S.style})}</div>${hintsHTML()}
-      <div class="opts"><button class="opt" data-dir="left">Från vänster</button><button class="opt" data-dir="right">Från höger</button>${S.level === 'ultra' ? '<button class="opt wide" data-dir="none">Går ej att avgöra utan multimeter</button>' : ''}</div>`;
+      <div class="opts">${dBtn('left', 'Från vänster')}${dBtn('right', 'Från höger')}${S.level === 'ultra' ? dBtn('none', 'Går ej att avgöra utan multimeter', ' wide') : ''}</div>`;
   } else if (S.type === 'read') {
     const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
       d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?', all:'Vilket värde har motståndet?'}[S.focus];
@@ -914,17 +938,19 @@ ${hintsHTML()}
       h += `<div class="slots">${labels.map((l,i) => {
         const k = S.build[i];
         const locked = S.askSlots && !S.askSlots.includes(i);
-        return `<button class="slot" data-slot="${i}" aria-pressed="${S.slot===i}"${locked ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}<span>${k?C[k].n:'Välj'}</span></button>`;
+        return `<button class="slot" data-slot="${i}" aria-pressed="${S.slot===i}"${locked || S.answered ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}<span>${k?C[k].n:'Välj'}</span></button>`;
       }).join('')}</div>`;
       // Stormästare och Eldprovet: alla tolv färger i en blandad ordning som ligger still under hela frågan.
       // Ingen hjälp med vilka färger som passar bandet. Svaret rättas när sista bandet är valt.
       const keys = S.palAll ||= shuffle(DIG.concat(['gold','silver']));
       h += `<div class="palette">${keys.map(k =>
-        `<button class="pc" data-color="${k}"><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
+        `<button class="pc" data-color="${k}"${disAttr()}><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
     }
   }
-  h += `<div id="fb"></div>`;
+  h += lessonHTML() + mainBtnHTML();
   q.innerHTML = h;
+  const more = document.getElementById('more');
+  more.innerHTML = moreHTML(); more.hidden = !more.innerHTML;
 }
 
 function parseVal(s){
@@ -941,7 +967,7 @@ const parseTc = s => parseFloat(s.toLowerCase().replace(/ppm|\/k|\s/g,'').replac
 const close = (a,b) => Math.abs(a-b) < 1e-6 * Math.max(1, Math.abs(b));
 
 function finish(ok){
-  S.answered = true; S.total++;
+  S.answered = true; S.ok = ok; S.total++;
   if (ok) S.right++;
   S.streak = nextStreak(S.streak, ok, S.usedHint, S.plan.counts);
   if (S.streak > S.best) { S.best = S.streak; save('fargkoden-best', S.best); }
@@ -953,45 +979,56 @@ function finish(ok){
     if (prevLv < UNLOCK_AT && S.streak >= UNLOCK_AT && nx && nx !== 'ultra') S.unlockedNow = nx;
   }
   if (S.level === 'ultra' && S.exam && !S.exam.done) recordExam(ok);
-  updateScore();
-  const q = document.getElementById('q'), L = LV[S.level];
-  q.querySelectorAll('button, input').forEach(el => el.disabled = true);
-  if (S.type === 'series') { srFeedback(ok); afterFeedback(); return; }
-  const b = S.q, n = b.length, k = nd(b), v = valueOf(b), t = tolOf(b), tc = tcOf(b);
-  const chips = b.map((c,i) => `<li><span class="sw" style="${swStyle(c)}"></span>${C[c].n} ${bandDetail(c, roleOf(n,i))}</li>`).join('');
-  const digits = b.slice(0, k).map(c => C[c].d).join('');
-  document.getElementById('fb').innerHTML = `<div class="feedback ${fbClass(ok)}" role="status">
-    <h2>${fbHead(ok)}</h2>
-    ${S.type === 'dir' && S.ambig ? `<p>Det går inte att avgöra utan multimeter. Motståndet kan vara ${fmtAll(b)} eller ${fmtAll(b.slice().reverse())}.</p>`
-      : S.type === 'dir' ? `<p>Det läses från ${S.style.flip ? 'höger' : 'vänster'} och är ${fmtAll(b)}.</p>`
-      : ((S.type === 'read' || S.type === 'build') && S.level === 'easy') ? easyFull(ok, b)
-      : ok ? '' : `<p>Rätt svar är ${fmtAll(b)}.</p>`}
-    ${!ok && S.parts ? partsHTML(S.parts) : ''}
-    ${S.level === 'tc' && S.n === 6 ? `<p class="dir">${tcFact(b)}</p>` : ''}
-    ${S.type === 'build' && S.bflip && !ok ? (S.build.join() === b.join()
-      ? '<p><b>Rätt färger, men åt fel håll.</b> Motståndet satt vänt: det breda toleransbandet satt till vänster, så Band 1 var slutet. Du byggde det som om det satt rättvänt.</p>'
-      : '<p>Motståndet satt vänt: det breda toleransbandet satt till vänster, så Band 1 var slutet.</p>') : ''}
-    ${(!ok && S.type==='build' && S.plan.fmt === 'hard' && bandsValid(readBuild())) ? `<p>Ditt motstånd är ogiltigt: ${bandsValid(readBuild())}.</p>` : ''}
-    ${(!ok && S.type==='build') ? `<div class="res">${svg(b,{label:'Rätt motstånd: '+colorNames(b)})}</div>` : ''}
-    ${(S.style.flip && S.type !== 'build' && !S.ambig) ? `<p>Rättvänt ser det ut så här:</p><div class="res">${svg(b,{style:{...S.style,flip:false},label:'Rättvänt motstånd: '+colorNames(b)})}</div>` : ''}
-    ${S.ambig ? meterFB(v, t, `Med en multimeter avgör du det. Visar den något i stil med det här är det ${fmtAll(b)}:`) : meterFB(v, t)}
-    ${tipCost(ok)}
-    ${S.ambig ? '' : `<p class="calc">${digits} ${fmtMult(C[b[k]].m)} = ${fmtVal(v)}, ${fmtTol(t)}${tc != null ? ', ' + fmtTc(tc) : ''}</p>
-    <ul class="chips">${chips}</ul>`}
-    ${S.type !== 'series' && !S.ambig ? `<p class="dir">${stdInfo(b)}</p>` : ''}
-    ${((L.varied && S.type==='read') || S.type==='dir') ? `<p class="dir">${directionText(b, S.style)}</p>` : ''}
-    <button class="primary" id="next">Nästa fråga</button></div>`;
-  showFeedback();
+  render();
+  document.getElementById('main').focus({preventScroll:true});
   afterFeedback();
 }
 const fbClass = ok => !ok ? 'bad' : S.usedHint ? 'tip' : 'ok';
-const fbHead = ok => !ok ? 'Inte riktigt' : S.usedHint ? 'Rätt, men med tips' : 'Rätt!';
-const tipCost = ok => ok && S.usedHint ? `<p class="cost">Tipset kostade: sviten ökar inte och står kvar på ${S.streak}.</p>` : '';
-function showFeedback(){
-  const box = document.querySelector('#fb .feedback');
-  if (!box) return;
-  if (box.scrollIntoView) box.scrollIntoView({block: box.offsetHeight > innerHeight * 0.9 ? 'start' : 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth'});
-  document.getElementById('next').focus({preventScroll:true});
+const fbHead = ok => !ok ? 'Inte riktigt.' : S.usedHint ? 'Rätt, men med tips.' : 'Rätt!';
+// En rad om det frågan lär ut
+function lessonText(){
+  const b = S.q, k = nd(b), name = c => C[c].n.toLowerCase();
+  if (S.type === 'dir') return directionText(b, S.style);
+  if (S.type === 'series') return seriesWhy();
+  const t = {
+    v: () => `${digitStr(b)} ${fmtMult(C[b[k]].m)} = ${fmtVal(valueOf(b))}.`,
+    d: () => `Sifferbanden ${b.slice(0, k).map(name).join('–')} ger ${digitStr(b).split('').join(' ')}.`,
+    x: () => `Multiplikatorbandet är ${name(b[k])}, alltså ${fmtMult(C[b[k]].m)}.`,
+    t: () => `Toleransbandet är ${name(b[k+1])}, alltså ${fmtTol(tolOf(b))}.`,
+    k: () => `Sjätte bandet är ${name(b[5])}, alltså ${fmtTc(tcOf(b))}.`,
+    all: () => `${digitStr(b)} ${fmtMult(C[b[k]].m)} = ${fmtAll(b)}.`
+  }[S.focus]();
+  const flipped = (S.type === 'read' && S.style.flip) || S.bflip ? ' Motståndet satt vänt, så det läses från höger.' : '';
+  const turned = S.bflip && !S.ok && S.build.join() === b.join() ? ' Du hade rätt färger men byggde åt fel håll: det breda toleransbandet satt till vänster, så Band 1 var slutet.' : '';
+  return t + flipped + turned;
+}
+function lessonHTML(){
+  if (!S.answered || S.level === 'ultra') return '';
+  const cost = S.ok && S.usedHint ? ` Tipset kostade: sviten står kvar på ${S.streak}.` : '';
+  return `<p class="lesson ${fbClass(S.ok)}" role="status"><b>${fbHead(S.ok)}</b> ${lessonText()}${cost}</p>`;
+}
+// Allt om motståndet, under kortet
+function moreHTML(){
+  if (!S.answered || S.level === 'ultra') return '';
+  let h = '<h2>Allt om motståndet</h2>';
+  if (S.type === 'series') {
+    const r = S.sr, tol = bandsTol(r.bands);
+    return h + `<div class="res">${svg(r.bands, {style: styleFor(r.bands), label: 'Motstånd: ' + colorNames(r.bands)})}</div>
+      <p>Motståndet är ${colorNames(r.bands)}, alltså ${fmtVal(r.v)} ${fmtTol(tol)}${r.bands.length === 3 ? ' (tre band, inget toleransband)' : ''}.</p>
+      ${meterFB(r.v, tol)}
+      <p class="dir">Toleransen avgör serien: ±20 % E6, ±10 % E12, ±5 % E24, ±2 % E48, ±1 % E96. Sedan kollar du om värdet finns i den serien.</p>`;
+  }
+  const b = S.q, n = b.length, k = nd(b), v = valueOf(b), t = tolOf(b), tc = tcOf(b);
+  const chips = b.map((c,i) => `<li><span class="sw" style="${swStyle(c)}"></span>${C[c].n} ${bandDetail(c, roleOf(n,i))}</li>`).join('');
+  const st = S.type === 'build' ? stdStyle(n) : {...S.style, flip:false};
+  h += `<div class="res">${svg(b, {style: st, label: 'Motståndet rättvänt: ' + colorNames(b)})}</div>
+    <p class="calc">${digitStr(b)} ${fmtMult(C[b[k]].m)} = ${fmtVal(v)}, ${fmtTol(t)}${tc != null ? ', ' + fmtTc(tc) : ''}</p>
+    <ul class="chips">${chips}</ul>
+    ${meterFB(v, t)}
+    <p class="dir">${stdInfo(b)}</p>`;
+  if (n === 6) h += `<p class="dir">${tcFact(b)}</p>`;
+  if (S.type === 'read' && LV[S.level].varied) h += `<p class="dir">${directionText(b, S.style)}</p>`;
+  return h;
 }
 // Upplåst-dialog som berättar vad nästa nivå lär ut
 const LEARN = {
@@ -1001,7 +1038,6 @@ const LEARN = {
   hard: 'Som Stormästare svarar du på allt på en gång. Du knappar in värden, bygger motstånd band för band ur en blandad palett och lär dig standardvärdena och E-serierna. Ungefär vart tionde motstånd är inte standard. När du känner dig redo väntar Eldprovet.'
 };
 function afterFeedback(){
-  if (S.level === 'ultra' && S.exam && S.exam.done) document.getElementById('next').textContent = 'Se resultatet';
   if (!S.unlockedNow) return;
   const lv = S.unlockedNow, dlg = document.getElementById('unlockDlg');
   document.getElementById('dlgTitle').textContent = `${lvName(lv)}`;
@@ -1009,7 +1045,7 @@ function afterFeedback(){
   const go = document.getElementById('dlgGo');
   go.textContent = `Gå till ${lvName(lv)}`;
   go.onclick = () => { dlg.hidden = true; document.querySelector(`[data-level="${lv}"]`).click(); };
-  document.getElementById('dlgStay').onclick = () => { dlg.hidden = true; document.getElementById('next')?.focus({preventScroll:true}); };
+  document.getElementById('dlgStay').onclick = () => { dlg.hidden = true; document.getElementById('main')?.focus({preventScroll:true}); };
   dlg.hidden = false;
   go.focus();
 }
@@ -1070,10 +1106,10 @@ function entryHTML(){
   const E = S.entry, ultra = S.level === 'ultra', six = S.n === 6;
   const caret = f => (ultra ? E.field === f : f === 'v') ? '<span class="caret"></span>' : '';
   const keys = ['7','8','9','4','5','6','1','2','3',',','0','⌫'];
-  const keyBtn = (k, cls = '', dis = false) => `<button class="key ${cls}" data-key="${k}"${dis ? ' disabled' : ''} aria-label="${k === '⌫' ? 'Radera' : k === 'next' ? 'Nästa fält' : k}">${k === 'next' ? 'Nästa' : k}</button>`;
+  const keyBtn = (k, cls = '', dis = false) => `<button class="key ${cls}" data-key="${k}"${dis || S.answered ? ' disabled' : ''} aria-label="${k === '⌫' ? 'Radera' : k === 'next' ? 'Nästa fält' : k}">${k === 'next' ? 'Nästa' : k}</button>`;
   let h = '<div class="entry">';
   if (ultra) {
-    const box = (f, lab, pre, val, unit) => `<button class="ebox${E.field === f ? ' active' : ''}" data-field="${f}"><span class="elab">${lab}</span><span class="eval">${pre}${val}${caret(f)}<span class="eunit">${unit}</span></span></button>`;
+    const box = (f, lab, pre, val, unit) => `<button class="ebox${E.field === f ? ' active' : ''}" data-field="${f}"${disAttr()}><span class="elab">${lab}</span><span class="eval">${pre}${val}${caret(f)}<span class="eunit">${unit}</span></span></button>`;
     const vTxt = /[kM]$/.test(E.v) ? E.v.slice(0, -1) + ' ' + E.v.slice(-1) : E.v;
     const vUnit = /[kM]$/.test(E.v) ? 'Ω' : ' Ω';
     h += `<div class="eboxes">${box('v', 'Resistans', '', vTxt, vUnit)}${box('t', 'Tolerans', '±', E.t, ' %')}${six ? box('k', 'Temp.koeff.', '', E.k, ' ppm/K') : ''}</div>`;
@@ -1084,13 +1120,13 @@ function entryHTML(){
     if (!hardFocus() || hardFocus() === 'v') h += `<div class="ebox active solo"><span class="elab">Siffror</span><span class="eval">${E.v}${caret('v')}<span class="emul">${E.mult != null ? fmtMult(E.mult) : '× ?'}</span></span><span class="epre">${pre}</span></div>`;
     if (!hardFocus() || hardFocus() === 'v') h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}</div>`;
     const chips = (attr, vals, cur, lab) => `<div><p class="grp-lbl">${lab}</p><div class="chiprow">${vals.map(v =>
-      `<button class="chip" data-${attr}="${v}" aria-pressed="${cur === v}">${attr === 'mult' ? fmtMult(v) : attr === 'tol' ? fmtTol(v) : fmtTc(v)}</button>`).join('')}</div></div>`;
+      `<button class="chip" data-${attr}="${v}" aria-pressed="${cur === v}"${disAttr()}>${attr === 'mult' ? fmtMult(v) : attr === 'tol' ? fmtTol(v) : fmtTc(v)}</button>`).join('')}</div></div>`;
     const xf = hardFocus();
     if (!xf || xf === 'v') h += chips('mult', MULTS, E.mult, 'Multiplikator');
     if (!xf || xf === 't') h += chips('tol', TOL_VALS, E.tol, 'Tolerans');
     if ((!xf && six) || xf === 'k') h += chips('tc', TC_VALS, E.tc, 'Temperaturkoefficient');
   }
-  h += '</div><p class="hint" id="hint" hidden></p><button class="primary" id="submit">Svara</button>';
+  h += '</div><p class="hint" id="hint" hidden></p>';
   return h;
 }
 function keyPress(k){
@@ -1117,16 +1153,11 @@ document.getElementById('q').addEventListener('click', e => {
     document.querySelector(`[data-level="${btn.dataset.go}"]`).click();
   } else if (btn.dataset.sr) {
     if (S.answered) return;
-    const right = S.sr.answer, ok = btn.dataset.sr === right;
-    document.querySelector(`[data-sr="${right}"]`).classList.add('ok');
-    if (!ok) btn.classList.add('bad');
-    finish(ok);
+    S.pickSr = btn.dataset.sr; finish(btn.dataset.sr === S.sr.answer);
   } else if (btn.dataset.dir) {
     if (S.answered) return;
-    const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left', ok = btn.dataset.dir === right;
-    document.querySelector(`[data-dir="${right}"]`).classList.add('ok');
-    if (!ok) btn.classList.add('bad');
-    finish(ok);
+    const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left';
+    S.pickDir = btn.dataset.dir; finish(btn.dataset.dir === right);
   } else if (btn.dataset.slot != null) {
     S.slot = +btn.dataset.slot; render();
   } else if (btn.dataset.color) {
@@ -1166,10 +1197,8 @@ document.getElementById('q').addEventListener('click', e => {
     S.entry.tc = +btn.dataset.tc; render();
   } else if (btn.dataset.hint) {
     useHint(btn.dataset.hint);
-  } else if (btn.id === 'submit') {
-    answerRead();
-  } else if (btn.id === 'next') {
-    next();
+  } else if (btn.id === 'main') {
+    if (S.answered) next(); else if (needsSubmit()) answerRead();
   }
 });
 
@@ -1182,7 +1211,7 @@ document.addEventListener('keydown', e => {
   }
   if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return;
   if (S.answered) { next(); return; }
-  if (S.type === 'read' && S.plan.fmt === 'hard') answerRead();
+  if (needsSubmit() && entryReady()) answerRead();
 });
 
 function bindSeg(attr, prop, store){
@@ -1251,12 +1280,6 @@ function valueDistractors(b){
   while (out.length < 3) { const x = genBands(b.length); if (!seen.has(valueOf(x))) { seen.add(valueOf(x)); out.push(x); } }
   return out;
 }
-function easyFull(ok, b){
-  const t = tolOf(b), tc = tcOf(b);
-  const rest = `toleransen ${fmtTol(t)}${tc != null ? ` och temperaturkoefficienten ${fmtTc(tc)}` : ''}`;
-  return ok ? `<p>Motståndet är ${fmtVal(valueOf(b))} med ${rest}.</p>`
-            : `<p>Rätt svar är ${fmtVal(valueOf(b))}, med ${rest}.</p>`;
-}
 
 // Lärling, Gesäll och Mästare, Läs av: flerval för den del frågan gäller
 function pickWrong(pool, right, n){
@@ -1298,27 +1321,24 @@ function multChoices(b){
 }
 const mcFmt = (g, x) => g === 'v' ? fmtVal(x) : g === 't' ? fmtTol(x) : g === 'd' ? x.split('').join(' ') : g === 'x' ? fmtMult(x) : fmtTc(x);
 const mcEq = (a, b) => typeof a === 'string' ? a === b : close(a, b);
+// Facit i knapparna: rätt svar grönt, fel val rött. I Eldprovet markeras bara valet.
+function markCls(isRight, isPicked){
+  if (!S.answered) return '';
+  if (S.level === 'ultra') return isPicked ? ' chosen' : '';
+  return isRight ? ' ok' : isPicked ? ' bad' : '';
+}
+const disAttr = () => S.answered ? ' disabled' : '';
 function mcHTML(){
   if (!S.mc) { S.mc = buildMC(); S.pick = {v:null, t:null, k:null, d:null, x:null}; }
-  const groups = [S.focus];
-  return groups.map(g => `<div class="mcgroup"><p class="grp-lbl">${MC_LABELS[g]}</p><div class="opts mc">${S.mc[g].map((x,i) =>
-    `<button class="opt" data-pick="${g}:${i}" aria-pressed="${S.pick[g] === i}">${mcFmt(g, x)}</button>`).join('')}</div></div>`).join('');
+  const g = S.focus, right = S.mc[g].findIndex(x => mcEq(x, mcTruth(g)));
+  return `<div class="mcgroup"><div class="opts mc">${S.mc[g].map((x,i) =>
+    `<button class="opt${markCls(i === right, S.pick[g] === i)}" data-pick="${g}:${i}"${disAttr()}>${mcFmt(g, x)}</button>`).join('')}</div></div>`;
 }
 function mcTruth(g){ return g === 'v' ? valueOf(S.q) : g === 't' ? tolOf(S.q) : g === 'd' ? digitStr(S.q) : g === 'x' ? C[S.q[nd(S.q)]].m : tcOf(S.q); }
 function answerMC(){
   if (S.answered) return;
-  const groups = [S.focus];
-  const missing = groups.find(g => S.pick[g] == null);
-  if (missing) { const h = document.getElementById('hint'); if (!h) return; h.textContent = `Välj ${MC_LABELS[missing].toLowerCase()} också.`; h.hidden = false; return; }
-  let ok = true;
-  S.parts = S.focus === 'v' ? compareValues(S.mc.v[S.pick.v], valueOf(S.q)) : null;
-  groups.forEach(g => {
-    const right = S.mc[g].findIndex(x => mcEq(x, mcTruth(g)));
-    if (S.pick[g] !== right) ok = false;
-    document.querySelector(`[data-pick="${g}:${right}"]`).classList.add('ok');
-    if (S.pick[g] !== right) document.querySelector(`[data-pick="${g}:${S.pick[g]}"]`).classList.add('bad');
-  });
-  finish(ok);
+  const g = S.focus;
+  finish(mcEq(S.mc[g][S.pick[g]], mcTruth(g)));
 }
 
 // Lärling, Gesäll och Mästare, Bygg: välj banden för den del frågan gäller
@@ -1348,78 +1368,35 @@ function bmcHTML(){
       : S.focus === 'k' ? {k: tcChoices()} : S.focus === 'd' ? {d: shuffle([S.q.slice(0, k), ...digitDistractors(S.q)])}
       : S.focus === 'x' ? {x: multChoices(S.q)} : {t: tolChoices()};
   }
-  const blank0 = n => Array(n).fill(null);
-  if (S.focus === 'd') {
-    let h = `<div class="res">${svg(blank0(k).concat(S.q.slice(k)), {label:'Motståndet med sifferbanden tomma', mark:S.mark})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Siffror</p><div class="opts rgrid">${S.bopts.d.map((o,i) =>
-      `<button class="opt r" data-vpick="${i}">${svg(o.concat(blank0(S.n - k)), {label:'Sifferband: ' + colorNames(o)})}</button>`).join('')}</div></div>`;
-    return h;
-  }
-  if (S.focus === 'x') {
-    let h = `<div class="res">${svg(S.q.slice(0, k).concat([null], S.q.slice(k + 1)), {label:'Motståndet med multiplikatorbandet tomt', mark:S.mark})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Multiplikator</p><div class="opts mc">${S.bopts.x.map(c =>
-      `<button class="opt bc" data-tpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
-    return h;
-  }
-  if (S.focus === 'k') {
-    let h = `<div class="res">${svg(S.q.slice(0, 5).concat([null]), {label:'Motståndet med sjätte bandet tomt', mark:S.mark})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Temperaturkoefficient</p><div class="opts mc">${S.bopts.k.map(c =>
-      `<button class="opt bc" data-kpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
-    return h;
-  }
+  const right = bmcRight(), st = {...stdStyle(S.n), flip: S.flipQ};
+  const imgBtn = (o, i, lab) => `<button class="opt r${markCls(i === right, S.bpick === i)}" data-vpick="${i}"${disAttr()}>${svg(o, {style: st, label: lab})}</button>`;
+  const colBtn = (c, attr) => `<button class="opt bc${markCls(c === right, S.bpick === c)}" data-${attr}="${c}"${disAttr()}><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`;
   const blank = n => Array(n).fill(null);
+  const target = (b, label) => `<div class="res">${svg(b, {style: st, label, mark: S.mark})}</div>`;
+  if (S.focus === 'd') return target(blank(k).concat(S.q.slice(k)), 'Motståndet med sifferbanden tomma')
+    + `<div class="mcgroup"><div class="opts rgrid">${S.bopts.d.map((o,i) => imgBtn(o.concat(blank(S.n - k)), i, 'Sifferband: ' + colorNames(o))).join('')}</div></div>`;
+  if (S.focus === 'x') return target(S.q.slice(0, k).concat([null], S.q.slice(k + 1)), 'Motståndet med multiplikatorbandet tomt')
+    + `<div class="mcgroup"><div class="opts mc">${S.bopts.x.map(c => colBtn(c, 'tpick')).join('')}</div></div>`;
+  if (S.focus === 'k') return target(S.q.slice(0, 5).concat([null]), 'Motståndet med sjätte bandet tomt')
+    + `<div class="mcgroup"><div class="opts mc">${S.bopts.k.map(c => colBtn(c, 'kpick')).join('')}</div></div>`;
   const tail = S.n === 6 ? [S.q[5]] : [];
   let h;
   if (S.focus === 'v') {
     // Toleransen (och TK) är redan ifyllda, välj resistansbanden
-    h = `<div class="res">${svg(blank(k+1).concat([S.q[k+1]], tail), {label:'Motståndet med resistansbanden tomma'})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Resistans</p><div class="opts rgrid">${S.bopts.v.map((o,i) =>
-      `<button class="opt r" data-vpick="${i}">${svg(o.concat(blank(S.n - k - 1)), {label:'Resistansband: ' + colorNames(o)})}</button>`).join('')}</div></div>`;
+    h = target(blank(k+1).concat([S.q[k+1]], tail), 'Motståndet med resistansbanden tomma')
+      + `<div class="mcgroup"><div class="opts rgrid">${S.bopts.v.map((o,i) => imgBtn(o.concat(blank(S.n - k - 1)), i, 'Resistansband: ' + colorNames(o))).join('')}</div></div>`;
   } else {
     // Resistansbanden är redan ifyllda, välj toleransbandet
-    h = `<div class="res">${svg(S.q.slice(0, k+1).concat([null], tail), {label:'Motståndet med toleransbandet tomt', mark:S.mark})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Tolerans</p><div class="opts mc">${S.bopts.t.map(c =>
-      `<button class="opt bc" data-tpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
+    h = target(S.q.slice(0, k+1).concat([null], tail), 'Motståndet med toleransbandet tomt')
+      + `<div class="mcgroup"><div class="opts mc">${S.bopts.t.map(c => colBtn(c, 'tpick')).join('')}</div></div>`;
   }
   if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet, temperaturkoefficienten, är redan ifyllt. Det behöver du inte kunna på den här nivån.</p>';
   return h;
 }
 function answerBMC(pick){
   if (S.answered) return;
-  const k = nd(S.q);
-  let ok;
-  if (S.focus === 'd') {
-    const right = S.bopts.d.findIndex(o => o.join() === S.q.slice(0, k).join());
-    ok = pick === right;
-    document.querySelector(`[data-vpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-vpick="${pick}"]`).classList.add('bad');
-    S.parts = null;
-  } else if (S.focus === 'x') {
-    const right = S.q[k];
-    ok = pick === right;
-    document.querySelector(`[data-tpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-tpick="${pick}"]`).classList.add('bad');
-    S.parts = null;
-  } else if (S.focus === 'v') {
-    const right = S.bopts.v.findIndex(o => o.join() === S.q.slice(0, k+1).join());
-    ok = pick === right;
-    document.querySelector(`[data-vpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-vpick="${pick}"]`).classList.add('bad');
-    S.parts = compareBands(S.bopts.v[pick].concat(S.q.slice(k+1)), S.q);
-  } else if (S.focus === 'k') {
-    const right = S.q[5];
-    ok = pick === right;
-    document.querySelector(`[data-kpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-kpick="${pick}"]`).classList.add('bad');
-    S.parts = null;
-  } else {
-    const right = S.q[k+1];
-    ok = pick === right;
-    document.querySelector(`[data-tpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-tpick="${pick}"]`).classList.add('bad');
-    S.parts = null;
-  }
-  finish(ok);
+  S.bpick = pick;
+  finish(pick === bmcRight());
 }
 
 // Rätt val i byggflervalet: index för motståndsbilder (v, d), färg för ett enskilt band (x, t, k)
@@ -1462,9 +1439,6 @@ function compareValues(vIn, vTrue){
     {label:'Siffror', ok: dOk, yours: sigDigits(vIn).split('').join(' '), right: sigDigits(vTrue).split('').join(' ')},
     {label:'Multiplikator', ok: mOk, yours: fmtVal(vIn), right: fmtVal(vTrue)}
   ];
-}
-function partsHTML(parts){
-  return `<ul class="parts">${parts.map(p => `<li><span class="pill ${p.ok ? 'p-ok' : 'p-bad'}">${p.ok ? 'Rätt' : 'Fel'}</span><span><b>${p.label}</b>${p.ok ? '' : `: du svarade ${p.yours}, rätt är ${p.right}`}</span></li>`).join('')}</ul>`;
 }
 
 // Tips per frågetyp
@@ -1704,22 +1678,14 @@ function meterFB(v, tol, note){
   return `<div class="meterfb"><p>${note || 'Så här kan en mätning se ut:'}</p>${meterLcd(mv)}
     <p class="gnote">Toleransen ${fmtTol(tol)} tillåter allt från ${fmtPrecise(v * (1 - tol / 100), v)} till ${fmtPrecise(v * (1 + tol / 100), v)}, så mätvärdet ligger sällan exakt på det märkta värdet.</p></div>`;
 }
-function srFeedback(ok){
-  const r = S.sr, tol = bandsTol(r.bands), ser = TOL_SER[tol];
-  const read = `Motståndet är ${colorNames(r.bands)}, alltså ${fmtVal(r.v)} ${fmtTol(tol)}${r.bands.length === 3 ? ' (tre band, inget toleransband)' : ''}.`;
-  const inAny = seriesOf(r.m3);
-  const why = r.answer === 'none'
+// E-serie: varför svaret blev som det blev
+function seriesWhy(){
+  const r = S.sr, tol = bandsTol(r.bands), ser = TOL_SER[tol], inAny = seriesOf(r.m3);
+  return r.answer === 'none'
     ? (inAny.length
       ? `${fmtTol(tol)} hör till ${ser}, men ${mantTxt(r.m3)} finns inte i ${ser} (det finns först i ${inAny[0]}). Med den här toleransen är värdet alltså inte standard.`
       : `${mantTxt(r.m3)} finns inte i någon standardserie, så värdet är inte standard.`)
     : `${fmtTol(tol)} hör till ${ser}, och ${mantTxt(r.m3)} finns i ${ser}.`;
-  document.getElementById('fb').innerHTML = `<div class="feedback ${fbClass(ok)}" role="status">
-    <h2>${fbHead(ok)}</h2>
-    <p>${read}</p><p>${why}</p>
-    ${meterFB(r.v, tol)}
-    <p class="dir">Toleransen avgör serien: ±20 % E6, ±10 % E12, ±5 % E24, ±2 % E48, ±1 % E96. Sedan kollar du om värdet finns i den serien.</p>
-    <button class="primary" id="next">Nästa fråga</button></div>`;
-  showFeedback();
 }
 let eSel = 'E24';
 try { const e = localStorage.getItem('fargkoden-eser'); if (e && ESER[e]) eSel = e; } catch(e) {}
