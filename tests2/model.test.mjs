@@ -433,8 +433,9 @@ test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort',
   const lock = t.g('S.lockUntil - S.revealAt');
   assert.ok(lock >= 1200, `låst i ${lock} ms`);
   await new Promise(r => setTimeout(r, lock - 200));
-  assert.equal(t.$('#gbar').querySelectorAll('.gseg')[2].querySelectorAll('.cracks .on').length, 1, 'en spricka på graden under');
-  assert.equal(t.$('#gbar').querySelectorAll('.gseg.cur .cracks').length, 0, 'inga sprickor på aktuell grad');
+  assert.equal(t.$('#gbar').querySelectorAll('.gseg')[2].querySelectorAll('i.bad').length, 1, 'ett rött fack på graden under');
+  assert.ok(t.$('#gbar').querySelectorAll('.gseg')[2].querySelectorAll('i')[2].classList.contains('bad'), 'rött från höger');
+  assert.equal(t.$('#gbar').querySelectorAll('.gseg.cur i.bad').length, 0, 'aktuell grad har inga röda');
   // Vid fel ligger stapeln kvar tills man trycker
   await new Promise(r => setTimeout(r, 900));
   assert.ok(t.$('#gbar').classList.contains('show'), 'stapeln ligger kvar efter fel');
@@ -456,12 +457,26 @@ test('Stapeln: tredje rätt mörknar facken under skakningen', async () => {
   t.g('stopTimer(); clearBar()');
 });
 
-test('Stapeln: inga sprickor på Nykomling, där kan man inte åka ner', () => {
+test('Stapeln: graden under blir röd från höger, Nykomling har inga röda', () => {
   const t = load();
   t.g("barDraw({g: 0, up: 0, down: 2, done: 0}, 'body')");
-  assert.equal(t.$$('#gbar .cracks').length, 0);
+  assert.equal(t.$$('#gbar i.bad').length, 0);
   t.g("barDraw({g: 2, up: 0, down: 2, done: 2}, 'body')");
-  assert.equal(t.$$('#gbar .gseg')[1].querySelectorAll('.cracks .on').length, 2);
+  const cells = [...t.$$('#gbar .gseg')[1].querySelectorAll('i')].map(c => c.classList.contains('bad') ? 'r' : c.classList.contains('full') ? 'g' : 't');
+  assert.equal(cells.join(''), 'grr');
+  assert.equal(t.$$('#gbar .cracks').length, 0, 'inga sprickor längre');
+});
+
+test('Stapeln: rätt efter fel läker de röda facken', async () => {
+  const t = atGrade('ohm', 2);
+  t.g('S.instant = false; S.grade.ohm = 2; S.up = 0; S.down = 2; next()');
+  answer(t, true); t.g('reveal()');
+  await new Promise(r => setTimeout(r, 1100));
+  const low = t.$$('#gbar .gseg')[1];
+  assert.equal(low.querySelectorAll('i.bad').length, 0, 'inga röda kvar');
+  assert.equal(low.querySelectorAll('i.heal').length, 2, 'de två röda läker');
+  assert.equal(t.$$('#gbar .gseg.cur i.on').length, 1, 'första gröna på aktuell grad');
+  t.g('stopTimer(); clearBar()');
 });
 
 test('Stapeln visas inte i Eldprovet', () => {

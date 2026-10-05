@@ -155,12 +155,11 @@ html,body{overflow-x:clip}
 .cells i.on{background:var(--fresh);border-color:#6cc43c}
 .cells i.full,.cells i.ripe{background:var(--ripe);border-color:var(--ripe)}
 .cells i.was{background:var(--fresh);border-color:var(--fresh);opacity:.4}
-.cracks{position:absolute;inset:-3px 0;width:100%;height:calc(100% + 6px);pointer-events:none;overflow:visible}
-.cracks path{fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linejoin:round;opacity:0;vector-effect:non-scaling-stroke}
-.cracks path.on{opacity:1}
+.cells i.bad{background:var(--bad);border-color:var(--bad)}
 .dust{position:fixed;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;z-index:31;pointer-events:none}
 .dust.in{background:#a6f06e;box-shadow:0 0 6px #8fe25f}
 .dust.out{background:#9b8f7e}
+.dust.out.bad{background:var(--bad)}
 @media (prefers-reduced-motion:no-preference){
   .cells i.pop{animation:cellpop .45s ease-out}
   @keyframes cellpop{40%{transform:scaleY(1.6);box-shadow:0 0 14px var(--fresh)}}
@@ -170,8 +169,12 @@ html,body{overflow-x:clip}
   @keyframes bquake{0%,100%{transform:translate(-50%,0)}10%{transform:translate(calc(-50% - 10px),3px) rotate(-2deg)}20%{transform:translate(calc(-50% + 9px),-3px) rotate(2deg)}30%{transform:translate(calc(-50% - 8px),2px) rotate(-1.5deg)}40%{transform:translate(calc(-50% + 7px),-2px) rotate(1.5deg)}50%{transform:translate(calc(-50% - 6px),2px) rotate(-1deg)}60%{transform:translate(calc(-50% + 5px),-1px)}70%{transform:translate(calc(-50% - 4px),1px)}80%{transform:translate(calc(-50% + 3px),0)}90%{transform:translate(calc(-50% - 2px),0)}}
   .gbar.newgrade .gseg.cur span{animation:gpop .45s ease-out}
   @keyframes gpop{50%{transform:scale(1.35)}}
-  .cracks path.on{animation:crack .3s ease-out}
-  @keyframes crack{from{stroke-dasharray:0 40}to{stroke-dasharray:40 0}}
+  .cells i.bad{animation:rattle .25s linear infinite}
+  @keyframes rattle{25%{transform:translate(-1px,1px) rotate(-3deg)}75%{transform:translate(1px,-1px) rotate(3deg)}}
+  .cells i.newbad{animation:badin .35s ease-out,rattle .25s linear .35s infinite}
+  @keyframes badin{40%{transform:scale(1.5);box-shadow:0 0 10px var(--bad)}}
+  .cells i.heal{animation:heal .6s ease-out}
+  @keyframes heal{0%{background:var(--bad);border-color:var(--bad)}50%{transform:scale(1.3);box-shadow:0 0 12px var(--fresh)}}
 }
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Nivåkortet: gradprickar och animering av ämnet */
@@ -1562,12 +1565,11 @@ function outcomeFX(kind, party){
     : kind === 'lost' ? '<s></s><s></s><s></s>' : '';
   d.innerHTML = `<i></i>${bits}`;
 }
-// Stapeln: hela skalan med ämnets fem grader, tre fack per grad. Klarade grader är fyllda, den aktuella visar rätt i rad,
-// och graden under får en spricka för varje fel i rad. Syns bara i slutet av ett svar.
+// Stapeln: hela skalan med ämnets fem grader, tre fack per grad. Klarade grader är mörkgröna, den aktuella visar rätt i rad
+// i ljusgrönt, och graden under blir röd från höger för varje fel i rad. Tre röda och den graden ramlar bort. Syns i slutet av ett svar.
 // Rätt: dammet från explosionen sugs in och fyller nästa fack. Upp en grad: stapeln skakar våldsamt och graden byts.
 // Fel: stapeln skakar av sig dammet från facken och får en spricka. Ner en grad: våldsammare, och graden byts.
 const BAR_WRONG = 1.1, BAR_DOWN = 1.9;
-const CRACKS = ['M18 0 L24 7 L19 12 L26 20', 'M60 0 L54 6 L61 11 L56 20', 'M98 0 L103 8 L97 13 L102 20'];
 const barT = [];
 const later = (sec, fn) => barT.push(setTimeout(fn, sec * 1000));
 function clearBar(){
@@ -1578,11 +1580,11 @@ function clearBar(){
 function barDraw(st, topic, label){
   const b = document.getElementById('gbar');
   // Under aktuell grad: fylld mörkgrön. Aktuell: rätt i rad i ljusgrönt. Över men klarad tidigare: blek. Annars tom.
-  // Sprickorna sitter på graden under, dit man halkar vid tre fel i rad. Nykomling har ingen grad under.
+  // Fel i rad gör graden under röd från höger, dit man halkar vid tre fel. Nykomling har ingen grad under.
+  const red = (g, i) => g === st.g - 1 && i >= 3 - (st.down || 0);
   const segs = GRADE_NAME.map((n, g) => {
-    const cur = g === st.g, fill = i => g < st.g ? 'full' : cur ? (i < st.up ? 'on' : '') : g < (st.done || 0) ? 'was' : '';
-    const cracks = g === st.g - 1 ? `<svg class="cracks" viewBox="0 0 120 20" preserveAspectRatio="none">${CRACKS.map((d, i) => `<path class="${i < st.down ? 'on' : ''}" d="${d}"/>`).join('')}</svg>` : '';
-    return `<div class="gseg${cur ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(i => `<i class="${fill(i)}"></i>`).join('')}${cracks}</div><span>${cur && label ? label : n}</span></div>`;
+    const cur = g === st.g, fill = i => g < st.g ? (red(g, i) ? 'full bad' : 'full') : cur ? (i < st.up ? 'on' : '') : g < (st.done || 0) ? 'was' : '';
+    return `<div class="gseg${cur ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(i => `<i class="${fill(i)}"></i>`).join('')}</div><span>${cur && label ? label : n}</span></div>`;
   }).join('');
   b.innerHTML = `<div class="gname">${topicName(topic)}</div><div class="segs">${segs}</div>`;
 }
@@ -1612,7 +1614,11 @@ function barFX(P, startAt){
   if (P.ok) {
     const slot = Math.min(P.from.up, 2), g = P.from.g;
     later(startAt + .35, () => { if (!calm) dust(S.ledAt, cell(g, slot), 10, 'in'); });
-    later(startAt + .85, () => { barDraw({...P.from, up: P.from.up + 1, down: 0}, P.topic); cellEl(g, slot)?.classList.add('pop'); });
+    later(startAt + .85, () => {
+      barDraw({...P.from, up: P.from.up + 1, down: 0}, P.topic); cellEl(g, slot)?.classList.add('pop');
+      // De röda facken på graden under läker tillbaka till grönt
+      for (let i = 3 - P.from.down; i < 3 && g > 0; i++) cellEl(g - 1, i)?.classList.add('heal');
+    });
     if (party) {
       // Graden mognar: de tre ljusgröna facken mörknar medan stapeln skakar
       later(startAt + 1.05, () => { b.classList.add('quake'); b.querySelectorAll('.gseg.cur .cells i').forEach(c => c.classList.add('ripe')); });
@@ -1623,14 +1629,16 @@ function barFX(P, startAt){
     const down = P.moved === 'down';
     later(startAt + .25, () => {
       if (!calm) [0, 1, 2].filter(i => i < P.from.up).forEach(i => dust(cell(P.from.g, i), null, down ? 8 : 5, 'out'));
-      barDraw({...P.from, up: 0, down: Math.min(P.from.down + 1, 3)}, P.topic);
+      const nd = Math.min(P.from.down + 1, 3);
+      barDraw({...P.from, up: 0, down: P.from.g > 0 ? nd : 0}, P.topic);
+      if (P.from.g > 0) cellEl(P.from.g - 1, 3 - nd)?.classList.add('newbad');
       b.classList.add(down ? 'quake' : 'shake');
     });
     if (down) {
-      // Ett helt snäpp ner: den lägre graden tappar allt sitt damm och blir den aktuella igen, tom
+      // Tre röda: de ramlar av som damm, och graden under blir den aktuella igen, tom
       later(startAt + .95, () => {
         b.classList.remove('quake');
-        if (!calm) [0, 1, 2].forEach(i => dust(cell(P.to.g, i), null, 7, 'out'));
+        if (!calm) [0, 1, 2].forEach(i => dust(cell(P.to.g, i), null, 7, 'out bad'));
         barDraw(P.to, P.topic); b.classList.add('newgrade', 'fell');
       });
     }
