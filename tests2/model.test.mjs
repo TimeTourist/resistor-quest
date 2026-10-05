@@ -291,6 +291,37 @@ test('Efter fel går det att trycka på svarsknapparna och bilden för att gå v
   }
 });
 
+test('Läsriktning fel: ingen vändning, banden räknas från rätt ände, toleransen och ledtråden visas', () => {
+  const t = atGrade('body', 3);
+  let flipped = 0;
+  for (let i = 0; i < 30; i++) {
+    t.g('S.grade.body = 3; next()');
+    const flip = t.g('S.style.flip'), n = t.g('S.n'), k = t.g('nd(S.q)');
+    if (flip) flipped++;
+    answer(t, false);
+    assert.equal(t.$('#q .res.turn'), null, 'ingen vändning');
+    const marks = t.$$('#q .res .mk.ok');
+    assert.equal(marks.length, n);
+    const x = lab => +marks.find(m => m.querySelector('text').textContent === lab).querySelector('text').getAttribute('x');
+    assert.equal(x('1') < x('2'), !flip, 'räknar från början, i läsriktningen');
+    assert.ok(marks.some(m => m.querySelector('text').textContent === '±'), 'toleransen är markerad');
+    assert.match(t.$('#q .res').textContent, /mellanrum|brett|samlade/, 'ledtråden visas');
+    assert.equal(t.$$('#q .lesson').length, 0, 'ingen synlig rad');
+    t.g('S.lockUntil = 0'); 
+  }
+  assert.ok(flipped > 0);
+});
+
+test('Resistansens Gesäll: etiketterna under banden har plats och går inte i varandra', () => {
+  const t = atGrade('ohm', 2);
+  for (let i = 0; i < 30; i++) {
+    t.g('S.grade.ohm = 2; next()');
+    const xs = t.$$('#q .res .blab').map(e => +e.getAttribute('x'));
+    if (!xs.length) continue;
+    for (let j = 1; j < xs.length; j++) assert.ok(Math.abs(xs[j] - xs[j - 1]) >= 38, `avstånd ${xs[j] - xs[j - 1]}`);
+  }
+});
+
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
   const t = atGrade('body', 0);
   t.g('S.instant = false');

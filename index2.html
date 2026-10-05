@@ -74,6 +74,8 @@ html,body{overflow-x:clip}
 .bracket text{fill:var(--accent);font-family:"IBM Plex Sans",system-ui,sans-serif}
 .bracket.ok path{stroke:var(--ok)}.bracket.ok text{fill:var(--ok)}
 .bracket.bad path{stroke:var(--bad)}
+.note path{stroke:var(--ink)}
+.note text{fill:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:700}
 .blab{fill:var(--muted)}
 /* Vilken ska bort?: det som ska bort är borta, platsen står kvar */
 .opt.gone{visibility:hidden}
@@ -815,6 +817,21 @@ function svg(b, o = {}){
     return `<g class="bracket ${kind}"><path d="M${x1} 6 V${y - 6} H${x2} V6" fill="none" stroke-width="2.5"${kind === 'ok' && brs.length > 1 ? ' stroke-dasharray="5 4"' : ''}/>` +
       (kind !== 'bad' ? `<text x="${(x1 + x2) / 2}" y="${y - 12}" text-anchor="middle" font-size="12" font-weight="700">Resistans</text>` : '') + `${lab}</g>`;
   }).join('');
+  // Anteckningar ovanför banden: text över ett band, en dubbelpil över ett mellanrum eller en klammer över flera band
+  const notes = (o.notes || []).map(({i, j, text, span}) => {
+    let g;
+    if (j == null) {
+      const cx = cxOf(i);
+      g = `<path d="M${cx} -2 V4" stroke-width="2"/><text x="${cx}" y="-8" text-anchor="middle">${text}</text>`;
+    } else if (span) {
+      const xs = [i, j].flatMap(n => [cxOf(n) - st.w[n]/2, cxOf(n) + st.w[n]/2]), x1 = Math.min(...xs), x2 = Math.max(...xs);
+      g = `<path d="M${x1} 4 V-4 H${x2} V4" fill="none" stroke-width="2"/><text x="${(x1 + x2) / 2}" y="-10" text-anchor="middle">${text}</text>`;
+    } else {
+      const a = cxOf(i), b2 = cxOf(j), l = Math.min(a, b2) + (a < b2 ? st.w[i] : st.w[j]) / 2 + 2, r = Math.max(a, b2) - (a < b2 ? st.w[j] : st.w[i]) / 2 - 2;
+      g = `<path d="M${l} -2 H${r} M${l + 5} -6 L${l} -2 L${l + 5} 2 M${r - 5} -6 L${r} -2 L${r - 5} 2" fill="none" stroke-width="2"/><text x="${(l + r) / 2}" y="-10" text-anchor="middle">${text}</text>`;
+    }
+    return `<g class="note mk" style="animation-delay:.2s">${g}</g>`;
+  }).join('');
   const dimTo = brs.find(x => x.dim) ? (brs[0].to ?? nd(b)) : null;
   const dims = dimTo == null ? '' : b.map((k, i) => i > dimTo && k ? `<rect x="${st.xs[i] - st.w[i]/2 - 1}" y="8" width="${st.w[i] + 2}" height="76" style="fill:var(--surface)" opacity=".6"/>` : '').join('');
   // Ringar runt band: accent som markering i frågan, ok och bad i facit
@@ -836,11 +853,11 @@ function svg(b, o = {}){
 <path d="${body}" ${fill}/>
 <g clip-path="url(#c${id})">${bands}${dims}${st.chip != null ? `<rect x="${st.xs[st.chip] - st.w[st.chip]/2 - 0.5}" y="38" width="${st.w[st.chip] + 1}" height="9" ${fill}/>` : ''}${st.tint ? `<rect x="60" y="10" width="200" height="72" fill="#ff9a2e" opacity=".38" style="mix-blend-mode:multiply"/>` : ''}<rect x="60" y="10" width="200" height="72" fill="url(#g${id})"/></g>
 <path d="${body}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1"/>${taps}`;
-  const top = brs.length ? -30 : 0, bottom = (o.mark && o.mark.length) || brs.some(x => x.labels) ? 108 : 92;
+  const top = brs.length || notes ? -30 : 0, bottom = (o.mark && o.mark.length) || brs.some(x => x.labels) ? 108 : 92;
   return `<svg viewBox="0 ${top} 320 ${bottom - top}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}"><defs>${mdefs}
 <clipPath id="c${id}"><path d="${body}"/></clipPath>
 <linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
-${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}${rings}${brackets}</svg>`;
+${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}${rings}${brackets}${notes}</svg>`;
 }
 const colorNames = b => b.map(k => C[k].n).join(', ');
 
@@ -1003,6 +1020,8 @@ function scaleHTML(kind, hi){
   return `<div class="scale" role="img" aria-label="Färgskalan">${list.map(c =>
     `<span class="${c === hi ? 'on' : ''}"><i class="sw" style="${swStyle(c)}"></i>${val(c)}</span>`).join('')}</div>${kind === 'k' ? '<p class="gnote center">ppm/K</p>' : ''}`;
 }
+// Fyra band med gott om plats mellan, för etiketterna under banden
+const spacedStyle = () => ({body:'var(--body)', shape:'bone', pal:0, xs:[90, 132, 174, 226], w:[13, 13, 13, 19.5], flip:false, cues:['gap','wide'], wideIdx:3});
 const roleLabel = (n, i) => { const r = roleOf(n, i); return r === 'digit' ? String(i + 1) : r === 'mult' ? '×' : r === 'tol' ? '±' : 'TK'; };
 const ringed = (at, cls = 'accent') => () => svg(S.q, {style: S.style, ring: [[at, cls]], label: 'Motstånd med ett markerat band'});
 // Vilken ska bort? med markerade band: tre har rätt band markerat, ett har fel
@@ -1107,11 +1126,11 @@ const GRADES = {
     () => {
       const support = [{labels:['siffra','siffra','nollor'], dim:true}];
       if (Math.random() < .3) return {type:'point', fmt:'mc', setup(){
-        S.n = 4; S.q = genBands(4); S.style = stdStyle(4); S.moreOK = true;
+        S.n = 4; S.q = genBands(4); S.style = spacedStyle(); S.moreOK = true;
         S.pointRole = 'mult'; S.pointAt = 2; S.pointSupport = support;
       }};
       return choice(() => {
-        S.n = 4; S.q = genBands(4); S.style = stdStyle(4); S.moreOK = true;
+        S.n = 4; S.q = genBands(4); S.style = spacedStyle(); S.moreOK = true;
         const d = [C[S.q[0]].d, C[S.q[1]].d], right = `${d[0]}${d[1]}`;
         const near = [`${d[1]}${d[0]}`, `${d[0]}${d[1]}${C[S.q[2]].d}`, `${rnd(NEAR_DIGIT[d[0]].filter(x => x))}${d[1]}`, `${d[0]}${rnd(NEAR_DIGIT[d[1]])}`];
         const vals = pick4(right, near.filter(x => x !== right && x[0] !== '0'), []);
@@ -1124,7 +1143,7 @@ const GRADES = {
     // Mästare: siffror och nollor till ohm, med k och M. Fyra band, bara klammern som stöd.
     () => choice(() => {
       const base = rnd(E24), mi = Math.floor(Math.random() * 7);
-      S.n = 4; S.q = [DIG[Math.floor(base / 10)], DIG[base % 10], DIG[mi], rnd(['gold','silver','brown','red'])]; S.style = stdStyle(4); S.moreOK = true;
+      S.n = 4; S.q = [DIG[Math.floor(base / 10)], DIG[base % 10], DIG[mi], rnd(['gold','silver','brown','red'])]; S.style = spacedStyle(); S.moreOK = true;
       const v = base * 10 ** mi, sw = (base % 10) * 10 + Math.floor(base / 10);
       const vals = [v];
       for (const x of shuffle([v * 10, v / 10, v * 100, sw >= 10 ? sw * 10 ** mi : v * 1000]).concat([v * 1000, v / 100]))
@@ -1268,6 +1287,9 @@ function entryReady(){
 const submitHTML = () => S.answered || !needsSubmit() ? '' : `<button class="primary submit" id="submit"${entryReady() ? '' : ' disabled'}>Svara</button>`;
 // Bygg med palett: rätt färg för plats i som den byggs (Band 1 är toleransänden när motståndet sitter vänt)
 const truthAt = i => S.bflip ? S.q[S.n - 1 - i] : S.q[i];
+// Förklaringsanimeringen vid fel för aktuell fråga: tidslinje i sekunder, eller null om frågan bara har en rad
+const DIR_T = {count: .9, step: .35};
+const qAnim = () => S.cq ? S.cq.anim : S.type === 'dir' ? {total: DIR_T.count + S.n * DIR_T.step + .6} : null;
 // Ingen Nästa-knapp: rätt svar går vidare själv, efter fel trycker man var som helst på kortet
 const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p></div>`;
 function render(){
@@ -1283,8 +1305,15 @@ function render(){
   } else if (S.type === 'dir') {
     const right = S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
-    const turn = S.answered && !inExam() && S.style.flip;
-    h += `${topHTML('Från vilket håll ska motståndet läsas?')}<div class="res${turn ? ' turn' : ''}">${svg(S.q, {style: turn ? {...S.style, flip:false} : S.style})}</div>
+    // Vid fel: ledtråden visas, toleransen får ± och banden räknas från rätt ände
+    const why = S.answered && !S.ok && !inExam(), k = nd(S.q), st = S.style;
+    const lab = i => i <= k ? String(i + 1) : i === k + 1 ? '±' : 'TK';
+    const cue = st.cues.includes('wide') ? {i: st.wideIdx, text: 'brett'}
+      : st.cues.includes('gap') ? {i: k, j: k + 1, text: 'mellanrum'}
+      : st.cues.includes('group') ? {i: 0, j: k + 1, text: 'samlade', span: true} : null;
+    h += `${topHTML('Från vilket håll ska motståndet läsas?')}<div class="res">${svg(S.q, {style: st,
+      mark: why ? S.q.map((_, i) => [i, lab(i)]) : null, markKind: 'ok', markAnim: {start: DIR_T.count, step: DIR_T.step},
+      notes: why && cue ? [cue] : null})}</div>
       <div class="opts">${dBtn('left', 'Från vänster')}${dBtn('right', 'Från höger')}</div>`;
   } else if (S.type === 'read') {
     const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
@@ -1383,7 +1412,7 @@ function reveal(){
   stopTimer();
   S.busy = false; S.justRevealed = true; S.revealAt = Date.now();
   // Vid fel måste man se hela förklaringen innan man kan gå vidare
-  const anim = !S.ok && !inExam() && S.cq && S.cq.anim;
+  const anim = !S.ok && !inExam() && qAnim();
   S.lockUntil = S.revealAt + (S.instant ? 0 : anim && !reduceMotion() ? anim.total * 1000 : 600);
   render();
   S.justRevealed = false; S.mapGrow = null;
@@ -1534,7 +1563,7 @@ function lessonHTML(){
   // Frågor med en egen förklaringsanimering visar inte raden, den läses bara upp för skärmläsare.
   // Fingret svävar nere till höger när animeringen är klar. Ett tryck var som helst fortsätter.
   const wait = ((S.lockUntil || 0) - (S.revealAt || 0)) / 1000;
-  const text = S.cq && S.cq.anim ? `<p class="sr" role="status">${line}</p>` : `<p class="lesson bad" role="status">${line}</p>`;
+  const text = qAnim() ? `<p class="sr" role="status">${line}</p>` : `<p class="lesson bad" role="status">${line}</p>`;
   return `${text}<button type="button" class="tapcue" id="cont" aria-label="Fortsätt" style="--wait:${Math.max(0, wait).toFixed(2)}s">${HAND}</button>`;
 }
 const pointWrong = () => S.pointRole === 'mult' ? 'Bandet efter siffrorna säger hur många nollor.'
