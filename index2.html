@@ -150,17 +150,20 @@ html,body{overflow-x:clip}
 .gseg.cur .cells{outline:2px solid var(--ink);outline-offset:2px;border-radius:5px}
 .cells{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;height:16px}
 .cells i{display:block;border-radius:3px;border:1.5px solid var(--line);background:var(--bg)}
-.cells i.on{background:var(--col);border-color:var(--col)}
-.cells i.was{background:var(--col);border-color:var(--col);opacity:.35}
+.gbar{--fresh:#8fe25f;--ripe:#2a9b48}
+.cells i{transition:background .45s,border-color .45s}
+.cells i.on{background:var(--fresh);border-color:#6cc43c}
+.cells i.full,.cells i.ripe{background:var(--ripe);border-color:var(--ripe)}
+.cells i.was{background:var(--fresh);border-color:var(--fresh);opacity:.4}
 .cracks{position:absolute;inset:-3px 0;width:100%;height:calc(100% + 6px);pointer-events:none;overflow:visible}
 .cracks path{fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linejoin:round;opacity:0;vector-effect:non-scaling-stroke}
 .cracks path.on{opacity:1}
 .dust{position:fixed;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;z-index:31;pointer-events:none}
-.dust.in{background:#ffd84a;box-shadow:0 0 6px #ffcc33}
+.dust.in{background:#a6f06e;box-shadow:0 0 6px #8fe25f}
 .dust.out{background:#9b8f7e}
 @media (prefers-reduced-motion:no-preference){
   .cells i.pop{animation:cellpop .45s ease-out}
-  @keyframes cellpop{40%{transform:scaleY(1.6);box-shadow:0 0 14px var(--col)}}
+  @keyframes cellpop{40%{transform:scaleY(1.6);box-shadow:0 0 14px var(--fresh)}}
   .gbar.shake{animation:bshake .45s ease-in-out}
   @keyframes bshake{20%{transform:translate(calc(-50% - 6px),0)}40%{transform:translate(calc(-50% + 5px),0)}60%{transform:translate(calc(-50% - 3px),0)}80%{transform:translate(calc(-50% + 2px),0)}}
   .gbar.quake{animation:bquake .5s linear}
@@ -1574,11 +1577,10 @@ function clearBar(){
 }
 function barDraw(st, topic, label){
   const b = document.getElementById('gbar');
-  b.style.setProperty('--col', MAP_BANDS[topic][0]);
-  // Under aktuell grad: fylld. Aktuell: rätt i rad. Över men klarad tidigare: blek. Annars tom.
+  // Under aktuell grad: fylld mörkgrön. Aktuell: rätt i rad i ljusgrönt. Över men klarad tidigare: blek. Annars tom.
   // Sprickorna sitter på graden under, dit man halkar vid tre fel i rad. Nykomling har ingen grad under.
   const segs = GRADE_NAME.map((n, g) => {
-    const cur = g === st.g, fill = i => g < st.g ? 'on' : cur ? (i < st.up ? 'on' : '') : g < (st.done || 0) ? 'was' : '';
+    const cur = g === st.g, fill = i => g < st.g ? 'full' : cur ? (i < st.up ? 'on' : '') : g < (st.done || 0) ? 'was' : '';
     const cracks = g === st.g - 1 ? `<svg class="cracks" viewBox="0 0 120 20" preserveAspectRatio="none">${CRACKS.map((d, i) => `<path class="${i < st.down ? 'on' : ''}" d="${d}"/>`).join('')}</svg>` : '';
     return `<div class="gseg${cur ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(i => `<i class="${fill(i)}"></i>`).join('')}${cracks}</div><span>${cur && label ? label : n}</span></div>`;
   }).join('');
@@ -1612,7 +1614,8 @@ function barFX(P, startAt){
     later(startAt + .35, () => { if (!calm) dust(S.ledAt, cell(g, slot), 10, 'in'); });
     later(startAt + .85, () => { barDraw({...P.from, up: P.from.up + 1, down: 0}, P.topic); cellEl(g, slot)?.classList.add('pop'); });
     if (party) {
-      later(startAt + 1.05, () => b.classList.add('quake'));
+      // Graden mognar: de tre ljusgröna facken mörknar medan stapeln skakar
+      later(startAt + 1.05, () => { b.classList.add('quake'); b.querySelectorAll('.gseg.cur .cells i').forEach(c => c.classList.add('ripe')); });
       later(startAt + 1.55, () => { b.classList.remove('quake'); barDraw(P.to, P.topic, P.moved === 'top' ? 'klart ✓' : null); b.classList.add('newgrade'); });
       later(startAt + 2.3, () => b.classList.remove('show'));
     } else later(startAt + 1.5, () => b.classList.remove('show'));

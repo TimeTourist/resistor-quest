@@ -423,7 +423,7 @@ test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort',
   assert.equal(bar.querySelectorAll('.gseg').length, 5, 'hela skalan, fem grader');
   assert.equal(bar.querySelectorAll('.gseg.cur i.on').length, 2, 'två rätt i rad på aktuell grad');
   assert.equal(bar.querySelectorAll('.gseg.cur')[0], bar.querySelectorAll('.gseg')[3], 'Mästare är aktuell');
-  assert.equal(bar.querySelectorAll('.gseg')[2].querySelectorAll('i.on').length, 3, 'Gesäll är klar');
+  assert.equal(bar.querySelectorAll('.gseg')[2].querySelectorAll('i.full').length, 3, 'Gesäll är klar, mörkgrön');
   await new Promise(r => setTimeout(r, 1500));
   assert.equal(t.g('S.answered'), false, 'nästa fråga');
   assert.ok(!t.$('#gbar').classList.contains('show'), 'stapeln har glidit bort');
@@ -440,6 +440,19 @@ test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort',
   assert.ok(t.$('#gbar').classList.contains('show'), 'stapeln ligger kvar efter fel');
   t.g('S.lockUntil = 0'); cont(t);
   assert.ok(!t.$('#gbar').classList.contains('show'), 'trycket tar bort stapeln');
+  t.g('stopTimer(); clearBar()');
+});
+
+test('Stapeln: tredje rätt mörknar facken under skakningen', async () => {
+  const t = atGrade('ohm', 2);
+  t.g('S.instant = false; S.grade.ohm = 2; S.up = 2; S.down = 0; next()');
+  answer(t, true); t.g('reveal()');
+  await new Promise(r => setTimeout(r, 1250));
+  const b = t.$('#gbar');
+  assert.ok(b.classList.contains('quake'));
+  assert.equal(b.querySelectorAll('.gseg.cur i.ripe').length, 3, 'facken mörknar');
+  await new Promise(r => setTimeout(r, 500));
+  assert.equal(b.querySelectorAll('.gseg')[2].querySelectorAll('i.full').length, 3);
   t.g('stopTimer(); clearBar()');
 });
 
