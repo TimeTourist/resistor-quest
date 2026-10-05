@@ -548,6 +548,18 @@ test('Resistansens Gesäll: ohm-talet står i klammern', () => {
   }
 });
 
+test('Resistansens Gesäll: guld och silver förekommer som multiplikator, med ×0,1 och ×0,01', () => {
+  const t = atGrade('ohm', 2), seen = new Set();
+  for (let i = 0; i < 200; i++) {
+    t.g('S.grade.ohm = 2; next()');
+    const m = t.g('S.q[nd(S.q)]');
+    seen.add(m);
+    if (m === 'gold') assert.equal(t.$$('#q .res .blab').at(-1).textContent, '×0,1');
+    if (m === 'silver') assert.equal(t.$$('#q .res .blab').at(-1).textContent, '×0,01');
+  }
+  assert.ok(seen.has('gold') && seen.has('silver'), [...seen].join());
+});
+
 test('Testläge: rätt svar har en grön pil, i vanligt läge syns ingen', () => {
   const tt = load({ url: 'http://localhost/?test=true', storage: { 'fargkoden2-topic': 'body', 'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }) } });
   const check = (topic, g, n = 15) => {

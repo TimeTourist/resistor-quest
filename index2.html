@@ -1254,10 +1254,11 @@ const GRADES = {
     // och värdena står under banden (4 · 7 · 0 · ×10), så att man ser vad banden säger.
     () => ({type:'point', fmt:'mc', setup(){
       // Multiplikatorn utskriven utan k (×1 000), eftersom k kommer först på Mästare. Lågt nog för att etiketten ska få plats.
+      // Guld och silver (×0,1 och ×0,01) får plats och är med.
       const n = rnd([4, 5, 6]);
       S.n = n; S.q = genBands(n);
       const k = nd(S.q);
-      S.q[k] = rnd(n === 4 ? ['black','brown','red','orange'] : ['black','brown','red']);
+      S.q[k] = rnd(n === 4 ? ['gold','silver','black','brown','red','orange'] : ['gold','silver','black','brown','red']);
       S.style = spacedStyle(n); S.moreOK = true;
       S.pointRole = rnd(k === 3 ? ['d1','d2','d3','mult'] : ['d1','d2','mult']);
       S.pointAt = {d1: 0, d2: 1, d3: 2, mult: k}[S.pointRole];
