@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { load, atGrade, ALL_OPEN } from './harness.mjs';
+import { load, atGrade, ALL_OPEN, golden } from './harness.mjs';
 import { answer, until, tap, cont } from './answer.mjs';
 
 const TOPICS = ['body', 'ohm', 'tol', 'tc', 'e'];
@@ -144,7 +144,7 @@ test('Peka på band: Motståndets Stormästare frågar efter första bandet, äv
   const t = atGrade('body', 4);
   let flipped = 0;
   for (let i = 0; i < 40; i++) {
-    t.g('next()');
+    t.g('S.grade.body = 4; S.up = 0; S.done.body = 4; next()');
     assert.equal(t.g('S.type'), 'point');
     if (t.g('S.style.flip')) flipped++;
     assert.equal(t.g('S.pointRole'), 'first');
@@ -484,6 +484,49 @@ test('Stapeln visas inte i Eldprovet', () => {
   t.g("goTopic('ultra')"); t.$('#examStart').click();
   answer(t, true);
   assert.equal(t.g('S.barPlan'), null);
+});
+
+test('Gyllene: tre rätt på Stormästare gör ämnet klart, och sedan visas ämnets kort', () => {
+  const t = atGrade('body', 4);
+  t.g('S.grade.body = 4; S.up = 2; S.done.body = 4; next()');
+  answer(t, true);
+  assert.equal(t.g('S.done.body'), 5);
+  assert.equal(t.g('S.barPlan.moved'), 'top');
+  cont(t);
+  assert.equal(t.g('S.view'), 'body', 'ämnets kort');
+  assert.match(t.$('#q').textContent, /klart/i);
+  assert.match(t.$('#play').textContent, /blandat/i);
+});
+
+test('Blandat: ett gyllene ämne ger frågor från alla grader, utan trappa, med rekordsvit', () => {
+  const t = golden('ohm');
+  const grades = new Set();
+  for (let i = 0; i < 40; i++) {
+    t.g('next()');
+    grades.add(t.g('S.mixG'));
+    answer(t, true);
+  }
+  assert.ok(grades.size >= 4, `grader: ${[...grades]}`);
+  assert.equal(t.g('S.grade.ohm'), 4, 'trappan rör sig inte');
+  assert.equal(t.g('S.done.ohm'), 5);
+  assert.equal(t.g('S.mix.streak'), 40);
+  assert.equal(JSON.parse(t.w.localStorage.getItem('fargkoden2-best')).ohm, 40);
+  t.g('next()'); answer(t, false);
+  assert.equal(t.g('S.mix.streak'), 0, 'fel nollställer sviten');
+  assert.equal(t.g('S.mix.best.ohm'), 40, 'rekordet står kvar');
+  assert.equal(t.g('S.grade.ohm'), 4, 'inga röda, ingen grad att tappa');
+  const p = JSON.parse(t.g('JSON.stringify(S.barPlan)'));
+  assert.deepEqual([p.mix, p.ok, p.from.streak, p.to.streak], [true, false, 40, 0]);
+});
+
+test('Blandat: statusraden, kartan och kortet', () => {
+  const t = golden('tol');
+  t.g('next()');
+  assert.match(t.$('#score').textContent, /Blandat/);
+  assert.ok(t.$('#map [data-level="tol"].gold'), 'gyllene band på kartan');
+  tap(t, t.$('#map [data-level="tol"]'));
+  assert.match(t.$('#q').textContent, /Rekordsvit/);
+  assert.equal(t.$$('[data-grade]').length, 0, 'inga gradval på ett gyllene ämne');
 });
 
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {

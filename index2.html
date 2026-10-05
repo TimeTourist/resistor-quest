@@ -160,8 +160,22 @@ html,body{overflow-x:clip}
 .dust.in{background:#a6f06e;box-shadow:0 0 6px #8fe25f}
 .dust.out{background:#9b8f7e}
 .dust.out.bad{background:var(--bad)}
+.dust.gold{background:#f6c945;box-shadow:0 0 8px #ffd95a}
+.gbar.gilded .cells i{background:#e8b923;border-color:#b8860b;transition:background .4s calc(var(--k) * 60ms),border-color .4s calc(var(--k) * 60ms);opacity:1}
+.gbar.gilded{box-shadow:0 0 0 2px #e8b923,0 8px 30px rgba(232,185,35,.55)}
+.goldbar{box-shadow:0 0 0 2px #e8b923,0 8px 24px rgba(0,0,0,.25)}
+.mixrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.mixrow .streak{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.2rem}
+.mixrow .streak b{display:inline-block;font-size:1.8rem;color:#b8860b}
+.mixrow .rec{font-size:.85rem;color:var(--muted)}
+.mixrow .rec.new{color:#b8860b;font-weight:700}
+.map .goldfill{opacity:.9}
+.goldcard h2 .goldmark{color:#e8b923}
+.fresh.gold{background:#e8b923;color:#3a2a00}
 @media (prefers-reduced-motion:no-preference){
-  .cells i.pop{animation:cellpop .45s ease-out}
+  .cells i.pop,.mixrow b.pop{animation:cellpop .45s ease-out}
+  .map .gold .goldfill{animation:shine 2.6s ease-in-out infinite}
+  @keyframes shine{50%{opacity:.6}}
   @keyframes cellpop{40%{transform:scaleY(1.6);box-shadow:0 0 14px var(--fresh)}}
   .gbar.shake{animation:bshake .45s ease-in-out}
   @keyframes bshake{20%{transform:translate(calc(-50% - 6px),0)}40%{transform:translate(calc(-50% + 5px),0)}60%{transform:translate(calc(-50% - 3px),0)}80%{transform:translate(calc(-50% + 2px),0)}}
@@ -564,10 +578,14 @@ try {
   const gr = JSON.parse(localStorage.getItem('fargkoden2-grade') || '{}');
   TOPICS.forEach(t => { S.done[t] = clamp(dn[t], 5); S.grade[t] = Math.min(clamp(gr[t], MAX), S.done[t]); });
 } catch(e) { S.firstVisit = true; }
+// Blandat: ett gyllene (klart) ämne spelas med frågor från alla grader. Sviten räknas, och rekordet sparas per ämne.
+S.mix = {streak: 0, best: {}};
+try { Object.assign(S.mix.best, JSON.parse(localStorage.getItem('fargkoden2-best') || '{}')); } catch(e) {}
 const saveProgress = () => { save('fargkoden2-done', JSON.stringify(S.done)); save('fargkoden2-grade', JSON.stringify(S.grade)); };
 const unlocked = t => { if (t === 'ultra') return true; const i = TOPICS.indexOf(t); return i <= 0 || S.done[TOPICS[i - 1]] >= UNLOCK_AT; };
 const cleared = t => t !== 'ultra' && S.done[t] >= 5;
 const inExam = () => S.topic === 'ultra';
+const isMix = t => cleared(t);
 // Stegen. done är antalet klarade grader (0–5) och minskar aldrig. Golvet är Nykomling, taket Stormästare.
 function ladder(s, ok){
   let {g, up, down, done} = s, moved = null;
@@ -597,17 +615,18 @@ function renderMap(){
   const shown = S.view || S.topic;
   const bands = Object.entries(MAP_BANDS).map(([lv, [c, x]], i) => {
     const open = unlocked(lv), done = cleared(lv), on = shown === lv, h = open ? 44 * S.done[lv] / 5 : 0;
-    return `<g data-level="${lv}" role="button" tabindex="0" class="${on ? 'on' : ''}" aria-label="${topicName(lv)}${!open ? ', låst' : done ? ', klar' : `, ${S.done[lv]} av 5 grader`}"${on ? ' aria-current="true"' : ''}>
+    return `<g data-level="${lv}" role="button" tabindex="0" class="${on ? 'on' : ''}${done ? ' gold' : ''}" aria-label="${topicName(lv)}${!open ? ', låst' : done ? ', klar' : `, ${S.done[lv]} av 5 grader`}"${on ? ' aria-current="true"' : ''}>
       <rect class="hit" x="${x - 5}" y="2" width="26" height="80" rx="3" fill="transparent"/>
       <rect x="${x}" y="10" width="16" height="44" fill="${c}" opacity=".28"/>
       ${h ? `<rect class="fill" x="${x}" y="${54 - h}" width="16" height="${h}" fill="${c}">${growAnim(lv, h)}</rect>` : ''}
+      ${done ? `<rect class="goldfill" x="${x}" y="10" width="16" height="44" fill="url(#goldg)"/>` : ''}
       ${open ? '' : `<svg class="lock" x="${x + 2}" y="25" width="12" height="14" viewBox="0 0 12 14" style="color:var(--ink)">${MAP_LOCK}</svg>`}
       ${on ? `<rect class="pulse" x="${x - 5}" y="5" width="26" height="54" rx="3" fill="none" stroke="var(--ink)" stroke-width="2.5"/>` : ''}
       <text x="${x + 8}" y="72" text-anchor="middle" class="${done ? 'done' : ''}">${done ? '✓' : i + 1}</text></g>`;
   }).join('');
   const bossOn = shown === 'ultra';
   document.getElementById('map').innerHTML = `
-    <defs><radialGradient id="ember" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="#ff9a3c"/><stop offset=".6" stop-color="#d9381e"/><stop offset="1" stop-color="#5a1c10"/></radialGradient></defs>
+    <defs><linearGradient id="goldg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1b0"/><stop offset=".35" stop-color="#e8b923"/><stop offset=".6" stop-color="#b8860b"/><stop offset="1" stop-color="#ffe27a"/></linearGradient><radialGradient id="ember" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="#ff9a3c"/><stop offset=".6" stop-color="#d9381e"/><stop offset="1" stop-color="#5a1c10"/></radialGradient></defs>
     <line x1="0" y1="32" x2="66" y2="32" stroke="var(--lead)" stroke-width="4"/>
     <line x1="244" y1="32" x2="290" y2="32" stroke="var(--lead)" stroke-width="4" stroke-dasharray="6 5"/>
     <rect x="66" y="10" width="178" height="44" rx="18" fill="var(--body)"/>
@@ -659,6 +678,14 @@ function levelCardHTML(lv, fresh){
       <div class="lvbtns">${going ? '<button class="primary" id="play" data-go="ultra">Fortsätt eldprovet</button>' : '<button class="primary" id="examStart">Starta eldprovet</button>'}</div></div>`;
   }
   const i = TOPICS.indexOf(lv), prev = TOPICS[i - 1], nx = TOPICS[i + 1], open = unlocked(lv);
+  if (cleared(lv)) {
+    // Gyllene: trappan har gjort sitt jobb. Ämnet spelas blandat, och vägen vidare är nästa ämne eller Eldprovet.
+    const on = nx && unlocked(nx) ? nx : 'ultra';
+    return `<div class="lvcard goldcard">${fresh ? '<span class="fresh gold">Ämnet är klart!</span>' : ''}<h2>${topicName(lv)} <span class="goldmark">✓</span></h2><p>${TOPIC_LINE[lv]}</p>
+      <p class="state done">Klart! Nu blandas frågor från alla grader. <b>Rekordsvit: ${S.mix.best[lv] || 0}</b></p>
+      <div class="lvbtns"><button class="primary" id="play" data-go="${lv}">Spela blandat</button>
+      ${fresh ? `<button class="ghost go" data-go="${on}">${on === 'ultra' ? 'Till Eldprovet' : `Till ${topicName(on)}`}</button>` : ''}</div></div>`;
+  }
   const top = Math.min(S.done[lv], MAX), pick = S.pickGrade ?? S.grade[lv];
   const dots = GRADE_NAME.map((n, g) => `<button class="gdot${g < S.done[lv] ? ' did' : ''}" data-grade="${g}" aria-pressed="${open && g === pick}"${!open || g > top ? ' disabled' : ''}><b aria-hidden="true"></b>${n}</button>`).join('');
   const state = cleared(lv) ? 'Klar! Välj vilken grad du vill spela.'
@@ -689,14 +716,15 @@ function goTopic(lv){
   const g = S.pickGrade; S.pickGrade = null;
   if (lv !== 'ultra' && g != null && g !== S.grade[lv]) { S.grade[lv] = g; S.up = 0; S.down = 0; saveProgress(); S.plan = null; }
   if (lv === S.topic && S.plan && S.type !== 'exam') { render(); return; }
-  if (lv !== S.topic) { S.up = 0; S.down = 0; S.exam = null; S.topic = lv; save('fargkoden2-topic', lv); }
+  if (lv !== S.topic) { S.up = 0; S.down = 0; S.mix.streak = 0; S.exam = null; S.topic = lv; save('fargkoden2-topic', lv); }
   S.moved = null;
   next();
 }
 // Efter svar: har man låst upp ett ämne visas dess kort, annars nästa fråga
 function advance(){
   stopTimer();
-  if (S.unlockedNow) { const lv = S.unlockedNow; S.unlockedNow = null; showLevelCard(lv, true); }
+  if (S.goldNow) { const lv = S.goldNow; S.goldNow = null; showLevelCard(lv, 'gold'); }
+  else if (S.unlockedNow) { const lv = S.unlockedNow; S.unlockedNow = null; showLevelCard(lv, true); }
   else next();
 }
 
@@ -941,6 +969,8 @@ function updateScore(){
   let h = '';
   if (S.topic === 'ultra') {
     if (S.exam && !S.exam.done && !S.view) h = `Eldprovet: fråga <b>${Math.min(S.exam.i + 1, EXAM_N)}</b> av <b>${EXAM_N}</b>`;
+  } else if (isMix(S.topic)) {
+    h = `<b>${topicName(S.topic)} · Blandat</b> · ${S.mix.streak} i rad · rekord ${S.mix.best[S.topic] || 0}`;
   } else {
     const col = MAP_BANDS[S.topic][0], g = S.grade[S.topic];
     const pips = `<span class="pips" aria-hidden="true">${[0,1,2].map(i => i < S.up ? `<b class="on" style="background:${col};border-color:${col}"></b>` : '<b></b>').join('')}</span>`;
@@ -1010,7 +1040,9 @@ function next(){
   if (S.topic === 'ultra' && (!S.exam || S.exam.done)) { S.answered = true; S.type = 'exam'; showExamCard(); return; }
   S.examItem = inExam() ? S.exam.queue[S.exam.i] : null;
   const topic = S.examItem ? S.examItem.topic : S.topic;
-  S.plan = GRADES[topic][S.examItem ? MAX : S.grade[topic]]();
+  // Blandat: en slumpad grad, oftare de svåra
+  S.mixG = !S.examItem && isMix(topic) ? rnd([0, 1, 2, 3, 3, 4, 4]) : null;
+  S.plan = GRADES[topic][S.examItem ? MAX : S.mixG ?? S.grade[topic]]();
   S.type = S.plan.type; S.focus = S.plan.focus || null;
   const n = S.plan.n || rnd([4, 5, 6]);
   S.n = n; S.q = genBands(n);
@@ -1479,13 +1511,20 @@ const close = (a,b) => Math.abs(a-b) < 1e-6 * Math.max(1, Math.abs(b));
 
 // Svaret: först en spänningsfas som är lika för rätt och fel, sedan utfallet.
 // Rätt (och Eldprovet) går vidare av sig själv. Fel stannar med förklaringen tills man trycker Nästa.
-const SPARK_MS = 900, NEXT_MS = 1700, PARTY_MS = 2600, EXAM_MS = 1100;
+const SPARK_MS = 900, NEXT_MS = 1700, PARTY_MS = 2600, GOLD_MS = 4200, EXAM_MS = 1100;
 const stopTimer = () => { clearTimeout(S.timer); S.timer = null; S.autoNext = false; };
 function finish(ok){
   S.answered = true; S.ok = ok;
-  S.unlockedNow = null; S.moved = null; S.mapGrow = null; S.barPlan = null;
+  S.unlockedNow = null; S.goldNow = null; S.moved = null; S.mapGrow = null; S.barPlan = null;
   if (inExam()) {
     if (S.exam && !S.exam.done) recordExam(ok);
+  } else if (isMix(S.topic)) {
+    // Blandat: ingen trappa, bara sviten och rekordet
+    const t = S.topic, from = S.mix.streak;
+    S.mix.streak = ok ? from + 1 : 0;
+    const record = S.mix.streak > (S.mix.best[t] || 0);
+    if (record) { S.mix.best[t] = S.mix.streak; save('fargkoden2-best', JSON.stringify(S.mix.best)); }
+    S.barPlan = {mix: true, ok, topic: t, from: {streak: from}, to: {streak: S.mix.streak, best: S.mix.best[t] || 0}, record};
   } else {
     const t = S.topic, before = S.done[t], from = {g: S.grade[t], up: S.up, down: S.down, done: before};
     const r = ladder({g: S.grade[t], up: S.up, down: S.down, done: before}, ok);
@@ -1497,6 +1536,7 @@ function finish(ok){
     saveProgress();
     const nx = TOPICS[TOPICS.indexOf(t) + 1];
     if (nx && before < UNLOCK_AT && r.done >= UNLOCK_AT) S.unlockedNow = nx;
+    if (S.moved === 'top') { S.goldNow = t; S.mix.streak = 0; }
   }
   if (S.instant || reduceMotion()) { reveal(); return; }
   S.busy = true;
@@ -1518,11 +1558,12 @@ function reveal(){
   const party = S.moved === 'up' || S.moved === 'top';
   if (inExam()) sfx.tick();
   else if (!S.ok) sfx.wrong();
+  else if (S.moved === 'top') sfx.gold();
   else if (party) sfx.fanfare();
   else sfx.right();
   if (!S.instant) outcomeFX(inExam() ? 'neutral' : S.ok ? 'won' : 'lost', party);
   if (!S.instant) barFX(S.barPlan, barStart);
-  if (!S.instant && (S.ok || inExam())) { S.autoNext = true; S.timer = setTimeout(advance, inExam() ? EXAM_MS : party ? PARTY_MS : NEXT_MS); }
+  if (!S.instant && (S.ok || inExam())) { S.autoNext = true; S.timer = setTimeout(advance, inExam() ? EXAM_MS : S.moved === 'top' ? GOLD_MS : party ? PARTY_MS : NEXT_MS); }
   document.getElementById('cont')?.focus({preventScroll:true});
 }
 // Gnistan går genom hela motståndet, alltid från vänster. Ett motstånd har ingen polaritet,
@@ -1584,7 +1625,7 @@ function barDraw(st, topic, label){
   const red = (g, i) => g === st.g - 1 && i >= 3 - (st.down || 0);
   const segs = GRADE_NAME.map((n, g) => {
     const cur = g === st.g, fill = i => g < st.g ? (red(g, i) ? 'full bad' : 'full') : cur ? (i < st.up ? 'on' : '') : g < (st.done || 0) ? 'was' : '';
-    return `<div class="gseg${cur ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(i => `<i class="${fill(i)}"></i>`).join('')}</div><span>${cur && label ? label : n}</span></div>`;
+    return `<div class="gseg${cur ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(i => `<i class="${fill(i)}" style="--k:${g * 3 + i}"></i>`).join('')}</div><span>${cur && label ? label : n}</span></div>`;
   }).join('');
   b.innerHTML = `<div class="gname">${topicName(topic)}</div><div class="segs">${segs}</div>`;
 }
@@ -1603,9 +1644,39 @@ function dust(from, to, n, cls){
     later((ms + i * 35) / 1000 + .05, () => d.remove());
   }
 }
+// Blandat: sviten och rekordet i stället för graderna
+function barDrawMix(topic, n, best, rec){
+  const b = document.getElementById('gbar');
+  b.innerHTML = `<div class="gname">${topicName(topic)} · Blandat</div><div class="mixrow"><span class="streak"><b>${n}</b> i rad</span><span class="rec${rec ? ' new' : ''}">${rec ? 'Nytt rekord!' : `Rekord ${best}`}</span></div>`;
+}
+function mixFX(P, startAt){
+  const b = document.getElementById('gbar'), calm = reduceMotion();
+  const num = () => { const e = b.querySelector('.streak b'); if (!e) return null; const r = e.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+  later(startAt, () => { barDrawMix(P.topic, P.from.streak, P.to.best - (P.record ? 1 : 0), false); b.className = 'gbar show goldbar'; });
+  if (P.ok) {
+    later(startAt + .35, () => { if (!calm) dust(S.ledAt, num(), 10, 'in gold'); });
+    later(startAt + .85, () => { barDrawMix(P.topic, P.to.streak, P.to.best, P.record); b.querySelector('.streak b').classList.add('pop'); if (P.record) b.classList.add('quake'); });
+    later(startAt + 1.55, () => b.classList.remove('show'));
+  } else {
+    later(startAt + .25, () => { if (!calm && P.from.streak) dust(num(), null, 10, 'out gold'); barDrawMix(P.topic, 0, P.to.best, false); b.classList.add('shake'); });
+  }
+}
+// Gyllene: en våg av guld går genom alla fack, och gnistor sprutar ur stapeln
+function goldFX(b, at){
+  later(at, () => {
+    b.classList.remove('quake'); b.classList.add('gilded');
+    if (reduceMotion()) return;
+    const r = b.getBoundingClientRect(), c = {x: r.left + r.width / 2, y: r.top + r.height / 2};
+    for (let i = 0; i < 3; i++) later(.15 + i * .35, () => {
+      const at2 = {x: r.left + r.width * (.2 + .3 * i), y: c.y};
+      for (let j = 0; j < 12; j++) { const a = j / 12 * Math.PI * 2, d = 60 + Math.random() * 50; dust(at2, {x: at2.x + Math.cos(a) * d, y: at2.y + Math.sin(a) * d + 30}, 1, 'in gold'); }
+    });
+  });
+}
 function barFX(P, startAt){
   clearBar();
   if (!P) return;
+  if (P.mix) { mixFX(P, startAt); return; }
   const b = document.getElementById('gbar'), calm = reduceMotion(), party = P.moved === 'up' || P.moved === 'top';
   // Fack i en grad: g är graden (0–4), i facket (0–2)
   const cellEl = (g, i) => b.querySelectorAll('.gseg')[g]?.querySelectorAll('.cells i')[i];
@@ -1623,7 +1694,8 @@ function barFX(P, startAt){
       // Graden mognar: de tre ljusgröna facken mörknar medan stapeln skakar
       later(startAt + 1.05, () => { b.classList.add('quake'); b.querySelectorAll('.gseg.cur .cells i').forEach(c => c.classList.add('ripe')); });
       later(startAt + 1.55, () => { b.classList.remove('quake'); barDraw(P.to, P.topic, P.moved === 'top' ? 'klart ✓' : null); b.classList.add('newgrade'); });
-      later(startAt + 2.3, () => b.classList.remove('show'));
+      if (P.moved === 'top') { goldFX(b, startAt + 1.7); later(startAt + 3.9, () => b.classList.remove('show')); }
+      else later(startAt + 2.3, () => b.classList.remove('show'));
     } else later(startAt + 1.5, () => b.classList.remove('show'));
   } else {
     const down = P.moved === 'down';
@@ -1694,6 +1766,13 @@ const sfx = (() => {
       [523, 659, 784].forEach((f, i) => tone(a, f, {t0: i * .11, d: .16, type: 'square', v: .07, at: .01}));
       [1047, 784, 659].forEach(f => tone(a, f, {t0: .36, d: .9, type: 'triangle', v: .12, at: .01}));
       tone(a, 2093, {t0: .36, d: 1, v: .06, at: .005});
+    },
+    // Ämnet är klart: en längre fanfar med glitter
+    gold(){
+      const a = ctx(); if (!a) return;
+      [523, 659, 784, 1047, 1319].forEach((f, i) => tone(a, f, {t0: i * .1, d: .18, type: 'square', v: .06, at: .01}));
+      [1047, 1319, 1568, 2093].forEach(f => tone(a, f, {t0: .55, d: 1.6, type: 'triangle', v: .09, at: .02}));
+      for (let i = 0; i < 8; i++) tone(a, 2637 + i * 220, {t0: .6 + i * .12, d: .3, v: .03, at: .005});
     },
     // Eldprovet: svaret är registrerat
     tick(){ const a = ctx(); if (!a) return; tone(a, 660, {d: .09, type: 'square', v: .06, at: .005}); tone(a, 990, {t0: .07, d: .12, type: 'square', v: .05, at: .005}); }
@@ -1859,7 +1938,7 @@ document.getElementById('q').addEventListener('click', e => {
   if (btn.id === 'examStart') {
     if (S.topic !== 'ultra') { S.up = 0; S.down = 0; S.topic = 'ultra'; save('fargkoden2-topic', 'ultra'); }
     startExam();
-  } else if (btn.id === 'play') {
+  } else if (btn.id === 'play' || btn.classList.contains('go')) {
     goTopic(btn.dataset.go);
   } else if (btn.dataset.grade != null) {
     S.pickGrade = +btn.dataset.grade; drawCard(S.view, S.fresh);
