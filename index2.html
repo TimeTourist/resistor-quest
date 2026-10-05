@@ -34,6 +34,8 @@ body{
   font:16px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
+/* Ballonger och gnistor får gå utanför kortet utan att sidan kan skrollas i sidled */
+html,body{overflow-x:clip}
 .top{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
 .toprow{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .brand{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:clamp(1.9rem,7vw,2.6rem);line-height:1;margin:0;display:flex;align-items:center;gap:8px}
@@ -111,13 +113,17 @@ main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
   #q .opt.ok:not(.picked){animation:okpop .35s ease-out}
   @keyframes okpop{50%{transform:scale(1.04)}}
   .opt.gone.popnow{visibility:visible;animation:balloon .55s ease-in forwards}
-  .opt.gone.popdelay{visibility:visible;animation:wobble .5s ease-in-out 3,balloon .55s ease-in 1.6s forwards}
+  .opt.gone.popdelay{visibility:visible;animation:wobble .5s ease-in-out infinite,balloon .55s ease-in var(--pd,1.6s) forwards}
   .opt.gone.popdelay{box-shadow:inset 0 0 0 3px var(--accent)}
   @keyframes balloon{0%{transform:scale(1)}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1.35);opacity:0;visibility:hidden}}
   @keyframes wobble{50%{transform:scale(1.04)}}
   .opt.picked.shake{animation:shake .5s ease-in-out}
   @keyframes shake{20%{transform:translateX(-8px) scale(1.06)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
   .mk{animation:ain .25s ease-out both}
+  .badge{animation:badgein .3s ease-out both}
+  @keyframes badgein{from{opacity:0;transform:scale(.4)}}
+  .tapcue svg{animation:press 1.1s ease-in-out calc(var(--wait,0s) + .3s) infinite}
+  @keyframes press{0%,60%,100%{transform:translate(0,0) scale(1)}30%{transform:translate(-3px,-4px) scale(.88)}}
 }
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Nivåkortet: gradprickar och animering av ämnet */
@@ -205,21 +211,13 @@ main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
 .primary:disabled{opacity:.45;cursor:default}
 .hint{color:var(--bad);font-size:.95rem;margin:8px 0 0}
 .lesson{margin:14px 0 0;border-radius:10px;padding:10px 14px;line-height:1.45}
-button.lesson{display:block;width:100%;position:relative;border:0;font:inherit;color:var(--ink);text-align:left;cursor:pointer;padding-right:40px}
-.lesson .ar{position:absolute;right:14px;bottom:8px;font-size:.85rem;color:var(--bad);opacity:0;animation:arin .3s ease-out .7s forwards}
-.lesson.late .ar{animation-delay:2.3s}
-@keyframes arin{to{opacity:1}}
-.lesson .hand{position:absolute;right:-4px;bottom:-22px;width:34px;height:34px;color:var(--ink);opacity:0;animation:arin .3s ease-out .9s forwards;pointer-events:none}
-.lesson.late .hand{animation-delay:2.5s}
+.tapcue{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;width:60px;height:60px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;animation:cuein .3s ease-out var(--wait,0s) forwards}
+.tapcue svg{width:34px;height:34px}
+@keyframes cuein{to{opacity:1;pointer-events:auto}}
+.badge{position:absolute;top:6px;right:8px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.25rem;line-height:1;padding:3px 9px;border-radius:999px;color:#fff}
+.badge.bad{background:var(--bad)}.badge.ok{background:var(--ok)}
+.opt{position:relative}
 .submit{display:block;width:100%;margin-top:4px}
-@media (prefers-reduced-motion:no-preference){
-  .lesson .ar{animation:arin .3s ease-out .7s forwards,bob .9s ease-in-out 1s infinite}
-  .lesson.late .ar{animation-delay:2.3s,2.6s}
-  @keyframes bob{50%{transform:translateY(4px)}}
-  .lesson .hand{animation:arin .3s ease-out .9s forwards,press 1.1s ease-in-out 1.2s infinite}
-  .lesson.late .hand{animation-delay:2.5s,2.8s}
-  @keyframes press{0%,60%,100%{transform:translate(0,0) scale(1)}30%{transform:translate(-3px,-4px) scale(.9)}}
-}
 .lesson.ok{background:var(--ok-bg)}
 .lesson.bad{background:var(--bad-bg)}
 .lesson.tip{background:var(--tip-bg)}
@@ -802,10 +800,11 @@ function svg(b, o = {}){
   // Markerade band (tipset "Förklara banden"): ram runt bandet och en etikett under
   const cxOf = i => st.flip ? 320 - st.xs[i] : st.xs[i];
   // markAnim: etiketterna dyker upp en i taget (banden räknas upp)
+  const mcol = `var(--${o.markKind || 'accent'})`, ma = o.markAnim === true ? {start: 0, step: .18} : o.markAnim;
   const marks = (o.mark || []).map(([i, lab], j) => {
-    const w = st.w[i], cx = cxOf(i), anim = o.markAnim ? ` class="mk" style="animation-delay:${j * .18}s"` : '';
-    return `<g${anim}><rect x="${cx - w/2 - 3}" y="5" width="${w + 6}" height="82" rx="3" fill="none" style="stroke:var(--accent)" stroke-width="2.5"/>` +
-      `<text x="${cx}" y="103" text-anchor="middle" font-size="12" font-weight="700" style="fill:var(--accent)" font-family="IBM Plex Sans, system-ui, sans-serif">${lab}</text></g>`;
+    const w = st.w[i], cx = cxOf(i), anim = ma ? ` class="mk ${o.markKind || ''}" style="animation-delay:${(ma.start + j * ma.step).toFixed(2)}s"` : '';
+    return `<g${anim}><rect x="${cx - w/2 - 3}" y="5" width="${w + 6}" height="82" rx="3" fill="none" style="stroke:${mcol}" stroke-width="2.5"/>` +
+      `<text x="${cx}" y="103" text-anchor="middle" font-size="12" font-weight="700" style="fill:${mcol}" font-family="IBM Plex Sans, system-ui, sans-serif">${lab}</text></g>`;
   }).join('');
   // Klammer över ohm-banden (band 0 till och med to). dim tonar ner banden efter, labels skrivs under banden.
   const brs = o.bracket || [];
@@ -1026,11 +1025,20 @@ const GRADES = {
     () => choice(() => {
       const right = rnd4(), odd = rnd([2, 7, 8]);
       const ns = [0,1,2,3].map(i => i === right ? odd : rnd([4, 5, 6]));
-      S.cq = {odd:true, ns, right, layout:'r', prompt:'Ett av dem är inget motstånd.',
+      // Tidslinjen för animeringen vid fel, i sekunder
+      const T = {red: .5, redStep: .3};
+      T.pop = T.red + odd * T.redStep + .7; T.green = T.pop + .7; T.greenStep = .16; T.total = T.green + 6 * T.greenStep + .6;
+      S.cq = {odd:true, anim: T, ns, right, layout:'r', prompt:'Ett av dem är inget motstånd.',
         opts: ns.map((n, i) => {
           const b = i === right ? oddBands(n) : genBands(n), st = i === right ? oddStyle(n) : stdStyle(n);
-          return {draw: () => svg(b, {style: st, label: `Motstånd med ${n} färgband`,
-            mark: i === right && S.answered && !S.ok ? b.map((_, j) => [j, String(j + 1)]) : null, markAnim: true})};
+          // Vid fel: det udda räknar sina band i rött och poppar, sedan räknar de andra i grönt
+          const count = () => {
+            if (!S.answered || S.ok) return {};
+            const odd = i === right, start = odd ? T.red : T.green, step = odd ? T.redStep : T.greenStep;
+            return {mark: b.map((_, j) => [j, String(j + 1)]), markKind: odd ? 'bad' : 'ok', markAnim: {start, step},
+              badge: {text: odd ? `${n} ✗` : `${n} ✓`, kind: odd ? 'bad' : 'ok', at: start + n * step}};
+          };
+          return {draw: () => svg(b, {style: st, label: `Motstånd med ${n} färgband`, ...count()}), badge: () => count().badge};
         }),
         wrong: `Ett motstånd har 3 till 6 färgband, oftast 4, 5 eller 6. Det här hade ${odd}.`};
     }),
@@ -1337,7 +1345,9 @@ function choiceHTML(){
     : !Q.odd ? markCls(i === Q.right, S.pickC === i)
     : i === Q.right ? ' gone' + (S.ok ? (jr ? ' popnow' : '') : ' reveal' + (jr ? ' popdelay' : ''))
     : ' ok' + (S.pickC === i ? ' picked' + (jr ? ' shake' : '') : '');
-  const opts = Q.opts.map((o, i) => `<button class="opt${cls}${mk(i)}" data-c="${i}"${disAttr()}>${o.draw ? o.draw() : o.html}${done && o.ann ? `<small class="ann">${o.ann}</small>` : ''}</button>`).join('');
+  const badge = o => { const b = done && o.badge && o.badge(); return b ? `<span class="badge ${b.kind}" style="animation-delay:${b.at.toFixed(2)}s">${b.text}</span>` : ''; };
+  const pd = i => Q.anim && done && !S.ok && i === Q.right ? ` style="--pd:${Q.anim.pop.toFixed(2)}s"` : '';
+  const opts = Q.opts.map((o, i) => `<button class="opt${cls}${mk(i)}" data-c="${i}"${pd(i)}${disAttr()}>${o.draw ? o.draw() : o.html}${badge(o)}${done && o.ann ? `<small class="ann">${o.ann}</small>` : ''}</button>`).join('');
   return `${Q.odd ? `<p class="oddhead">${BALLOON}Vilken ska bort?<span>Tre hör ihop, en ska bort.</span></p>` : ''}${topHTML(Q.prompt)}${Q.res ? `<div class="res">${Q.res()}</div>` : ''}
     <div class="${grid}">${opts}</div>${done && !S.ok && Q.facit ? Q.facit() : ''}`;
 }
@@ -1372,12 +1382,9 @@ function finish(ok){
 function reveal(){
   stopTimer();
   S.busy = false; S.justRevealed = true; S.revealAt = Date.now();
-  // Handen visas de tre första gångerna man svarar fel
-  S.handShow = false;
-  if (!S.ok && !inExam()) {
-    let n = 0; try { n = +localStorage.getItem('fargkoden2-hand') || 0; } catch(e) {}
-    if (n < 3) { S.handShow = true; save('fargkoden2-hand', n + 1); }
-  }
+  // Vid fel måste man se hela förklaringen innan man kan gå vidare
+  const anim = !S.ok && !inExam() && S.cq && S.cq.anim;
+  S.lockUntil = S.revealAt + (S.instant ? 0 : anim && !reduceMotion() ? anim.total * 1000 : 600);
   render();
   S.justRevealed = false; S.mapGrow = null;
   const party = S.moved === 'up' || S.moved === 'top';
@@ -1524,8 +1531,11 @@ function lessonHTML(){
   const line = S.cq ? S.cq.wrong : S.type === 'point' ? pointWrong() : lessonText();
   // Rutan är som en dialogruta i ett spel: pilen ▼ studsar när förklaringen är klar, och ett tryck fortsätter.
   // De tre första gångerna visar en hand var man trycker.
-  const late = S.cq && S.cq.odd ? ' late' : '';
-  return `<div role="status"><button type="button" class="lesson bad${late}" id="cont">${line}<span class="sr"> Tryck för att fortsätta.</span>${S.handShow ? HAND : ''}<span class="ar" aria-hidden="true">▼</span></button></div>`;
+  // Frågor med en egen förklaringsanimering visar inte raden, den läses bara upp för skärmläsare.
+  // Fingret svävar nere till höger när animeringen är klar. Ett tryck var som helst fortsätter.
+  const wait = ((S.lockUntil || 0) - (S.revealAt || 0)) / 1000;
+  const text = S.cq && S.cq.anim ? `<p class="sr" role="status">${line}</p>` : `<p class="lesson bad" role="status">${line}</p>`;
+  return `${text}<button type="button" class="tapcue" id="cont" aria-label="Fortsätt" style="--wait:${Math.max(0, wait).toFixed(2)}s">${HAND}</button>`;
 }
 const pointWrong = () => S.pointRole === 'mult' ? 'Bandet efter siffrorna säger hur många nollor.'
   : `Första bandet sitter i änden längst från det breda toleransbandet. Här läser man från ${S.style.flip ? 'höger' : 'vänster'}.`;
@@ -1625,7 +1635,7 @@ document.getElementById('q').addEventListener('click', e => {
   if (S.autoNext) { advance(); return; }
   // Efter svar: ett tryck var som helst på kortet tar nästa fråga. Tryck direkt efter utfallet räknas inte.
   if (S.answered && !S.view && S.type !== 'exam') {
-    if (!S.instant && Date.now() - (S.revealAt || 0) < 600) return;
+    if (Date.now() < (S.lockUntil || 0)) return;
     advance(); return;
   }
   // Peka på band: banden i motståndet är knappar
@@ -1716,7 +1726,7 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return;
   if (e.target.closest && e.target.closest('[data-band],[data-level]')) return;
   if (S.view) return;
-  if (S.answered) { advance(); return; }
+  if (S.answered) { if (Date.now() >= (S.lockUntil || 0)) advance(); return; }
   if (needsSubmit() && entryReady()) answerRead();
 });
 const mapEl = document.getElementById('map');

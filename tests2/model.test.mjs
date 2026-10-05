@@ -100,7 +100,7 @@ for (const topic of TOPICS) {
       assert.ok(t.$(`[data-c="${picked}"]`).classList.contains('ok'));
       assert.equal(t.$$('#q .opt.ok').length, 3);
       assert.equal(t.$$('#q .opt.bad').length, 0);
-      assert.equal(t.$$('#q .lesson').length, 1);
+      assert.ok(t.$('#q [role="status"]'), 'regeln finns, synlig eller för skärmläsare');
     }
   });
 }
@@ -158,7 +158,7 @@ test('Peka på band: Motståndets Stormästare frågar efter första bandet, äv
 });
 
 test('Text: rätt svar ger ingen text, fel svar ger exakt en rad', () => {
-  for (const [topic, g] of [['body', 0], ['ohm', 1], ['ohm', 3], ['tol', 3], ['e', 2]]) {
+  for (const [topic, g] of [['ohm', 1], ['ohm', 3], ['tol', 3], ['e', 2]]) {
     const t = atGrade(topic, g);
     t.g('next()'); answer(t, true);
     assert.equal(t.$$('#q .lesson').length, 0, `${topic} ${g} rätt`);
@@ -260,39 +260,66 @@ test('Eldprovet: nästa fråga kommer av sig själv även vid fel', async () => 
   t.g('clearTimeout(S.timer)');
 });
 
-test('Ingen Nästa-knapp: efter fel svar fortsätter man med ett tryck på kortet', () => {
+test('Ingen Nästa-knapp: efter fel svar fortsätter man med ett tryck på kortet eller fingret', () => {
   const t = atGrade('ohm', 1);
   t.g('next()');
   assert.equal(t.$('#main'), null);
   answer(t, false);
   assert.equal(t.$('#main'), null);
-  const box = t.$('#q .lesson');
-  assert.equal(box.tagName, 'BUTTON');
-  assert.ok(box.querySelector('.ar'), 'pilen ▼ finns i rutan');
+  assert.ok(t.$('#cont.tapcue'), 'fingret finns');
   t.$('#q .prompt').dispatchEvent(new t.w.MouseEvent('click', { bubbles: true }));
   assert.equal(t.g('S.answered'), false, 'ny fråga');
+  t.g('next()'); answer(t, false);
+  t.$('#cont').click();
+  assert.equal(t.g('S.answered'), false, 'fingret fortsätter också');
 });
 
-test('Tryck direkt efter utfallet ignoreras, så att man inte hoppar förbi förklaringen', () => {
-  const t = atGrade('ohm', 1);
+test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
+  const t = atGrade('body', 0);
   t.g('S.instant = false');
-  t.g('next()'); answer(t, false);
+  t.g(`S.grade.body = 0; next()`); answer(t, false);
   t.g('reveal()');
+  const lock = t.g('S.lockUntil - S.revealAt');
+  assert.ok(lock >= 3000, `animeringen tar ${lock} ms`);
   cont(t);
   assert.equal(t.g('S.answered'), true, 'trycket för tidigt ignoreras');
-  t.g('S.revealAt = 0');
+  t.doc.body.dispatchEvent(new t.w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  assert.equal(t.g('S.answered'), true, 'Enter för tidigt ignoreras');
+  t.g('S.lockUntil = 0');
   cont(t);
   assert.equal(t.g('S.answered'), false);
 });
 
-test('Handen visas de tre första gångerna man svarar fel, sedan inte', () => {
+test('Fingret visas varje gång spelet väntar efter fel, aldrig efter rätt', () => {
   const t = atGrade('ohm', 1);
-  for (let i = 0; i < 4; i++) {
-    t.g('next()'); answer(t, false);
-    assert.equal(!!t.$('#q .lesson .hand'), i < 3, `gång ${i + 1}`);
+  for (let i = 0; i < 5; i++) {
+    t.g('S.grade.ohm = 1; next()'); answer(t, false);
+    assert.ok(t.$('#cont.tapcue'), `gång ${i + 1}`);
     cont(t);
   }
-  assert.equal(t.w.localStorage.getItem('fargkoden2-hand'), '3');
+  t.g('S.grade.ohm = 1; next()'); answer(t, true);
+  assert.equal(t.$('#cont'), null);
+});
+
+test('Motståndet Nykomling fel: det udda räknar sina band i rött och poppar, de andra räknar i grönt', () => {
+  const t = atGrade('body', 0);
+  for (let i = 0; i < 15; i++) {
+    t.g('S.grade.body = 0; next()');
+    const right = t.g('S.cq.right'), ns = t.g('S.cq.ns');
+    answer(t, false);
+    const odd = t.$(`[data-c="${right}"]`);
+    assert.ok(odd.classList.contains('gone'));
+    assert.equal(odd.querySelectorAll('.mk.bad').length, ns[right], 'det udda räknar alla sina band i rött');
+    assert.match(odd.querySelector('.badge.bad').textContent, new RegExp(`${ns[right]}.*✗`));
+    t.$$('[data-c]').filter(b => b !== odd).forEach(b => {
+      const n = ns[+b.dataset.c];
+      assert.equal(b.querySelectorAll('.mk.ok').length, n);
+      assert.match(b.querySelector('.badge.ok').textContent, new RegExp(`${n}.*✓`));
+    });
+    // Ingen synlig rad, bara för skärmläsare
+    assert.equal(t.$$('#q .lesson').length, 0);
+    assert.match(t.$('#q .sr[role="status"]').textContent, /4, 5 eller 6/);
+  }
 });
 
 test('Svår variant: Svara sitter under inmatningen', () => {
