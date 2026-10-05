@@ -623,7 +623,14 @@ test('Resistansen Stormästare fel: talet byggs upp, och vid avläsning får ban
     answer(t, false);
     const row = t.$('#q .calcrow').textContent.replace(/\s/g, '');
     assert.ok(row.includes(t.g('fmtVal(valueOf(S.q))').replace(/\s/g, '')), row);
-    if (t.g('S.type') === 'read') assert.equal(t.$$('#q .res .mk.ok').length, t.g('nd(S.q)') + 1);
+    if (t.g('S.type') === 'read') {
+      assert.equal(t.$$('#q .res .mk.ok').length, t.g('nd(S.q)') + 1);
+      const texts = t.$$('#q .res .mk.ok text');
+      const mult = texts.find(e => e.textContent === t.g('fmtMult(C[S.q[nd(S.q)]].m)'));
+      assert.ok(mult, 'hela multiplikatorn står på bandet');
+      assert.ok(+mult.getAttribute('y') < 0, 'ovanför motståndet');
+      texts.filter(e => e !== mult).forEach(e => assert.ok(+e.getAttribute('y') > 92, 'siffrorna under'));
+    }
     assert.equal(t.$$('#q .lesson').length, 0);
   }
   assert.deepEqual([...types].sort(), ['build', 'read']);

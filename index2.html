@@ -899,10 +899,11 @@ function svg(b, o = {}){
   const delay = at => at != null ? ` style="animation-delay:${at.toFixed(2)}s"` : '';
   // markAnim: etiketterna dyker upp en i taget (banden räknas upp)
   const mcol = `var(--${o.markKind || 'accent'})`, ma = o.markAnim === true ? {start: 0, step: .18} : o.markAnim;
-  const marks = (o.mark || []).map(([i, lab], j) => {
+  // Ett tredje värde 'top' sätter etiketten ovanför motståndet i stället för under
+  const marks = (o.mark || []).map(([i, lab, pos], j) => {
     const w = st.w[i], cx = cxOf(i), anim = ma ? ` class="mk ${o.markKind || ''}" style="animation-delay:${(ma.start + j * ma.step).toFixed(2)}s"` : '';
     return `<g${anim}><rect x="${cx - w/2 - 3}" y="5" width="${w + 6}" height="82" rx="3" fill="none" style="stroke:${mcol}" stroke-width="2.5"/>` +
-      `<text x="${cx}" y="103" text-anchor="middle" font-size="12" font-weight="700" style="fill:${mcol}" font-family="IBM Plex Sans, system-ui, sans-serif">${lab}</text></g>`;
+      `<text x="${cx}" y="${pos === 'top' ? -4 : 103}" text-anchor="middle" font-size="12" font-weight="700" style="fill:${mcol}" font-family="IBM Plex Sans, system-ui, sans-serif">${lab}</text></g>`;
   }).join('');
   // Klammer över ohm-banden (band 0 till och med to). dim tonar ner banden efter, labels skrivs under banden.
   const brs = o.bracket || [];
@@ -961,7 +962,7 @@ function svg(b, o = {}){
 <path d="${body}" ${fill}/>
 <g clip-path="url(#c${id})">${bands}${dims}${st.chip != null ? `<rect x="${st.xs[st.chip] - st.w[st.chip]/2 - 0.5}" y="38" width="${st.w[st.chip] + 1}" height="9" ${fill}/>` : ''}${st.tint ? `<rect x="60" y="10" width="200" height="72" fill="#ff9a2e" opacity=".38" style="mix-blend-mode:multiply"/>` : ''}<rect x="60" y="10" width="200" height="72" fill="url(#g${id})"/></g>
 <path d="${body}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1"/>${taps}`;
-  const top = brs.length || notes ? -30 : 0, bottom = (o.mark && o.mark.length) || brs.some(x => x.labels) ? 108 : 92;
+  const top = brs.length || notes || (o.mark || []).some(m => m[2] === 'top') ? -30 : 0, bottom = (o.mark && o.mark.length) || brs.some(x => x.labels) ? 108 : 92;
   return `<svg viewBox="0 ${top} 320 ${bottom - top}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}"><defs>${mdefs}
 <clipPath id="c${id}"><path d="${body}"/></clipPath>
 <linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
@@ -1463,8 +1464,8 @@ function calcRowHTML(b, at){
   if (v >= 1000) { h += tok(`= ${fmtVal(v)}`, t, 'pre'); t += .5; }
   return {html: `<div class="calcrow" aria-hidden="true">${h}</div>`, end: t};
 }
-// Banden får sina värden: siffrorna, och × på multiplikatorn (hela multiplikatorn står i talet under, banden sitter tätt)
-const valueMarks = b => b.slice(0, nd(b)).map((c, j) => [j, String(C[c].d)]).concat([[nd(b), '×']]);
+// Banden får sina värden: siffrorna under och multiplikatorn ovanför, så att etiketterna inte krockar när banden sitter tätt
+const valueMarks = b => b.slice(0, nd(b)).map((c, j) => [j, String(C[c].d)]).concat([[nd(b), fmtMult(C[b[nd(b)]].m), 'top']]);
 // Ingen Nästa-knapp: rätt svar går vidare själv, efter fel trycker man var som helst på kortet
 const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p></div>`;
 function render(){
