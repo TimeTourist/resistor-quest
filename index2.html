@@ -139,6 +139,32 @@ html,body{overflow-x:clip}
   .tapcue svg{animation:press 1.1s ease-in-out calc(var(--wait,0s) + .3s) infinite}
   @keyframes press{0%,60%,100%{transform:translate(0,0) scale(1)}30%{transform:translate(-3px,-4px) scale(.88)}}
 }
+/* Stapeln överst på skärmen i slutet av varje svar */
+.gbar{position:fixed;left:50%;top:10px;z-index:30;width:min(420px,calc(100% - 32px));transform:translate(-50%,-150%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 12px 10px;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:transform .35s ease;pointer-events:none}
+.gbar.show{transform:translate(-50%,0)}
+.gname{font-size:.9rem;color:var(--muted);margin-bottom:6px}
+.gname b{color:var(--ink);display:inline-block}
+.cells{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;height:18px}
+.cells i{display:block;border-radius:5px;border:2px solid var(--line);background:var(--bg)}
+.cells i.on{background:var(--col);border-color:var(--col)}
+.cracks{position:absolute;inset:-3px 0;width:100%;height:calc(100% + 6px);pointer-events:none;overflow:visible}
+.cracks path{fill:none;stroke:var(--bad);stroke-width:2.4;stroke-linejoin:round;opacity:0;vector-effect:non-scaling-stroke}
+.cracks path.on{opacity:1}
+.dust{position:fixed;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;z-index:31;pointer-events:none}
+.dust.in{background:#ffd84a;box-shadow:0 0 6px #ffcc33}
+.dust.out{background:#9b8f7e}
+@media (prefers-reduced-motion:no-preference){
+  .cells i.pop{animation:cellpop .45s ease-out}
+  @keyframes cellpop{40%{transform:scaleY(1.6);box-shadow:0 0 14px var(--col)}}
+  .gbar.shake{animation:bshake .45s ease-in-out}
+  @keyframes bshake{20%{transform:translate(calc(-50% - 6px),0)}40%{transform:translate(calc(-50% + 5px),0)}60%{transform:translate(calc(-50% - 3px),0)}80%{transform:translate(calc(-50% + 2px),0)}}
+  .gbar.quake{animation:bquake .5s linear}
+  @keyframes bquake{0%,100%{transform:translate(-50%,0)}10%{transform:translate(calc(-50% - 10px),3px) rotate(-2deg)}20%{transform:translate(calc(-50% + 9px),-3px) rotate(2deg)}30%{transform:translate(calc(-50% - 8px),2px) rotate(-1.5deg)}40%{transform:translate(calc(-50% + 7px),-2px) rotate(1.5deg)}50%{transform:translate(calc(-50% - 6px),2px) rotate(-1deg)}60%{transform:translate(calc(-50% + 5px),-1px)}70%{transform:translate(calc(-50% - 4px),1px)}80%{transform:translate(calc(-50% + 3px),0)}90%{transform:translate(calc(-50% - 2px),0)}}
+  .gbar.newgrade .gname b{animation:gpop .45s ease-out}
+  @keyframes gpop{50%{transform:scale(1.35)}}
+  .cracks path.on{animation:crack .3s ease-out}
+  @keyframes crack{from{stroke-dasharray:0 40}to{stroke-dasharray:40 0}}
+}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Nivåkortet: gradprickar och animering av ämnet */
 .grades{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
@@ -446,6 +472,7 @@ th{color:var(--muted);font-weight:500}
     <button id="tReset">Börja om</button>
   </div>
 </main>
+<div class="gbar" id="gbar" aria-hidden="true"></div>
 <script>
 const C = {
   black:{n:'Svart',hex:'#1b1b1b',d:0,m:1,tc:250},
@@ -639,7 +666,7 @@ function drawCard(lv, fresh){
   updateScore();
 }
 function showLevelCard(lv, fresh = false){
-  stopTimer(); S.busy = false;
+  stopTimer(); clearBar(); S.busy = false;
   S.view = lv; S.pickGrade = null; S.fresh = fresh;
   drawCard(lv, fresh);
   (document.getElementById('play') || document.getElementById('examStart'))?.focus({preventScroll:true});
@@ -966,7 +993,7 @@ function showExamCard(){
   updateScore();
 }
 function next(){
-  stopTimer();
+  stopTimer(); clearBar();
   S.view = null;
   document.getElementById('q').classList.remove('bosscard');
   if (S.topic === 'ultra' && (!S.exam || S.exam.done)) { S.answered = true; S.type = 'exam'; showExamCard(); return; }
@@ -1441,18 +1468,20 @@ const close = (a,b) => Math.abs(a-b) < 1e-6 * Math.max(1, Math.abs(b));
 
 // Svaret: först en spänningsfas som är lika för rätt och fel, sedan utfallet.
 // Rätt (och Eldprovet) går vidare av sig själv. Fel stannar med förklaringen tills man trycker Nästa.
-const SPARK_MS = 900, NEXT_MS = 1100, PARTY_MS = 1900;
+const SPARK_MS = 900, NEXT_MS = 1700, PARTY_MS = 2600, EXAM_MS = 1100;
 const stopTimer = () => { clearTimeout(S.timer); S.timer = null; S.autoNext = false; };
 function finish(ok){
   S.answered = true; S.ok = ok;
-  S.unlockedNow = null; S.moved = null; S.mapGrow = null;
+  S.unlockedNow = null; S.moved = null; S.mapGrow = null; S.barPlan = null;
   if (inExam()) {
     if (S.exam && !S.exam.done) recordExam(ok);
   } else {
-    const t = S.topic, before = S.done[t];
+    const t = S.topic, before = S.done[t], from = {g: S.grade[t], up: S.up, down: S.down};
     const r = ladder({g: S.grade[t], up: S.up, down: S.down, done: before}, ok);
     S.grade[t] = r.g; S.up = r.up; S.down = r.down; S.done[t] = r.done;
     S.moved = r.moved || (r.done === 5 && before < 5 ? 'top' : null);
+    // Stapeln i slutet av svaret: från läget före till läget efter
+    S.barPlan = {ok, topic: t, from, to: {g: r.g, up: r.up, down: r.down}, moved: S.moved};
     if (r.done > before) S.mapGrow = {lv: t, from: before};
     saveProgress();
     const nx = TOPICS[TOPICS.indexOf(t) + 1];
@@ -1469,7 +1498,10 @@ function reveal(){
   S.busy = false; S.justRevealed = true; S.revealAt = Date.now();
   // Vid fel måste man se hela förklaringen innan man kan gå vidare
   const anim = !S.ok && !inExam() && qAnim();
-  S.lockUntil = S.revealAt + (S.instant ? 0 : anim && !reduceMotion() ? anim.total * 1000 : 600);
+  // Stapeln kommer när animeringen är klar. Vid fel måste man se både förklaringen och stapeln innan man kan gå vidare.
+  const barStart = S.ok ? .1 : anim && !reduceMotion() ? anim.total : .3;
+  const barDur = !S.barPlan || S.ok ? 0 : S.barPlan.moved === 'down' ? BAR_DOWN : BAR_WRONG;
+  S.lockUntil = S.revealAt + (S.instant ? 0 : S.ok || inExam() ? 600 : (barStart + barDur) * 1000);
   render();
   S.justRevealed = false; S.mapGrow = null;
   const party = S.moved === 'up' || S.moved === 'top';
@@ -1478,7 +1510,8 @@ function reveal(){
   else if (party) sfx.fanfare();
   else sfx.right();
   if (!S.instant) outcomeFX(inExam() ? 'neutral' : S.ok ? 'won' : 'lost', party);
-  if (!S.instant && (S.ok || inExam())) { S.autoNext = true; S.timer = setTimeout(advance, party ? PARTY_MS : NEXT_MS); }
+  if (!S.instant) barFX(S.barPlan, barStart);
+  if (!S.instant && (S.ok || inExam())) { S.autoNext = true; S.timer = setTimeout(advance, inExam() ? EXAM_MS : party ? PARTY_MS : NEXT_MS); }
   document.getElementById('cont')?.focus({preventScroll:true});
 }
 // Gnistan går genom hela motståndet, alltid från vänster. Ett motstånd har ingen polaritet,
@@ -1514,9 +1547,75 @@ function outcomeFX(kind, party){
   if (!t) return;
   const at = {...t, x0: t.x1};
   const d = fxLayer(at, 'out ' + kind + (party ? ' party' : ''));
+  // Lysdiodens plats på skärmen: därifrån sugs dammet upp i stapeln
+  const qr = t.q.getBoundingClientRect();
+  S.ledAt = {x: qr.left + at.x0, y: qr.top + at.y};
   const bits = kind === 'won' ? Array.from({length: party ? 14 : 8}, (_, i) => `<b style="--a:${i * (360 / (party ? 14 : 8))}deg"></b>`).join('')
     : kind === 'lost' ? '<s></s><s></s><s></s>' : '';
   d.innerHTML = `<i></i>${bits}`;
+}
+// Stapeln: ämne, grad, tre fack för rätt i rad och sprickor för fel i rad. Syns bara i slutet av ett svar.
+// Rätt: dammet från explosionen sugs in och fyller nästa fack. Upp en grad: stapeln skakar våldsamt och graden byts.
+// Fel: stapeln skakar av sig dammet från facken och får en spricka. Ner en grad: våldsammare, och graden byts.
+const BAR_WRONG = 1.1, BAR_DOWN = 1.9;
+const CRACKS = ['M18 0 L24 7 L19 12 L26 20', 'M60 0 L54 6 L61 11 L56 20', 'M98 0 L103 8 L97 13 L102 20'];
+const barT = [];
+const later = (sec, fn) => barT.push(setTimeout(fn, sec * 1000));
+function clearBar(){
+  barT.forEach(clearTimeout); barT.length = 0;
+  document.getElementById('gbar').className = 'gbar';
+  document.querySelectorAll('.dust').forEach(d => d.remove());
+}
+function barDraw(st, topic, label){
+  const b = document.getElementById('gbar');
+  b.style.setProperty('--col', MAP_BANDS[topic][0]);
+  b.innerHTML = `<div class="gname">${topicName(topic)} · <b>${label || GRADE_NAME[st.g]}</b></div><div class="cells">${[0,1,2].map(i =>
+    `<i class="${i < st.up ? 'on' : ''}"></i>`).join('')}<svg class="cracks" viewBox="0 0 120 20" preserveAspectRatio="none">${CRACKS.map((d, i) =>
+    `<path class="${i < st.down ? 'on' : ''}" d="${d}"/>`).join('')}</svg></div>`;
+}
+// Damm som flyger till en punkt (to) eller faller och försvinner (to saknas). Punkterna är skärmkoordinater.
+function dust(from, to, n, cls){
+  if (!from) return;
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('i');
+    d.className = 'dust ' + cls; d.style.left = from.x + 'px'; d.style.top = from.y + 'px';
+    document.body.appendChild(d);
+    const jx = Math.random() * 30 - 15, jy = -6 - Math.random() * 14;
+    const dx = to ? to.x - from.x : jx * 1.5, dy = to ? to.y - from.y : 45 + Math.random() * 35;
+    const ms = to ? 520 : 750;
+    if (d.animate) d.animate([{transform: `translate(${jx}px,${jy}px)`, opacity: 1}, {transform: `translate(${dx}px,${dy}px) scale(${to ? .4 : .7})`, opacity: to ? 1 : 0}],
+      {duration: ms, delay: i * 35, easing: to ? 'cubic-bezier(.5,0,.9,.6)' : 'ease-in', fill: 'forwards'});
+    later((ms + i * 35) / 1000 + .05, () => d.remove());
+  }
+}
+function barFX(P, startAt){
+  clearBar();
+  if (!P) return;
+  const b = document.getElementById('gbar'), calm = reduceMotion(), party = P.moved === 'up' || P.moved === 'top';
+  const cell = i => { const c = b.querySelectorAll('.cells i')[i]; if (!c) return null; const r = c.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+  later(startAt, () => { barDraw(P.from, P.topic); b.className = 'gbar show'; });
+  if (P.ok) {
+    const slot = Math.min(P.from.up, 2);
+    later(startAt + .35, () => { if (!calm) dust(S.ledAt, cell(slot), 10, 'in'); });
+    later(startAt + .85, () => { barDraw({...P.from, up: P.from.up + 1, down: 0}, P.topic); b.querySelectorAll('.cells i')[slot]?.classList.add('pop'); });
+    if (party) {
+      later(startAt + 1.05, () => b.classList.add('quake'));
+      later(startAt + 1.55, () => { b.classList.remove('quake'); barDraw(P.to, P.topic, P.moved === 'top' ? 'klart ✓' : null); b.classList.add('newgrade'); });
+      later(startAt + 2.3, () => b.classList.remove('show'));
+    } else later(startAt + 1.5, () => b.classList.remove('show'));
+  } else {
+    const down = P.moved === 'down';
+    later(startAt + .25, () => {
+      if (!calm) [0, 1, 2].filter(i => i < P.from.up).forEach(i => dust(cell(i), null, down ? 8 : 5, 'out'));
+      barDraw({...P.from, up: 0, down: Math.min(P.from.down + 1, 3)}, P.topic);
+      b.classList.add(down ? 'quake' : 'shake');
+      if (down && !calm) { const r = b.getBoundingClientRect(); dust({x: r.left + r.width / 2, y: r.bottom - 8}, null, 14, 'out'); }
+    });
+    if (down) {
+      later(startAt + .95, () => { b.classList.remove('quake'); barDraw(P.to, P.topic); b.classList.add('newgrade', 'fell'); });
+      later(startAt + BAR_DOWN - .1, () => b.classList.remove('show'));
+    } else later(startAt + BAR_WRONG - .1, () => b.classList.remove('show'));
+  }
 }
 // Ljuden skapas med Web Audio. Varje ljud är en egen funktion så att det kan bytas mot en ljudfil senare.
 S.sound = true;

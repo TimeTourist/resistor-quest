@@ -395,6 +395,52 @@ test('Resistansen Lärling fel: markeringen vandrar längs färgskalan och landa
   }
 });
 
+test('Stapeln: planen för rätt, fel, upp och ner', () => {
+  const t = atGrade('ohm', 2);
+  const plan = () => JSON.parse(t.g('JSON.stringify(S.barPlan)'));
+  t.g('S.grade.ohm = 2; S.up = 0; S.down = 0; next()'); answer(t, true);
+  let p = plan();
+  assert.deepEqual([p.ok, p.from.up, p.to.up, p.to.down], [true, 0, 1, 0]);
+  t.g('S.grade.ohm = 2; S.up = 0; S.down = 1; next()'); answer(t, false);
+  p = plan();
+  assert.deepEqual([p.ok, p.from.down, p.to.down, p.moved], [false, 1, 2, null]);
+  t.g('S.grade.ohm = 2; S.up = 0; S.down = 2; next()'); answer(t, false);
+  p = plan();
+  assert.deepEqual([p.moved, p.from.g, p.to.g], ['down', 2, 1]);
+  t.g('S.grade.ohm = 2; S.up = 2; S.down = 0; next()'); answer(t, true);
+  p = plan();
+  assert.deepEqual([p.moved, p.from.up, p.to.g, p.to.up], ['up', 2, 3, 0]);
+});
+
+test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort', async () => {
+  const t = atGrade('ohm', 3);
+  t.g('S.instant = false; S.grade.ohm = 3; S.up = 1; S.down = 0; next()');
+  answer(t, true); t.g('reveal()');
+  await new Promise(r => setTimeout(r, 1000));
+  const bar = t.$('#gbar');
+  assert.ok(bar.classList.contains('show'), 'stapeln syns');
+  assert.match(bar.textContent, /Resistansen/);
+  assert.equal(bar.querySelectorAll('.cells i.on').length, 2, 'två rätt i rad');
+  await new Promise(r => setTimeout(r, 1500));
+  assert.equal(t.g('S.answered'), false, 'nästa fråga');
+  assert.ok(!t.$('#gbar').classList.contains('show'), 'stapeln har glidit bort');
+  // Fel: en spricka, och man måste vänta in stapeln
+  t.g('S.grade.ohm = 3; S.up = 0; S.down = 0; next()');
+  answer(t, false); t.g('reveal()');
+  const lock = t.g('S.lockUntil - S.revealAt');
+  assert.ok(lock >= 1200, `låst i ${lock} ms`);
+  await new Promise(r => setTimeout(r, lock - 200));
+  assert.equal(t.$('#gbar').querySelectorAll('.cracks .on').length, 1, 'en spricka');
+  t.g('stopTimer(); clearBar()');
+});
+
+test('Stapeln visas inte i Eldprovet', () => {
+  const t = load({ storage: ALL_OPEN });
+  t.g("goTopic('ultra')"); t.$('#examStart').click();
+  answer(t, true);
+  assert.equal(t.g('S.barPlan'), null);
+});
+
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
   const t = atGrade('body', 0);
   t.g('S.instant = false');
