@@ -117,3 +117,18 @@ for (const lv of ['intro', 'easy', 'medium', 'tc', 'hard']) {
     assert.deepEqual(t.errors.map(String), []);
   });
 }
+
+test('Huvudknappen sitter uppe till höger bredvid frågan, före och efter svar', () => {
+  for (const lv of ['intro', 'medium', 'hard']) {
+    const t = atLevel(lv);
+    for (let i = 0; i < 10; i++) {
+      t.g('next()');
+      assert.ok(t.$('#q .qtop .prompt + #main'), `${lv}: ${t.g('S.type')} före svar`);
+      if (t.g('S.plan.fmt') === 'mc' || t.g('S.type') === 'build') {
+        answer(t, false);
+        assert.ok(t.$('#q .qtop .prompt + #main'), `${lv}: ${t.g('S.type')} efter svar`);
+        assert.equal(t.$$('#q #main').length, 1);
+      }
+    }
+  }
+});

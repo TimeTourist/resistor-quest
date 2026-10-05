@@ -68,6 +68,9 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .score b{color:var(--ink);font-weight:600}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
 .prompt{font-size:1.05rem;margin:0 0 8px;color:var(--muted)}
+.qtop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.qtop .prompt{margin:0;padding-top:8px}
+.qtop .primary{margin:0;flex:none;padding:10px 20px}
 .big{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:600;font-size:clamp(2.4rem,10vw,3.4rem);line-height:1.05;margin:0 0 8px}
 .res svg{width:100%;height:auto;max-width:560px;display:block;margin:0 auto}
 .opts{display:grid;gap:10px;margin-top:16px;grid-template-columns:1fr 1fr}
@@ -909,6 +912,8 @@ function mainBtnHTML(){
 }
 // Bygg med palett: rätt färg för plats i som den byggs (Band 1 är toleransänden när motståndet sitter vänt)
 const truthAt = i => S.bflip ? S.q[S.n - 1 - i] : S.q[i];
+// Frågan med huvudknappen uppe till höger, så att knappen står still när facit dyker upp
+const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p>${mainBtnHTML()}</div>`;
 function render(){
   updateScore();
   const q = document.getElementById('q'), n = S.n;
@@ -916,19 +921,19 @@ function render(){
   let h = '';
   if (S.type === 'series') {
     const full = S.level === 'hard' ? `<p class="big">${fmtVal(S.sr.v)} ${fmtTol(bandsTol(S.sr.bands))}</p>` : '';
-    h += `<p class="prompt">Vilken E-serie hör motståndet hemma i?</p>${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
+    h += `${topHTML('Vilken E-serie hör motståndet hemma i?')}${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
 ${hintsHTML()}
       <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
     const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
     const turn = S.answered && S.level !== 'ultra' && S.style.flip && !S.ambig;
-    h += `<p class="prompt">Från vilket håll ska motståndet läsas?</p><div class="res${turn ? ' turn' : ''}">${svg(S.q, {style: turn ? {...S.style, flip:false} : S.style})}</div>${hintsHTML()}
+    h += `${topHTML('Från vilket håll ska motståndet läsas?')}<div class="res${turn ? ' turn' : ''}">${svg(S.q, {style: turn ? {...S.style, flip:false} : S.style})}</div>${hintsHTML()}
       <div class="opts">${dBtn('left', 'Från vänster')}${dBtn('right', 'Från höger')}${S.level === 'ultra' ? dBtn('none', 'Går ej att avgöra utan multimeter', ' wide') : ''}</div>`;
   } else if (S.type === 'read') {
     const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
       d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?', all:'Vilket värde har motståndet?'}[S.focus];
-    h += `<p class="prompt">${rq}</p><div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>${hintsHTML()}`;
+    h += `${topHTML(rq)}<div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>${hintsHTML()}`;
     h += S.plan.fmt !== 'hard' ? mcHTML() : S.level === 'ultra' ? entryHTML() : fieldsHTML();
     if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet är temperaturkoefficienten. Den behöver du inte kunna på den här nivån.</p>';
   } else {
@@ -937,7 +942,7 @@ ${hintsHTML()}
     const big = S.level === 'ultra' ? `${S.vText} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`
       : {v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc), d:digitStr(S.q).split('').join(' '), x:fmtMult(C[S.q[nd(S.q)]].m),
          all:`${fmtVal(v)} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`}[S.focus];
-    h += `<p class="prompt">${bq}</p><p class="big">${big}</p>${hintsHTML()}`;
+    h += `${topHTML(bq)}<p class="big">${big}</p>${hintsHTML()}`;
     if (S.plan.fmt !== 'hard') {
       h += bmcHTML();
     } else {
@@ -962,7 +967,7 @@ ${hintsHTML()}
         `<button class="pc" data-color="${k}"${disAttr()}><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
     }
   }
-  h += lessonHTML() + mainBtnHTML();
+  h += lessonHTML();
   q.innerHTML = h;
   const more = document.getElementById('more');
   more.innerHTML = moreHTML(); more.hidden = !more.innerHTML;
