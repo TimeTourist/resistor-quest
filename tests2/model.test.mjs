@@ -274,6 +274,23 @@ test('Ingen Nästa-knapp: efter fel svar fortsätter man med ett tryck på korte
   assert.equal(t.g('S.answered'), false, 'fingret fortsätter också');
 });
 
+test('Efter fel går det att trycka på svarsknapparna och bilden för att gå vidare', () => {
+  for (const [topic, g, sel] of [['body', 0, '[data-c]'], ['ohm', 3, '[data-c]'], ['ohm', 4, '[data-slot],[data-field]'], ['body', 3, '[data-dir]'], ['e', 3, '[data-sr]']]) {
+    const t = atGrade(topic, g);
+    let n = 0;
+    for (let i = 0; i < 40 && n < 3; i++) {
+      t.g(`S.grade['${topic}'] = ${g}; next()`);
+      if (!t.$(sel)) continue;
+      answer(t, false);
+      const btn = t.$$(sel).find(b => !b.classList.contains('gone'));
+      btn.click();
+      assert.equal(t.g('S.answered'), false, `${topic} ${g}: tryck på ${sel} fortsätter`);
+      n++;
+    }
+    assert.ok(n > 0, `${topic} ${g} testades`);
+  }
+});
+
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
   const t = atGrade('body', 0);
   t.g('S.instant = false');

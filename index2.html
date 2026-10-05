@@ -197,7 +197,7 @@ html,body{overflow-x:clip}
 .opt{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:12px 8px;cursor:pointer;min-height:60px;
   font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.45rem;line-height:1.15}
 .opt small{display:block;font-size:1rem;color:var(--muted)}
-.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:hover:not(:disabled):not([aria-disabled]){border-color:var(--accent)}
 .opt.r{padding:6px}
 .opt.r svg{width:100%;height:auto;display:block}
 .opt[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
@@ -235,7 +235,7 @@ html,body{overflow-x:clip}
 .palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-top:14px}
 .pc{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px;font:inherit;font-size:.92rem;cursor:pointer;text-align:left}
 .pc small{color:var(--muted);margin-left:auto}
-.pc:hover:not(:disabled){border-color:var(--accent)}
+.pc:hover:not(:disabled):not([aria-disabled]){border-color:var(--accent)}
 .pill{flex:none;font-size:.75rem;font-weight:700;padding:1px 8px;border-radius:999px;color:#fff;min-width:3.2em;text-align:center}
 .p-ok{background:var(--ok)}
 .p-bad{background:var(--bad)}
@@ -1320,7 +1320,7 @@ function render(){
         const val = mark === ' bad'
           ? `<span><s>${C[k].n}</s> <span class="sw" style="${swStyle(truthAt(i))}"></span>${C[truthAt(i)].n}</span>`
           : `<span>${k ? C[k].n : 'Välj'}</span>`;
-        return `<button class="slot${mark}" data-slot="${i}" aria-pressed="${S.slot===i && !S.answered}"${locked || S.answered ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}${val}</button>`;
+        return `<button class="slot${mark}" data-slot="${i}" aria-pressed="${S.slot===i && !S.answered}"${S.answered ? ' aria-disabled="true"' : locked ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}${val}</button>`;
       }).join('')}</div>`;
       // Stormästare och Eldprovet: alla tolv färger i en blandad ordning som ligger still under hela frågan.
       // Ingen hjälp med vilka färger som passar bandet. Svaret rättas när sista bandet är valt.
@@ -1830,7 +1830,8 @@ function markCls(isRight, isPicked){
   if (inExam()) return isPicked ? ' chosen' : '';
   return isRight ? ' ok' : isPicked ? ' bad' : '';
 }
-const disAttr = () => S.answered ? ' disabled' : '';
+// Efter svar är knapparna låsta men inte disabled: disabled-knappar tar inte emot klick, och ett tryck var som helst ska fortsätta
+const disAttr = () => S.answered ? ' aria-disabled="true"' : '';
 // Vad ett alternativ motsvarar i färger: värde till siffer- och multiplikatorband (k siffror), null om det inte går
 function valueBands(v, k){
   for (const c of MO) {
