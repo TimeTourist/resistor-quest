@@ -92,7 +92,7 @@ main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
 .fx s{position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;background:rgba(120,120,120,.55);text-decoration:none}
 @media (prefers-reduced-motion:no-preference){
   .fx.spark i{animation:sparkgo .9s cubic-bezier(.4,0,.6,1) forwards}
-  @keyframes sparkgo{0%{transform:translateX(0) scale(.6)}80%{transform:translateX(var(--dx)) scale(1.1)}100%{transform:translateX(var(--dx)) scale(1.5);opacity:.9}}
+  @keyframes sparkgo{0%{transform:translateX(0) scale(.6)}88%{transform:translateX(var(--dx)) scale(1.1)}100%{transform:translateX(var(--dx)) scale(1.5);opacity:.9}}
   .fx.won i{animation:ledon 1s ease-out forwards}
   @keyframes ledon{0%{transform:scale(.4)}35%{transform:scale(1.6)}100%{transform:scale(1);opacity:0}}
   .fx.won b{animation:burst .75s ease-out forwards}
@@ -1372,17 +1372,19 @@ function reveal(){
   if (!S.instant && (S.ok || inExam())) { S.autoNext = true; S.timer = setTimeout(advance, party ? PARTY_MS : NEXT_MS); }
   document.getElementById('main')?.focus({preventScroll:true});
 }
-// Gnistan: vandrar längs anslutningstråden in i motståndet, eller längs det valda alternativet
+// Gnistan går genom hela motståndet, alltid från vänster. Ett motstånd har ingen polaritet,
+// så riktningen får inte se ut att hänga ihop med läsriktningen.
+// Finns inget motstånd i frågan går den genom motståndet i det valda alternativet, annars längs alternativet.
 function fxTarget(){
-  const q = document.getElementById('q'), svgEl = q.querySelector(':scope > .res svg');
-  const qr = q.getBoundingClientRect();
+  const q = document.getElementById('q'), qr = q.getBoundingClientRect();
+  const tap = S.lastTap && q.contains(S.lastTap) ? S.lastTap : null;
+  const main = q.querySelector(':scope > .res svg'), svgEl = main || (tap && tap.querySelector('svg'));
   if (svgEl) {
     const lead = svgEl.querySelector('line'), r = svgEl.getBoundingClientRect(), l = lead ? lead.getBoundingClientRect() : r;
-    return {q, x0: r.left - qr.left, x1: r.left - qr.left + r.width * .5, y: l.top - qr.top + l.height / 2};
+    return {q, x0: r.left - qr.left + 4, x1: r.right - qr.left - 4, y: l.top - qr.top + l.height / 2};
   }
-  const el = S.lastTap && q.contains(S.lastTap) ? S.lastTap : null;
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
+  if (!tap) return null;
+  const r = tap.getBoundingClientRect();
   return {q, x0: r.left - qr.left + 8, x1: r.right - qr.left - 14, y: r.bottom - qr.top - 7};
 }
 function fxLayer(t, cls){
