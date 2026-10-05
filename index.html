@@ -1,0 +1,1904 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Färgkoden – lär dig läsa motstånd</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e8edf0;--grid:rgba(31,111,178,.08);--surface:#fff;--ink:#1d2730;--muted:#566673;--line:#c8d1d8;
+  --accent:#1f6fb2;--accent-ink:#fff;--ok:#24803a;--ok-bg:#e3f3e6;--bad:#b83227;--bad-bg:#f8e4e1;--tip-bg:#fbefcf;
+  --body:#dcc596;--lead:#98a1a8;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
+    --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
+  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;color:var(--ink);background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  font:16px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
+h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:clamp(2.6rem,9vw,3.8rem);line-height:1;margin:0 0 6px}
+.lede{color:var(--muted);margin:0 0 20px;max-width:60ch}
+.controls{display:flex;flex-wrap:wrap;gap:12px 24px;margin-bottom:16px}
+.seg{display:flex;flex-direction:column;gap:6px}
+.seg>span{font-size:.85rem;color:var(--muted)}
+.seg>div{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;color:var(--ink);padding:8px 14px;font:inherit;font-size:.95rem;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.lv{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px}
+.examwrap{display:flex;align-items:flex-end}
+.exambtn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:12px 20px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.45rem;letter-spacing:.03em;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);background:linear-gradient(135deg,#ffb020 0%,#ff6a1a 45%,#c8261b 100%);box-shadow:0 4px 16px rgba(200,38,27,.4);cursor:pointer}
+.exambtn svg{width:24px;height:24px;flex:none}
+.exambtn:hover{filter:brightness(1.08)}
+.exambtn[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:3px}
+.lvicon{display:inline-flex;height:14px}
+.lvicon svg{width:14px;height:14px;display:block}
+.stars{display:inline-flex;gap:2px}
+.stars svg{width:13px;height:13px;display:block}
+.star-on{fill:#f2c230;stroke:#9a7410;stroke-width:1.2}
+.star-off{fill:none;stroke:currentColor;stroke-width:1.4;opacity:.55}
+.star-note{display:flex;align-items:center;gap:8px;font-weight:600}
+.star-note svg{width:20px;height:20px;flex:none}
+.seg[hidden]{display:none}
+.seg button[hidden]{display:none}
+.seg button:disabled{opacity:.4;cursor:default}
+/* Nivå: tre knappar per rad */
+.seg>div[aria-labelledby="lvlLbl"]{display:grid;grid-template-columns:repeat(3,1fr)}
+.seg>div[aria-labelledby="lvlLbl"] button:nth-child(3n+1){border-left:0}
+.seg>div[aria-labelledby="lvlLbl"] button:nth-child(n+4){border-top:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.score{display:flex;flex-wrap:wrap;gap:4px 20px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.2rem;color:var(--muted);margin:0 0 12px}
+.score b{color:var(--ink);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.prompt{font-size:1.05rem;margin:0 0 8px;color:var(--muted)}
+.big{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:600;font-size:clamp(2.4rem,10vw,3.4rem);line-height:1.05;margin:0 0 8px}
+.res svg{width:100%;height:auto;max-width:560px;display:block;margin:0 auto}
+.opts{display:grid;gap:10px;margin-top:16px;grid-template-columns:1fr 1fr}
+.opt{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:12px 8px;cursor:pointer;min-height:60px;
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.45rem;line-height:1.15}
+.opt small{display:block;font-size:1rem;color:var(--muted)}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.r{padding:6px}
+.opt.r svg{width:100%;height:auto;display:block}
+.opt[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.opt.wide{grid-column:1 / -1;font-size:1.2rem}
+.opt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+.opt:disabled{cursor:default}
+@media (max-width:440px){.opts.rgrid{grid-template-columns:1fr}}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:16px}
+.big .tc{display:block;font-size:.5em;color:var(--muted);font-weight:500}
+.field label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;font:inherit;font-size:1.2rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.primary{margin-top:16px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;padding:12px 22px;cursor:pointer}
+.primary:disabled{opacity:.45;cursor:default}
+.hint{color:var(--bad);font-size:.95rem;margin:8px 0 0}
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:8px;margin-top:8px}
+.slot{border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:8px 4px;font:inherit;font-size:.8rem;line-height:1.2;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.slot[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.sw{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.3);display:inline-block;flex:none}
+.sw.empty{border:1.5px dashed var(--muted)}
+.palette{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-top:14px}
+.pc{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px;font:inherit;font-size:.92rem;cursor:pointer;text-align:left}
+.pc small{color:var(--muted);margin-left:auto}
+.pc:hover:not(:disabled){border-color:var(--accent)}
+.feedback{margin-top:18px;border-radius:10px;padding:14px 16px}
+.feedback.ok{background:var(--ok-bg)}
+.feedback.bad{background:var(--bad-bg)}
+.feedback.tip{background:var(--tip-bg)}
+.cost{font-weight:600}
+.parts{list-style:none;padding:0;margin:8px 0 10px;display:grid;gap:6px}
+.parts li{display:flex;gap:8px;align-items:baseline;line-height:1.4}
+.pill{flex:none;font-size:.75rem;font-weight:700;padding:1px 8px;border-radius:999px;color:#fff;min-width:3.2em;text-align:center}
+.p-ok{background:var(--ok)}
+.p-bad{background:var(--bad)}
+.feedback h2{margin:0 0 4px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.7rem;line-height:1.1}
+.feedback p{margin:0 0 6px}
+.calc{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.3rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 0;padding:0;list-style:none;font-size:.95rem}
+.dir{margin-top:10px!important;font-size:.95rem;color:var(--muted)}
+.chips li{display:flex;align-items:center;gap:6px}
+details{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+details+details{margin-top:12px}
+details[hidden]{display:none}
+.guide h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.35rem;margin:18px 0 6px}
+.guide ul{margin:0;padding-left:0;list-style:none;display:grid;gap:10px}
+.guide li{line-height:1.5}
+.gnote.center{text-align:center;margin-top:2px}
+.gnote{color:var(--muted);font-size:.92rem;margin:10px 0}
+.ex{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px}
+.ex figure{margin:0}
+.ex svg{width:100%;max-width:340px;height:auto;display:block}
+.ex figcaption{font-size:.88rem;color:var(--muted);line-height:1.4}
+.meter-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:12px;min-height:56px}
+.ghost{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.ghost:hover:not(:disabled){border-color:var(--accent)}
+.ghost:disabled{opacity:.5;cursor:default}
+.ghost svg{width:20px;height:20px;flex:none}
+.meter{display:inline-flex;align-items:center;gap:10px;background:#2b3035;border:3px solid #d9a521;border-radius:12px;padding:7px 10px}
+.lcd{background:#b8c6a0;color:#1b2216;font-family:"Share Tech Mono",ui-monospace,Menlo,Consolas,monospace;font-size:1.9rem;line-height:1.1;padding:4px 12px;border-radius:6px;min-width:6.5ch;text-align:right;box-shadow:inset 0 2px 5px rgba(0,0,0,.35);font-variant-numeric:tabular-nums}
+.lcd small{font-size:.55em;margin-left:6px}
+.probe{width:10px;height:10px;border-radius:50%;display:inline-block}
+.probe.r{background:#c62828}.probe.b{background:#111;border:1px solid #666}
+.hints{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.hint-out{margin-top:10px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:.98rem}
+.hint-out:empty{display:none}
+.hint-out p{margin:0}
+.hint-out p+p{margin-top:4px}
+.opt.gone{opacity:.28;text-decoration:line-through}
+.slot.wrong{border-color:var(--bad);box-shadow:inset 0 0 0 1.5px var(--bad)}
+.entry{margin-top:14px;display:grid;gap:12px}
+.eboxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.ebox{display:block;text-align:left;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:8px 12px;font:inherit;cursor:pointer}
+.ebox.solo{cursor:default}
+.ebox.active{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.elab{display:block;font-size:.8rem;color:var(--muted)}
+.eval{display:block;font-family:"Share Tech Mono",ui-monospace,Menlo,Consolas,monospace;font-size:1.6rem;line-height:1.3;min-height:1.3em;white-space:nowrap;overflow-x:auto}
+.eunit{color:var(--muted)}
+.emul{color:var(--accent);margin-left:12px}
+.epre{display:block;color:var(--muted);font-size:.95rem;min-height:1.4em}
+.caret{display:inline-block;width:2px;height:1em;background:var(--accent);vertical-align:-3px;margin-left:1px}
+@media (prefers-reduced-motion:no-preference){.caret{animation:blink 1s steps(1) infinite}@keyframes blink{50%{opacity:0}}}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:340px}
+.key{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.6rem;line-height:1;padding:12px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer;min-height:52px}
+.key.fn{background:var(--bg)}
+.key:disabled{opacity:.35;cursor:default}
+.key:active:not(:disabled){background:var(--accent);color:var(--accent-ink)}
+.mcgroup{margin-top:14px}
+.mcgroup .opts{margin-top:0}
+.opts.mc{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.opts.mc .opt{font-size:1.3rem;min-height:50px}
+.opt.bc{display:flex;align-items:center;justify-content:center;gap:8px;font-size:1.15rem}
+.grp-lbl{font-size:.85rem;color:var(--muted);margin:0 0 6px}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:6px 12px;font:inherit;font-size:.95rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.lvlist{margin:0;padding-left:0;list-style:none;display:grid;gap:8px}
+.testbar{margin-top:24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
+.testbar button{font:inherit;font-size:.85rem;padding:6px 10px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+.dlg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));z-index:10}
+.dlg[hidden]{display:none}
+.dlg-box{background:var(--surface);color:var(--ink);border-radius:16px;padding:22px 22px 18px;max-width:440px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.dlg-kicker{margin:0;font-weight:700;color:var(--ok);letter-spacing:.04em;text-transform:uppercase;font-size:.8rem}
+.dlg-box h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.2rem;line-height:1.05;margin:4px 0 10px}
+.dlg-box p{margin:0 0 12px}
+.dlg-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.dlg-btns .primary{margin-top:0}
+.exam h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.4rem;line-height:1.05;margin:0 0 8px}
+.exam .verdict{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.6rem;line-height:1.05;margin:4px 0 8px}
+.skills{list-style:none;padding:0;margin:12px 0;display:grid;gap:6px}
+.skills li{display:flex;gap:8px;align-items:baseline}
+.exam-btns{display:flex;flex-wrap:wrap;gap:8px}
+.exam-btns .primary{margin-top:8px}
+.bandexp{flex-direction:column;gap:6px;margin:8px 0}
+.meterfb{margin:10px 0}
+.meterfb>p:first-child{margin:0 0 6px}
+.meterfb .gnote{margin:6px 0 0}
+.tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.02em;padding:1px 7px;border-radius:999px;margin-right:6px;vertical-align:1px;border:1px solid}
+.tag.std{color:var(--accent);border-color:var(--accent)}
+.tag.pra{color:var(--ok);border-color:var(--ok)}
+.tag.tum{color:var(--muted);border-color:var(--muted)}
+.eseg{margin-top:12px}
+.eseg>div{flex-wrap:wrap}
+.ehelp{margin-top:12px;font-size:.95rem}
+.ehelp p{margin:0 0 10px}
+.enote{color:var(--muted);font-size:.92rem;margin:10px 0}
+.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.egrid span{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.2rem;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;margin-top:10px;font-size:.92rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){
+  .feedback{animation:pop .18s ease-out}
+  @keyframes pop{from{transform:translateY(4px);opacity:0}}
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>Färgkoden</h1>
+  <p class="lede">Läs av och bygg motstånd med fyra, fem eller sex färgband: siffror, multiplikator, tolerans och ibland temperaturkoefficient.</p>
+
+  <div class="controls">
+    <div class="seg"><span id="lvlLbl">Nivå</span>
+      <div role="group" aria-labelledby="lvlLbl">
+        <button class="lv" data-level="intro" aria-pressed="false"><span>Nykomling</span><span class="lvicon" data-icon="intro"></span></button>
+        <button class="lv" data-level="easy" aria-pressed="true"><span>Lärling</span><span class="lvicon" data-icon="easy"></span></button>
+        <button class="lv" data-level="medium" aria-pressed="false"><span>Gesäll</span><span class="lvicon" data-icon="medium"></span></button>
+        <button class="lv" data-level="tc" aria-pressed="false"><span>Mästare</span><span class="lvicon" data-icon="tc"></span></button>
+        <button class="lv" data-level="hard" aria-pressed="false"><span>Stormästare</span><span class="lvicon" data-icon="hard"></span></button>
+      </div>
+    </div>
+    <div class="examwrap">
+      <button class="exambtn" data-level="ultra" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffe7a3" d="M12 2c1 3.5-1.5 5-1.5 7.5 0 1.4 1 2.5 2.3 2.5 1.6 0 2.4-1.3 2.2-3 2.5 1.8 4 4.4 4 7 0 3.9-3.1 6-7 6s-7-2.6-7-6.3C5 10.5 10.6 7.4 12 2z"/><path fill="#fff" opacity=".85" d="M12 13.5c.4 1.4-.6 2.2-.6 3.2 0 .7.5 1.3 1.2 1.3 1 0 1.5-.8 1.4-1.8 1 .8 1.5 1.8 1.5 2.8 0 1.8-1.5 3-3.5 3s-3.5-1.3-3.5-3.1c0-2.3 2.3-3.6 3.5-5.4z"/></svg><span>Eldprovet</span></button>
+    </div>
+    <div class="seg"><span id="modeLbl">Läge</span>
+      <div role="group" aria-labelledby="modeLbl">
+        <button data-mode="play" aria-pressed="true">Spela</button>
+        <button data-mode="practice" aria-pressed="false">Öva</button>
+      </div>
+    </div>
+    <div class="seg" id="partSeg" hidden><span id="partLbl">Öva på</span>
+      <div role="group" aria-labelledby="partLbl">
+        <button data-part="v" aria-pressed="true">Resistans</button>
+        <button data-part="t" aria-pressed="false">Tolerans</button>
+        <button data-part="k" aria-pressed="false">Temp.koeff.</button>
+        <button data-part="e" aria-pressed="false">E-serie</button>
+        <button data-part="d" aria-pressed="false">Siffror</button>
+        <button data-part="x" aria-pressed="false">Multiplikator</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="score" id="score"></p>
+  <section class="card" id="q" aria-live="polite"></section>
+
+  <details>
+    <summary>Om nivåerna</summary>
+    <p class="gnote">Nivåerna heter efter hur långt du kommit, från Nykomling till Stormästare. Du börjar som Nykomling, och <b>5 rätt i rad</b> när du spelar låser upp nästa nivå. Eldprovet är alltid öppet.</p>
+    <ul class="lvlist">
+      <li><b>Nykomling:</b> läsriktning. Du avgör om motståndet ska läsas från vänster eller höger. Det finns alltid en tydlig ledtråd, och tipset kostar inget.</li>
+      <li><b>Lärling:</b> resistansen i ohm, med fyra svarsalternativ och standardutseende. Frågorna gäller ibland hela värdet, ibland bara siffrorna och ibland bara multiplikatorn.</li>
+      <li><b>Gesäll:</b> tolerans. Varje fråga gäller resistansen eller toleransen, och motstånden ser olika ut.</li>
+      <li><b>Mästare:</b> temperaturkoefficient, det sjätte bandet. Sexbandsmotstånd dyker upp oftare.</li>
+      <li><b>Stormästare:</b> allt på en gång. Du knappar in värden, bygger band för band ur en blandad palett och avgör vilken E-serie ett värde hör till. Ungefär vart tionde motstånd är inte standard.</li>
+      <li><b>Eldprovet:</b> 20 frågor som testar allt, utan tips och utan färdiga värden. Motstånd kan sitta vända, och riktningsfrågorna är de kluriga sorterna där bara standardvärden, guld och silver eller en multimeter avgör. Du får en poäng för varje del du klarar, och en färdighet räknas som klarad vid minst hälften rätt. Till sist får du ett utlåtande om vilken nivå du behärskar.</li>
+    </ul>
+    <p class="gnote">Motstånden har 4, 5 eller 6 band, blandat. På de lägre nivåerna frågas bara det du ska kunna där, men facit visar alltid vad alla band betyder. Under Läge kan du från Lärling och uppåt välja Öva och träna på en del i taget. Tips finns bara på den nivå där du lär dig något nytt, och på nästa nivå förväntas du kunna det. Rätt svar med tips räknas, men sviten står still.</p>
+  </details>
+
+  <details class="guide">
+    <summary>Guide: så hittar du läsriktningen</summary>
+    <p class="gnote">Varje tips är märkt med var det kommer ifrån. <span class="tag std">Standard</span> betyder att det står i IEC 60062:2016, standarden för färgkoden. <span class="tag pra">Praxis</span> är vanligt hos tillverkare men inget krav. <span class="tag tum">Tumregel</span> är ett knep som oftast fungerar men kan slå fel.</p>
+
+    <h3>Vad standarden säger</h3>
+    <ul>
+      <li><span class="tag std">Standard</span> Första bandet ska, där det går, sitta närmast motståndets ände. Banden ska placeras och ha sådana avstånd att de inte kan läsas fel.<div class="ex" data-ex="s-first"></div></li>
+      <li><span class="tag std">Standard</span> Toleransbandet ska vara minst 1,5 gånger så brett som de andra banden.<div class="ex" data-ex="s-wide"></div></li>
+      <li><span class="tag std">Standard</span> Guld, silver och rosa används bara som multiplikator eller tolerans, aldrig som siffra. De kan alltså aldrig vara första bandet.<div class="ex" data-ex="s-metal"></div></li>
+      <li><span class="tag std">Standard</span> Tre band betyder två siffror och en multiplikator. Att toleransbandet saknas betyder ±20 %.<div class="ex" data-ex="s-three"></div></li>
+      <li><span class="tag std">Standard</span> På sex band är toleransbandet (det femte) det enda breda. Äldre utgåvor föreskrev i stället att det sjätte bandet skulle vara brett. Det ändrades 2016 eftersom det förvirrade, så äldre motstånd kan ha ett brett sjätte band.<div class="ex" data-ex="s-six"></div></li>
+      <li><span class="tag std">Standard</span> Temperaturkoefficienten kan också märkas med ett avbrutet sjätte band, eller med prickar mellan banden när motståndet är för kort för ett helt band.<div class="ex" data-ex="s-tcr"></div></li>
+      <li><span class="tag std">Standard</span> Ett band får ha ett oavsiktligt avbrott så länge minst två tredjedelar syns från varje vinkel.<div class="ex" data-ex="s-chip"></div></li>
+      <li><span class="tag std">Standard</span> Rosa betyder ×0,001 och infördes 2016. Det är ovanligt och finns inte med i spelet.<div class="ex" data-ex="s-pink"></div></li>
+    </ul>
+
+    <h3>Vad man brukar se i praktiken</h3>
+    <ul>
+      <li><span class="tag pra">Praxis</span> Ett lite större mellanrum före toleransbandet. Det är mycket vanligt men står inte som krav i standarden, och billiga motstånd kan ha jämnt avstånd.<div class="ex" data-ex="p-gap"></div></li>
+      <li><span class="tag pra">Praxis</span> Fyra band med guld (±5 %) eller silver (±10 %) som tolerans är det vanligaste för vanliga motstånd. Då pekar metallbandet direkt ut slutet.<div class="ex" data-ex="p-metal4"></div></li>
+      <li><span class="tag pra">Praxis</span> Fem band används för precisionsmotstånd, oftast med brun (±1 %) eller röd (±2 %) tolerans. Då finns inget metallband att gå efter, och bredd och mellanrum blir viktigare.<div class="ex" data-ex="p-five"></div></li>
+      <li><span class="tag pra">Praxis</span> Kroppsfärgen är inte standardiserad. Beige eller ljusbrun kropp är vanligt på kolfilmsmotstånd och blå på metallfilmsmotstånd, men det finns många undantag.<div class="ex" data-ex="p-body"></div></li>
+    </ul>
+
+    <h3>Knep när ledtrådarna inte räcker</h3>
+    <ul>
+      <li><span class="tag tum">Tumregel</span> Första bandet kan inte vara svart, eftersom ett värde inte börjar med en nolla. Ser du svart i ena änden kan det inte vara början.<div class="ex" data-ex="t-black"></div></li>
+      <li><span class="tag tum">Tumregel</span> Läs åt båda hållen och välj den läsning som ger ett standardvärde: E24 för fyra band och E96 för fem band (standardserierna kommer från IEC 60063). Det fungerar ofta men inte alltid. Brun–svart–röd–röd är 1 kΩ ±2 %, men läst baklänges blir det röd–röd–svart–brun, 22 Ω ±1 %, och båda är standardvärden.<div class="ex" data-ex="t-eser"></div></li>
+      <li><span class="tag tum">Tumregel</span> Guld kan också vara multiplikator. 4,7 Ω ±5 % är gul–violett–guld–guld, så då sitter guld på två platser i samma ände.<div class="ex" data-ex="t-goldmult"></div></li>
+      <li><span class="tag tum">Tumregel</span> Läs i dagsljus. Brun, röd och orange är lätta att blanda ihop i gult lampljus, liksom blå, violett och grå. Ett motstånd som blivit för varmt kan också ha missfärgade band.<div class="ex" data-ex="t-light"></div></li>
+      <li><span class="tag tum">Tumregel</span> Är du osäker, mät med en multimeter. Mät helst motståndet när det inte sitter i en krets, eftersom andra komponenter annars påverkar mätvärdet.<div class="ex" data-ex="t-meter"></div></li>
+    </ul>
+    <p class="gnote">Källor: IEC 60062:2016 avsnitt 3 (färgkod, bandbredd, placering, TK-märkning och färgtabell) och IEC 60063 (E-serierna).</p>
+  </details>
+
+  <details id="refColors">
+    <summary>Visa färgkoden</summary>
+    <div class="tbl"><table id="ref"></table></div>
+  </details>
+
+  <details id="refE">
+    <summary>Visa standardvärden</summary>
+    <div class="seg eseg"><div role="group" aria-label="E-serie" id="eSeg"></div></div>
+    <div class="ehelp">
+      <p><b>Varför just de här talen?</b> E-serierna är byggda så att toleranserna täcker varandra utan glapp. I E6 täcker 10 Ω ±20 % allt från 8 till 12 Ω, och nästa värde, 15 Ω ±20 %, tar vid vid 12 Ω. Fler värden per dekad ger mindre steg mellan värdena och tillåter därför en snävare tolerans:</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Serie</th><th>Värden per dekad</th><th>Steg</th><th>Tolerans</th></tr></thead>
+        <tbody>
+          <tr><td>E6</td><td>6</td><td>ca 47 %</td><td>±20 %</td></tr>
+          <tr><td>E12</td><td>12</td><td>ca 21 %</td><td>±10 %</td></tr>
+          <tr><td>E24</td><td>24</td><td>ca 10 %</td><td>±5 %</td></tr>
+          <tr><td>E48</td><td>48</td><td>ca 4,9 %</td><td>±2 %</td></tr>
+          <tr><td>E96</td><td>96</td><td>ca 2,4 %</td><td>±1 %</td></tr>
+        </tbody>
+      </table></div>
+      <p>Varje värde är det förra gånger samma faktor (ungefär 1,47 i E6), så stegen är lika stora i procent. Några E24-värden avviker lite från den regeln av historiska skäl, till exempel 3,3 och 4,7.</p>
+      <p><b>Lär dig lager för lager.</b> E6: 10, 15, 22, 33, 47, 68. E12 lägger till ett värde mellan varje: 12, 18, 27, 39, 56, 82. E24 lägger till ett till mellan varje: 11, 13, 16, 20, 24, 30, 36, 43, 51, 62, 75, 91. E48 och E96 lär sig ingen utantill, dem slår man upp.</p>
+    </div>
+    <p class="enote" id="eNote"></p>
+    <div class="egrid" id="eGrid"></div>
+  </details>
+  <div class="testbar">
+    <span>Test</span>
+    <button id="tGive">Lås upp nästa nivå</button>
+    <button id="tReset">Lås alla nivåer igen</button>
+  </div>
+</main>
+<div class="dlg" id="unlockDlg" hidden>
+  <div class="dlg-box" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <p class="dlg-kicker">Upplåst!</p>
+    <h2 id="dlgTitle"></h2>
+    <p id="dlgText"></p>
+    <div class="dlg-btns"><button class="primary" id="dlgGo"></button><button class="ghost" id="dlgStay">Stanna kvar</button></div>
+  </div>
+</div>
+
+<script>
+const C = {
+  black:{n:'Svart',hex:'#1b1b1b',d:0,m:1,tc:250},
+  brown:{n:'Brun',hex:'#7a4a21',d:1,m:10,t:1,tc:100},
+  red:{n:'Röd',hex:'#c62828',d:2,m:100,t:2,tc:50},
+  orange:{n:'Orange',hex:'#ef7d1a',d:3,m:1e3,t:0.05,tc:15},
+  yellow:{n:'Gul',hex:'#f2d024',d:4,m:1e4,t:0.02,tc:25},
+  green:{n:'Grön',hex:'#2e8b3d',d:5,m:1e5,t:0.5,tc:20},
+  blue:{n:'Blå',hex:'#1f5fbf',d:6,m:1e6,t:0.25,tc:10},
+  violet:{n:'Violett',hex:'#7b3fa0',d:7,m:1e7,t:0.1,tc:5},
+  grey:{n:'Grå',hex:'#8a8a8a',d:8,m:1e8,t:0.01,tc:1},
+  white:{n:'Vit',hex:'#f7f7f2',d:9,m:1e9},
+  gold:{n:'Guld',hex:'#c9a43a',m:0.1,t:5},
+  silver:{n:'Silver',hex:'#b9bdc3',m:0.01,t:10},
+  pink:{n:'Rosa',hex:'#f2a0bd',m:0.001}
+};
+// Nyansvarianter: [standard, blekt, mörk/varm]
+const HX = {
+  black:['#1b1b1b','#3a3633','#262020'], brown:['#7a4a21','#8b5a3c','#5e3818'],
+  red:['#c62828','#cf4a3c','#a3241d'], orange:['#ef7d1a','#e48a3e','#d2601a'],
+  yellow:['#f2d024','#e6cf5a','#e0b417'], green:['#2e8b3d','#55985b','#22703a'],
+  blue:['#1f5fbf','#3d70b5','#234894'], violet:['#7b3fa0','#9061a8','#672d7c'],
+  grey:['#8a8a8a','#9b9994','#75767a'], white:['#f7f7f2','#e9e8e0','#fbfbf6'],
+  gold:['#c9a43a','#b8932f','#a6883d'], silver:['#b9bdc3','#a8acb1','#c8cacd'], pink:['#f2a0bd','#f2a0bd','#f2a0bd']
+};
+const DIG = ['black','brown','red','orange','yellow','green','blue','violet','grey','white'];
+const BAND1 = DIG.slice(1);
+const MO = ['silver','gold',...DIG];
+const TOL = ['brown','red','orange','yellow','green','blue','violet','grey','gold','silver'];
+const TCS = ['black','brown','red','orange','yellow','green','blue','violet','grey'];
+const GEN = {
+  mult4:['gold','black','brown','red','orange','yellow','green','blue'],
+  tol4:['gold','gold','gold','silver','brown','brown','red','green'],
+  mult5:['silver','gold','black','black','brown','brown','red','red','orange','yellow'],
+  tol5:['brown','brown','brown','red','red','green','blue','violet'],
+  tc:['brown','brown','red','red','orange','yellow','blue','violet']
+};
+const BODIES = ['#dcc596','#d4b07f','#e8bda6','#9cc3e6','#5f93d6','#a9d3c0'];
+const LV = {
+  intro:{choice:true, varied:true, flip:false},
+  easy:{choice:true, varied:false, flip:false},
+  medium:{choice:true, varied:true, flip:false},
+  tc:{choice:true, varied:true, flip:false},
+  hard:{choice:false, varied:true, flip:false},
+  ultra:{choice:false, varied:true, flip:true}
+};
+const LV_KEYS = Object.keys(LV);
+const E24 = [10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91];
+const E96 = [100,102,105,107,110,113,115,118,121,124,127,130,133,137,140,143,147,150,154,158,162,165,169,174,178,182,187,191,196,200,205,210,215,221,226,232,237,243,249,255,261,267,274,280,287,294,301,309,316,324,332,340,348,357,365,374,383,392,402,412,422,432,442,453,464,475,487,499,511,523,536,549,562,576,590,604,619,634,649,665,681,698,715,732,750,768,787,806,825,845,866,887,909,931,953,976];
+
+// Öva: välj en del och öva på den på nivåns sätt (Medel, Svår, Expert)
+const partActive = () => S.mode === 'practice' && ['easy','medium','tc','hard'].includes(S.level);
+const partsFor = lv => lv === 'easy' ? ['v','d','x'] : lv === 'medium' ? ['v','t'] : lv === 'tc' ? ['v','t','k'] : lv === 'hard' ? ['v','t','k','e'] : [];
+// focus som gäller i Expert-frågor (null = hela svaret)
+const xFocus = () => partActive() && S.level === 'hard' && S.part !== 'e' ? S.part : null;
+function syncPartAvail(){
+  document.getElementById('partSeg').hidden = !partActive();
+  const avail = partsFor(S.level);
+  document.querySelectorAll('[data-part]').forEach(b => { b.hidden = !avail.includes(b.dataset.part); });
+  if (avail.length && !avail.includes(S.part)) S.part = 'v';
+  document.querySelectorAll('[data-part]').forEach(x => x.setAttribute('aria-pressed', x.dataset.part === S.part));
+}
+const S = {level:'intro',kind:'mix',bands:'4',right:0,total:0,streak:0,best:0,q:null,n:4,type:null,answered:false,opts:null,optStyles:null,build:null,slot:0,style:null,eCase:false};
+try {
+  S.best = +localStorage.getItem('fargkoden-best') || 0;
+  const lv = localStorage.getItem('fargkoden-level'), kd = localStorage.getItem('fargkoden-kind');
+  if (lv && LV_KEYS.includes(lv)) S.level = lv;
+  const md = localStorage.getItem('fargkoden-mode');
+  if (md === 'play' || md === 'practice') S.mode = md;
+  const pt = localStorage.getItem('fargkoden-part');
+  if (pt && ['v','t','k','e','d','x'].includes(pt)) S.part = pt;
+} catch(e) {}
+const save = (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} };
+S.removed = new Set(); S.hintsUsed = new Set();
+S.lvBest = {intro:0, easy:0, medium:0, tc:0, hard:0, ultra:0}; if (!['v','t','k','e','d','x'].includes(S.part)) S.part = 'v'; S.mode = S.mode || 'play';
+try { Object.assign(S.lvBest, JSON.parse(localStorage.getItem('fargkoden-stars') || '{}')); } catch(e) {}
+const UNLOCK_AT = 5;
+const STAR_AT = [UNLOCK_AT]; const starsFor = n => n >= UNLOCK_AT ? 1 : 0;
+const LOCK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7.5" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+const CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="var(--ok)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// Nivåerna låses upp i tur och ordning: 5 rätt i rad (när man spelar) öppnar nästa. Eldprovet är alltid öppet.
+const ORDER = ['intro','easy','medium','tc','hard','ultra'];
+const lvName = lv => document.querySelector(`[data-level="${lv}"] span`).textContent;
+const unlocked = lv => { if (lv === 'ultra') return true; const i = ORDER.indexOf(lv); return i <= 0 || (S.lvBest[ORDER[i - 1]] || 0) >= UNLOCK_AT; };
+const cleared = lv => lv !== 'ultra' && (S.lvBest[lv] || 0) >= UNLOCK_AT;
+function syncLocks(){
+  document.querySelectorAll('[data-level]').forEach(b => {
+    const lv = b.dataset.level, open = unlocked(lv);
+    b.disabled = !open;
+    b.title = open ? '' : `Klara 5 rätt i rad på ${lvName(ORDER[ORDER.indexOf(lv) - 1])} för att låsa upp`;
+    const ic = b.querySelector('.lvicon');
+    if (ic) ic.innerHTML = !open ? LOCK_SVG : cleared(lv) ? CHECK_SVG : '';
+    if (ic) ic.setAttribute('aria-label', !open ? 'låst' : cleared(lv) ? 'klarad' : '');
+  });
+  if (!unlocked(S.level)) {
+    S.level = [...ORDER].reverse().find(l => l !== 'ultra' && unlocked(l));
+    save('fargkoden-level', S.level);
+    document.querySelectorAll('[data-level]').forEach(x => x.setAttribute('aria-pressed', x.dataset.level === S.level));
+  }
+}
+function renderStars(){ syncLocks(); }
+
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+const nd = b => b.length === 4 ? 2 : 3;
+function valueOf(b){ let d = 0; for (let i = 0; i < nd(b); i++) d = d*10 + C[b[i]].d; return Math.round(d * C[b[nd(b)]].m * 100) / 100; }
+const tolOf = b => C[b[nd(b)+1]].t;
+const tcOf = b => b.length === 6 ? C[b[5]].tc : null;
+const key = b => valueOf(b) + '|' + tolOf(b) + '|' + tcOf(b);
+const num = n => String(Math.round(n*100)/100).replace('.', ',');
+function fmtVal(v){ if(v>=1e9) return num(v/1e9)+' GΩ'; if(v>=1e6) return num(v/1e6)+' MΩ'; if(v>=1e3) return num(v/1e3)+' kΩ'; return num(v)+' Ω'; }
+const fmtTol = t => '±' + num(t) + ' %';
+const fmtTc = t => t + ' ppm/K';
+const fmtAll = b => fmtVal(valueOf(b)) + ' ' + fmtTol(tolOf(b)) + (tcOf(b) != null ? ', ' + fmtTc(tcOf(b)) : '');
+function fmtMult(m){ if(m<1) return '×'+num(m); if(m>=1e9) return '×'+m/1e9+'G'; if(m>=1e6) return '×'+m/1e6+'M'; if(m>=1e3) return '×'+m/1e3+'k'; return '×'+m; }
+function roleOf(n, i){ const k = n === 4 ? 2 : 3; return i < k ? 'digit' : i === k ? 'mult' : i === k+1 ? 'tol' : 'tc'; }
+function bandDetail(k, role){ return role === 'digit' ? C[k].d : role === 'mult' ? fmtMult(C[k].m) : role === 'tol' ? fmtTol(C[k].t) : fmtTc(C[k].tc); }
+
+// Helt slumpade band (ger oftast värden utanför standardserierna)
+function genRandomBands(n){
+  if (n === 4) return [rnd(BAND1), rnd(DIG), rnd(GEN.mult4), rnd(GEN.tol4)];
+  const b = [rnd(BAND1), rnd(DIG), rnd(DIG), rnd(GEN.mult5), rnd(GEN.tol5)];
+  if (n === 6) b.push(rnd(GEN.tc));
+  return b;
+}
+// 90 % standardvärden med passande tolerans, 10 % slumpvärden för att man inte ska lita blint på serierna
+function genBands(n){
+  // Slumpvärden utanför serierna förekommer bara på Expert och Mästare, där standardvärden introduceras
+  if ((S.level === 'hard' || S.level === 'ultra') && Math.random() < 0.1) return genRandomBands(n);
+  if (n === 4) {
+    const tol = rnd(GEN.tol4), base = rnd(tol === 'silver' ? E12 : E24);
+    return [DIG[Math.floor(base / 10)], DIG[base % 10], rnd(GEN.mult4), tol];
+  }
+  const tol = rnd(GEN.tol5);
+  const pool = (tol === 'red' ? E48 : E96).concat(E24.map(x => x * 10));
+  const m3 = rnd(pool);
+  const b = [DIG[Math.floor(m3 / 100)], DIG[Math.floor(m3 / 10) % 10], DIG[m3 % 10], rnd(GEN.mult5), tol];
+  if (n === 6) b.push(rnd(GEN.tc));
+  return b;
+}
+// Antalet band blandas alltid; Svår har fler sexbandsmotstånd för att öva temperaturkoefficient
+const pickN = () => rnd(S.level === 'tc' ? [4,5,6,6,6] : [4,5,6]);
+
+function distractors(b){
+  const n = b.length, k = nd(b), c = [];
+  const mod = (i, v) => { const x = b.slice(); x[i] = v; return x; };
+  const swap = (i, j) => { const x = b.slice(); [x[i], x[j]] = [x[j], x[i]]; return x; };
+  if (b[1] !== 'black' && b[0] !== b[1]) c.push(swap(0,1));
+  if (k === 3 && b[1] !== b[2]) c.push(swap(1,2));
+  const mi = MO.indexOf(b[k]);
+  if (mi > 0) c.push(mod(k, MO[mi-1]));
+  if (mi < 8) c.push(mod(k, MO[mi+1]));
+  const tols = n === 4 ? ['gold','silver','brown','red'] : ['brown','red','green','blue'];
+  c.push(mod(k+1, rnd(tols.filter(x => x !== b[k+1]))));
+  if (n === 6) c.push(mod(5, rnd(GEN.tc.filter(x => x !== b[5]))));
+  for (let i = 0; i < k; i++) {
+    const d = C[b[i]].d;
+    if (d < 9) c.push(mod(i, DIG[d+1]));
+    if (d > (i === 0 ? 1 : 0)) c.push(mod(i, DIG[d-1]));
+  }
+  shuffle(c);
+  const seen = new Set([key(b)]), out = [];
+  for (const x of c) { if (out.length === 3) break; if (!seen.has(key(x))) { seen.add(key(x)); out.push(x); } }
+  while (out.length < 3) { const x = genBands(n); if (!seen.has(key(x))) { seen.add(key(x)); out.push(x); } }
+  return out;
+}
+
+// Motstånd där bara E-serien avgör läsriktningen (4 band: E24, 5 band: E96)
+function genE(n){
+  for (;;) {
+    const tol = rnd(['brown','red']);
+    if (n === 4) {
+      const base = rnd(E24), d1 = Math.floor(base/10), d2 = base % 10;
+      if (!C[DIG[d1]].t) continue;
+      const mult = rnd(['black','brown','red','orange','yellow']);
+      if (E24.includes(C[tol].d*10 + C[mult].d)) continue;
+      return [DIG[d1], DIG[d2], mult, tol];
+    }
+    const base = rnd(E96), d = [Math.floor(base/100), Math.floor(base/10) % 10, base % 10];
+    if (!C[DIG[d[0]]].t) continue;
+    const mult = rnd(['black','brown','red','orange']);
+    if (E96.includes(C[tol].d*100 + C[mult].d*10 + d[2])) continue;
+    return [DIG[d[0]], DIG[d[1]], DIG[d[2]], mult, tol];
+  }
+}
+
+const STD_X = {4:[96,130,156,222], 5:[92,116,140,164,222], 6:[90,113,136,159,206,230]};
+const tolIdx = n => n === 6 ? 4 : n - 1;
+function stdStyle(n){
+  const w = Array(n).fill(n === 4 ? 13 : n === 5 ? 12 : 11);
+  w[tolIdx(n)] *= 1.5;
+  return {body:'var(--body)', shape:'bone', pal:0, xs:STD_X[n].slice(), w, flip:false, cues:['gap','wide'], wideIdx:tolIdx(n)};
+}
+
+function variedStyle(b, flip){
+  const n = b.length;
+  const shape = rnd(['bone','bone','cyl']);
+  const w0 = (n === 4 ? 10 : n === 5 ? 9 : 8) + Math.random()*3.5;
+  const metal = b.some(METAL);
+  let layout = rnd(['gap','gap','wide','both','even']);
+  const group = Math.random() < 0.35;
+  // Ett vänt motstånd måste ha minst en ledtråd till läsriktningen
+  if (flip && !metal && layout === 'even' && !group) layout = rnd(['gap','wide','both']);
+  const start = group ? 86 : (shape === 'bone' ? 94 : 98);
+  const front = n === 6 ? 4 : n - 1;
+  let xs, cues = [];
+  if (layout === 'even') {
+    const p = group ? (n === 4 ? 25 : 20) : (232 - start) / (n - 1);
+    xs = Array.from({length:n}, (_, i) => start + i*p);
+  } else {
+    const p = (n === 4 ? 21 : n === 5 ? 19 : 17) + Math.random()*(n === 4 ? 8 : 5);
+    xs = Array.from({length:front}, (_, i) => start + i*p);
+    const t = layout === 'wide' ? xs[front-1] + p + 4 : (n === 6 ? 202 + Math.random()*6 : 222 + Math.random()*8);
+    xs.push(t);
+    if (n === 6) xs.push(Math.min(t + p + 4, 238));
+    if (layout !== 'wide') cues.push('gap');
+  }
+  const wide = layout === 'wide' || layout === 'both';
+  const w = Array(n).fill(w0);
+  let wideIdx = null;
+  if (wide) { wideIdx = n === 6 && Math.random() < 0.25 ? 5 : tolIdx(n); w[wideIdx] = w0*1.75; cues.push('wide'); }
+  if (group) cues.push('group');
+  return {body:rnd(BODIES), shape, pal:Math.floor(Math.random()*3), xs, w, flip, cues, wideIdx};
+}
+function evenStyle(n){
+  const st = variedStyle(Array(n).fill('gold'), false);
+  const start = st.shape === 'bone' ? 94 : 98, p = (232 - start) / (n - 1);
+  st.xs = Array.from({length:n}, (_, i) => start + i*p);
+  st.w = st.w.map(() => st.w[0]);
+  st.cues = [];
+  return st;
+}
+
+let uid = 0;
+const METAL = k => k === 'gold' || k === 'silver';
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function shade(hex, f){
+  const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255];
+  return '#' + c.map(v => Math.round(f >= 0 ? v + (255 - v) * f : v * (1 + f)).toString(16).padStart(2,'0')).join('');
+}
+function metalDefs(id, k, pal){
+  const b = HX[k][pal];
+  const stops = [[0,shade(b,-.18)],[.18,shade(b,.18)],[.3,shade(b,.4)],[.42,b],[.62,shade(b,-.2)],[.8,shade(b,.22)],[1,shade(b,-.12)]];
+  return `<linearGradient id="m${id}${k}" x1="0" y1="0" x2=".5" y2="1">${stops.map(([o,c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+}
+function glitterDefs(id){
+  const anim = reduceMotion() ? () => '' : (d, b) => `<animate attributeName="opacity" values=".1;1;.1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/>`;
+  const dots = [[1.2,1.5,.7,1.3,0],[5,4.2,.55,1.7,.4],[2.8,7.4,.5,1.1,.8],[6.2,9,.65,1.9,.2],[3.6,11.6,.45,1.5,1]];
+  return `<pattern id="sp${id}" width="8" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">${
+    dots.map(([x,y,r,d,b]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff">${anim(d,b)}</circle>`).join('')}</pattern>`;
+}
+function swStyle(k){
+  const b = C[k].hex;
+  return METAL(k)
+    ? `background:linear-gradient(135deg,${shade(b,-.15)} 0%,${shade(b,.38)} 35%,${b} 55%,${shade(b,-.18)} 75%,${shade(b,.2)} 100%)`
+    : `background:${b}`;
+}
+
+const BONE = 'M70,45 C70,16 108,16 112,25 L208,25 C212,16 250,16 250,45 C250,74 212,74 208,65 L112,65 C108,74 70,74 70,45 Z';
+const CYL = 'M80,24 L240,24 Q252,24 252,36 L252,54 Q252,66 240,66 L80,66 Q68,66 68,54 L68,36 Q68,24 80,24 Z';
+function svg(b, o = {}){
+  const id = 'r' + (uid++);
+  const st = o.style || stdStyle(b.length);
+  const body = st.shape === 'cyl' ? CYL : BONE;
+  const bands = b.map((k,i) => {
+    const w = st.w[i], x = st.xs[i] - w/2;
+    if (!k) return `<rect x="${x}" y="8" width="${w}" height="76" fill="rgba(0,0,0,.08)" stroke="#6f5f3f" stroke-width="1.2" stroke-dasharray="3 3"/>`;
+    if (st.interrupt === i) return [0,1,2,3,4].map(j => `<rect x="${x}" y="${8 + j*16}" width="${w}" height="9" fill="${HX[k][st.pal]}"/>`).join('');
+    if (METAL(k)) return `<rect x="${x}" y="8" width="${w}" height="76" fill="url(#m${id}${k})"/><rect x="${x}" y="8" width="${w}" height="76" fill="url(#sp${id})" opacity=".42"/>`;
+    return `<rect x="${x}" y="8" width="${w}" height="76" fill="${HX[k][st.pal]}"/>`;
+  }).join('');
+  const ax = o.active != null ? (st.flip ? 320 - st.xs[o.active] : st.xs[o.active]) : 0;
+  const mk = o.active != null ? `<path d="M${ax-7},91 L${ax+7},91 L${ax},82 Z" style="fill:var(--accent)"/>` : '';
+  // Markerade band (tipset "Förklara banden"): ram runt bandet och en etikett under
+  const marks = (o.mark || []).map(([i, lab]) => {
+    const w = st.w[i], cx = st.flip ? 320 - st.xs[i] : st.xs[i];
+    return `<rect x="${cx - w/2 - 3}" y="5" width="${w + 6}" height="82" rx="3" fill="none" style="stroke:var(--accent)" stroke-width="2.5"/>` +
+      `<text x="${cx}" y="103" text-anchor="middle" font-size="12" font-weight="700" style="fill:var(--accent)" font-family="IBM Plex Sans, system-ui, sans-serif">${lab}</text>`;
+  }).join('');
+  const label = o.label || `Motstånd med ${b.length} färgband`;
+  const fill = st.body.startsWith('var') ? `style="fill:${st.body}"` : `fill="${st.body}"`;
+  const metals = [...new Set(b.filter(k => k && METAL(k)))];
+  const mdefs = metals.length ? metals.map(k => metalDefs(id, k, st.pal)).join('') + glitterDefs(id) : '';
+  const inner = `<line x1="4" y1="45" x2="74" y2="45" style="stroke:var(--lead)" stroke-width="5" stroke-linecap="round"/>
+<line x1="246" y1="45" x2="316" y2="45" style="stroke:var(--lead)" stroke-width="5" stroke-linecap="round"/>
+<path d="${body}" ${fill}/>
+<g clip-path="url(#c${id})">${bands}${st.chip != null ? `<rect x="${st.xs[st.chip] - st.w[st.chip]/2 - 0.5}" y="38" width="${st.w[st.chip] + 1}" height="9" ${fill}/>` : ''}${st.tint ? `<rect x="60" y="10" width="200" height="72" fill="#ff9a2e" opacity=".38" style="mix-blend-mode:multiply"/>` : ''}<rect x="60" y="10" width="200" height="72" fill="url(#g${id})"/></g>
+<path d="${body}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1"/>`;
+  return `<svg viewBox="0 0 320 ${o.mark && o.mark.length ? 108 : 92}" role="img" aria-label="${label}"><defs>${mdefs}
+<clipPath id="c${id}"><path d="${body}"/></clipPath>
+<linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
+${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}</svg>`;
+}
+const colorNames = b => b.map(k => C[k].n).join(', ');
+
+// Mästare: motstånd där båda läsriktningarna ger giltiga, rimliga standardvärden (brun/röd tolerans åt båda hållen)
+let AMBIG = null;
+function ambigList(){
+  if (AMBIG) return AMBIG;
+  AMBIG = {4: [], 5: []};
+  for (const tol of ['brown','red']) for (const d1 of [1,2]) for (let d2 = 0; d2 <= 5; d2++) for (let m = 0; m <= 4; m++) {
+    if (!E24.includes(d1*10 + d2) || !E24.includes(C[tol].d*10 + m)) continue;
+    const b = [DIG[d1], DIG[d2], DIG[m], tol];
+    if (key(b) !== key(b.slice().reverse())) AMBIG[4].push(b);
+  }
+  for (const tol of ['brown','red']) for (const d1 of [1,2]) for (let d2 = 0; d2 <= 4; d2++) for (let d3 = 0; d3 <= 9; d3++) for (let m = 0; m <= 3; m++) {
+    if (!E96.includes(d1*100 + d2*10 + d3) || !E96.includes(C[tol].d*100 + m*10 + d3)) continue;
+    const b = [DIG[d1], DIG[d2], DIG[d3], DIG[m], tol];
+    if (key(b) !== key(b.slice().reverse())) AMBIG[5].push(b);
+  }
+  return AMBIG;
+}
+function directionText(b, st){
+  if (S.ambig) {
+    const series = b.length === 4 ? 'E24' : 'E96';
+    return `Utseendet ger ingen ledtråd, och båda läsningarna är standardvärden i ${series}. Här måste du mäta.`;
+  }
+  if (S.eCase) {
+    const r = b.slice().reverse(), series = b.length === 4 ? 'E24' : 'E96';
+    return `Utseendet ger ingen ledtråd. Läst rätt blir det ${fmtVal(valueOf(b))}, ett standardvärde i ${series}-serien. Läst åt andra hållet blir det ${fmtVal(valueOf(r))} ${fmtTol(tolOf(r))}, som inte finns i ${series}.`;
+  }
+  const t = [];
+  if (st.flip) t.push('Motståndet satt vänt, så det läses från höger till vänster.');
+  if (b.some(METAL)) t.push('Guld och silver är inga siffror och kan aldrig vara första bandet, så den änden är slutet.');
+  if (st.cues.includes('gap')) t.push('Det större mellanrummet sitter före toleransbandet.');
+  if (st.cues.includes('wide')) t.push(st.wideIdx === 5
+    ? 'Sjätte bandet är bredare. Så föreskrev äldre utgåvor av IEC 60062; sedan 2016 ska toleransbandet vara det breda.'
+    : 'Toleransbandet är bredare än de andra.');
+  if (st.cues.includes('group')) t.push('Banden sitter samlade närmast början.');
+  if (!t.length) t.push('Jämnt avstånd och ingen guld eller silver: här finns ingen tydlig ledtråd, så man får pröva vilken läsning som ger ett rimligt standardvärde.');
+  return t.join(' ');
+}
+
+function updateScore(){
+  let tail = '';
+  if (S.level === 'ultra') {
+    tail = S.exam && !S.exam.done ? `<span>Fråga <b>${Math.min(S.exam.i + 1, EXAM_N)}</b> av <b>${EXAM_N}</b></span>`
+      : bestTitle() ? `<span>Bästa resultat: <b>${bestTitle()}</b></span>` : '';
+  } else if (S.mode !== 'play') tail = '<span>Nivåer låses upp när du spelar</span>';
+  else {
+    const nx = ORDER[ORDER.indexOf(S.level) + 1];
+    tail = nx === 'ultra' ? '<span>Redo? Testa dig i Eldprovet</span>'
+      : !unlocked(nx) ? `<span><b>${Math.min(S.streak, UNLOCK_AT)}</b> av ${UNLOCK_AT} i rad till ${lvName(nx)}</span>`
+      : `<span>${lvName(nx)} är upplåst</span>`;
+  }
+  document.getElementById('score').innerHTML =
+    (S.level === 'ultra' ? '' : `<span>Rätt <b>${S.right}</b> av <b>${S.total}</b></span><span>Svit <b>${S.streak}</b></span>`) + tail;
+  renderStars();
+}
+
+// Eldprovet: 20 frågor, poäng per färdighet, utlåtande till sist
+const EXAM_N = 20;
+const SKILLS = {dir:'Läsriktning', v:'Resistans', t:'Tolerans', k:'Temperaturkoefficient', e:'Standardserier', dirx:'Kluriga riktningsfrågor'};
+// Alla som gör provet är minst Nykomling. En färdighet räknas som klarad vid minst hälften rätt.
+const PASS = 0.5;
+const LADDER = [['intro','Nykomling',[]], ['easy','Lärling',['v']], ['medium','Gesäll',['t']], ['tc','Mästare',['k']], ['hard','Stormästare',['e','dirx']]];
+function examQueue(){
+  const q = [{t:'dir', hard:true}, {t:'dir', hard:true}, {t:'dir', hard:true}, {t:'dir', hard:true}];
+  for (const t of ['read','build']) [6, 6, 4, 5, 0, 0].forEach(n => q.push({t, n}));
+  for (let i = 0; i < 4; i++) q.push({t:'series'});
+  return shuffle(q);
+}
+function startExam(){ S.exam = {queue: examQueue(), i: 0, score: {}, done: false}; S.streak = 0; next(); }
+function recordExam(ok){
+  const sc = S.exam.score, add = (k, g) => { sc[k] = sc[k] || {ok:0, n:0}; sc[k].n++; if (g) sc[k].ok++; };
+  if (S.type === 'dir') add(S.examItem.hard ? 'dirx' : 'dir', ok);
+  else if (S.type === 'series') add('e', ok);
+  else {
+    const P = S.parts || [], g = l => { const p = P.find(x => x.label === l); return p ? p.ok : ok; };
+    add('v', g('Siffror') && g('Multiplikator'));
+    add('t', g('Tolerans'));
+    if (S.n === 6) add('k', g('Temperaturkoefficient'));
+  }
+  S.exam.i++;
+  if (S.exam.i >= EXAM_N) S.exam.done = true;
+}
+const passSkill = k => { const x = S.exam.score[k]; return !!(x && x.n && x.ok / x.n >= PASS); };
+function verdict(){
+  let idx = -1;
+  for (let j = 0; j < LADDER.length; j++) { if (LADDER[j][2].every(passSkill)) idx = j; else break; }
+  return idx;
+}
+const bestTitle = () => { const i = +(localStorage.getItem('fargkoden-title') ?? -1); return i >= 0 && LADDER[i] ? LADDER[i][1] : null; };
+// gamla sparade titlar räknades med en annan skala; nollställ en gång
+try { if (!localStorage.getItem('fargkoden-title-v2')) { localStorage.removeItem('fargkoden-title'); localStorage.setItem('fargkoden-title-v2', '1'); } } catch(e) {}
+function showExamCard(){
+  const q = document.getElementById('q');
+  let h;
+  if (!S.exam) {
+    h = `<div class="exam"><h2>Eldprovet</h2>
+      <p>20 frågor som testar allt: läsriktning, resistans, tolerans, temperaturkoefficient och standardserier. Inga tips och inga färdiga värden, och motstånd kan sitta vända.</p>
+      <p>Du får en poäng för varje del du klarar. Till sist får du ett utlåtande om vilken nivå du behärskar, från Nykomling till Stormästare.</p>
+      <button class="primary" id="examStart">Starta eldprovet</button></div>`;
+  } else {
+    const idx = verdict();
+    try { if (idx > +(localStorage.getItem('fargkoden-title') ?? -1)) localStorage.setItem('fargkoden-title', idx); } catch(e) {}
+    const title = idx === LADDER.length - 1 ? 'Du kan kalla dig Stormästare!' : `Du är ${LADDER[idx][1]}!`;
+    const skills = ['dir','v','t','k','e','dirx'].filter(k => S.exam.score[k]).map(k => {
+      const x = S.exam.score[k], ok = passSkill(k);
+      return `<li><span class="pill ${ok ? 'p-ok' : 'p-bad'}">${ok ? 'Kan' : 'Öva'}</span><span><b>${SKILLS[k]}</b>: ${x.ok} av ${x.n}</span></li>`;
+    }).join('');
+    const nextStep = LADDER[idx + 1];
+    const tip = !nextStep ? 'Du klarade allt. Snyggt jobbat!'
+      : `För att bli ${nextStep[1]} behöver du öva mer på ${nextStep[2].filter(k => !passSkill(k)).map(k => SKILLS[k].toLowerCase()).join(' och ')}.`;
+    const goLv = nextStep ? nextStep[0] : null;
+    h = `<div class="exam"><p class="prompt">Eldprovet är klart</p><p class="verdict">${title}</p>
+      <ul class="skills">${skills}</ul><p>${tip}</p>
+      <div class="exam-btns"><button class="primary" id="examStart">Gör om eldprovet</button>
+      ${goLv && unlocked(goLv) ? `<button class="primary" id="examGo" data-go="${goLv}">Öva som ${lvName(goLv)}</button>` : ''}</div></div>`;
+  }
+  q.innerHTML = h;
+  updateScore();
+}
+function next(){
+  syncModes();
+  syncPartAvail();
+  if (S.level === 'ultra' && (!S.exam || S.exam.done)) { S.answered = true; S.type = 'exam'; showExamCard(); return; }
+  S.examItem = S.level === 'ultra' ? S.exam.queue[S.exam.i] : null;
+  const n = S.examItem && S.examItem.n ? S.examItem.n : partActive() && S.part === 'k' ? 6 : pickN(), L = LV[S.level];
+  S.n = n; S.q = genBands(n);
+  const kinds = ['read','build'].concat(seriesOK() ? ['series'] : [], S.level === 'ultra' ? ['dir'] : []);
+  S.type = S.examItem ? S.examItem.t : partActive() ? (S.part === 'e' ? 'series' : rnd(['read','build'])) : S.kind === 'mix' ? rnd(kinds) : S.kind;
+  S.answered = false; S.opts = null; S.optStyles = null; S.usedMeter = false; S.meterVal = null;
+  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.removed = new Set(); S.palOrder = {}; S.palAll = null; S.entry = newEntry(); S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.ambig = false; S.bflip = false; S.vText = valueNotation(valueOf(S.q)); S.focus = partActive() && S.part !== 'e' ? S.part : S.level === 'easy' ? rnd(['v','d','x']) : S.level === 'tc' && n === 6 ? rnd(['v','t','k','k']) : rnd(['v','t']);
+  S.build = Array(n).fill(null); S.slot = 0; S.eCase = false;
+  if (S.type === 'series') {
+    S.ser = genSeries(); S.serSel = new Set();
+    // Var tredje seriefråga: koppla ihop serie och tolerans
+    S.stol = Math.random() < 1/3 ? {dir: rnd(['tol2ser','ser2tol']), ser: rnd(Object.keys(ESER))} : null;
+    S.sr = null;
+    if (S.level === 'ultra' || S.level === 'hard') {
+      S.stol = null; S.sr = genSeriesRead();
+      S.ser = {v: S.sr.v, m3: S.sr.m3, set: seriesOf(S.sr.m3)};
+    }
+    else if (S.stol) S.stol.res = resistorFromSeries(S.stol.ser).bands;
+    else S.ser.bands = seriesBands(S.ser.v, S.ser.m3, S.ser.set[0] || null);
+  }
+  if (S.level === 'ultra' && S.type === 'build') S.bflip = Math.random() < 0.5;
+  const xf = xFocus();
+  if (xf && S.type === 'build') {
+    const k0 = nd(S.q), ask = xf === 'v' ? [...Array(k0 + 1).keys()] : xf === 't' ? [k0 + 1] : [5];
+    S.build = S.q.map((c, i) => ask.includes(i) ? null : c);
+    S.slot = ask[0]; S.askSlots = ask;
+  } else S.askSlots = null;
+  if (S.type === 'dir') {
+    const flip = Math.random() < 0.5;
+    if (S.level === 'ultra' && !(S.examItem && !S.examItem.hard)) {
+      // Eldprovet: de svåra fallen, utan synliga ledtrådar i utseendet.
+      // Antingen avgör standardvärdena (E24/E96) eller att guld/silver inte kan vara en siffra.
+      const r = Math.random();
+      if (n < 6 && r < 1/3) { S.q = rnd(ambigList()[n]).slice(); S.ambig = true; }
+      else if (n < 6 && r < 2/3) { S.q = genE(n); S.eCase = true; }
+      else {
+        let b; do { b = genBands(n); if (n > 4) b[nd(b)] = rnd(['gold','silver']); } while (!b.some(METAL));
+        S.q = b;
+      }
+      S.style = evenStyle(n);
+    } else {
+      // Nybörjare: inga guld/silverband och alltid en tydlig ledtråd enligt standarden
+      while (S.q.some(METAL)) S.q = genBands(n);
+      S.style = variedStyle(S.q, true);
+    }
+    S.style.flip = flip;
+  } else {
+    S.style = L.varied ? variedStyle(S.q, L.flip && S.type === 'read' && Math.random() < 0.5) : stdStyle(n);
+  }
+  render();
+}
+
+// Serie finns bara på Svår och Ultra
+const seriesOK = () => S.level === 'hard' || S.level === 'ultra';
+// Två lägen: Spela (allt blandat, ger stjärnor) och Öva (en del i taget, inga stjärnor).
+// Öva finns bara på Medel, Svår och Expert. Nybörjare och Lätt har bara en sorts fråga, och Mästare ska man bara spela.
+const practiceOK = () => ['easy','medium','tc','hard'].includes(S.level);
+function syncModes(){
+  if (!practiceOK() && S.mode === 'practice') S.mode = 'play';
+  S.kind = S.level === 'intro' ? 'dir' : 'mix';
+  // Färgkod och standardvärden är hjälp som bara visas när man övar
+  document.querySelectorAll('[data-mode]').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.mode === S.mode);
+    const off = b.dataset.mode === 'practice' && !practiceOK();
+    b.disabled = off; b.title = off ? (S.level === 'ultra' ? 'Eldprovet har ett eget upplägg' : 'Här finns bara en sorts fråga') : '';
+  });
+}
+// Mästare, Bygg: värdet skrivs som på riktiga scheman och listor
+function rkm(v){
+  const [u, l] = v >= 1e6 ? [1e6, 'M'] : v >= 1e3 ? [1e3, 'k'] : [1, 'R'];
+  const x = String(Math.round(v / u * 1000) / 1000);
+  return x.includes('.') ? x.replace('.', l) : x + l;
+}
+function valueNotation(v){
+  const forms = [fmtVal(v), rkm(v), v.toLocaleString('sv-SE') + ' Ω'];
+  if (v >= 1e3) forms.push((v / 1e6).toLocaleString('sv-SE', {maximumSignificantDigits: 3}) + ' MΩ');
+  else forms.push((v / 1e3).toLocaleString('sv-SE', {maximumSignificantDigits: 3}) + ' kΩ');
+  return rnd(forms);
+}
+const readBuild = () => S.bflip ? S.build.slice().reverse() : S.build;
+function slotLabels(n){
+  const k = n === 4 ? 2 : 3, l = [];
+  for (let i = 1; i <= k; i++) l.push('Siffra ' + i);
+  l.push('Multiplikator', 'Tolerans');
+  if (n === 6) l.push('Temp.koeff.');
+  return l;
+}
+function slotKeys(n, i){
+  const r = roleOf(n, i);
+  return r === 'digit' ? (i === 0 ? BAND1 : DIG) : r === 'mult' ? MO : r === 'tol' ? TOL : TCS;
+}
+
+function render(){
+  updateScore();
+  const q = document.getElementById('q'), L = LV[S.level], n = S.n;
+  const v = valueOf(S.q), t = tolOf(S.q), tc = tcOf(S.q);
+  let h = '';
+  if (S.type === 'series' && S.sr) {
+    const full = S.level === 'hard' ? `<p class="big">${fmtVal(S.sr.v)} ${fmtTol(bandsTol(S.sr.bands))}</p>` : '';
+    h += `<p class="prompt">Vilken E-serie hör motståndet hemma i?</p>${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
+${hintsHTML()}
+      <div class="opts">${SER_OPTS.map(k => `<button class="opt" data-sr="${k}">${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
+  } else if (S.type === 'series' && S.stol) {
+    const st = S.stol, ask = st.dir === 'tol2ser';
+    const opts = Object.keys(ESER);
+    h += `<p class="prompt">${ask ? 'Vilken E-serie hör ihop med toleransen' : 'Vilken tolerans hör ihop med'}</p>
+      <p class="big">${ask ? fmtTol(ESER[st.ser][1]) : st.ser}</p>
+      <div class="res">${svg(st.res, {style: styleFor(st.res)})}</div><p class="gnote center">Ett motstånd som passar in</p>
+      <div class="opts">${opts.map(k => `<button class="opt" data-stol="${k}">${ask ? k : fmtTol(ESER[k][1])}</button>`).join('')}</div>`;
+  } else if (S.type === 'series') {
+    h += `<p class="prompt">${L.choice ? 'Vilken är den minsta standardserien som värdet finns i?' : 'Markera alla standardserier som värdet finns i.'}</p>
+      <p class="big">${fmtVal(S.ser.v)}</p>
+      <div class="res">${svg(S.ser.bands, {style: styleFor(S.ser.bands)})}</div><p class="gnote center">Så här kan det se ut, med närmaste tolerans</p>${hintsHTML()}
+      <div class="opts">${SER_OPTS.map(k => `<button class="opt" data-ser="${k}"${L.choice ? '' : ' aria-pressed="false"'}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>
+      ${L.choice ? '' : '<button class="primary" id="serSubmit" disabled>Svara</button>'}`;
+  } else if (S.type === 'dir') {
+    h += `<p class="prompt">Från vilket håll ska motståndet läsas?</p><div class="res">${svg(S.q,{style:S.style})}</div>${hintsHTML()}
+      <div class="opts"><button class="opt" data-dir="left">Från vänster</button><button class="opt" data-dir="right">Från höger</button>${S.level === 'ultra' ? '<button class="opt wide" data-dir="none">Går ej att avgöra utan multimeter</button>' : ''}</div>`;
+  } else if (S.type === 'read') {
+    const oneQ = S.level === 'medium' || S.level === 'tc' || (S.level === 'easy' && S.focus !== 'v');
+    const fq = oneQ ? S.focus : xFocus();
+    const rq = fq ? ({v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?', d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?'})[fq] : 'Vilket värde har motståndet?';
+    h += `<p class="prompt">${rq}</p><div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>${hintsHTML()}`;
+    if (oneQ) {
+      h += mcHTML();
+      if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet är temperaturkoefficienten. Den behöver du inte kunna på den här nivån.</p>';
+    } else if (L.choice) {
+      // Lätt: bara resistansen i alternativen, alla med olika värden
+      if (!S.opts) S.opts = shuffle([S.q, ...valueDistractors(S.q)]);
+      h += `<div class="opts">${S.opts.map((o,i) =>
+        `<button class="opt${S.removed.has(i) ? ' gone' : ''}" data-opt="${i}"${S.removed.has(i) ? ' disabled' : ''}>${fmtVal(valueOf(o))}</button>`).join('')}</div>`;
+    } else {
+      h += entryHTML();
+    }
+  } else {
+    const oneB = S.level === 'medium' || S.level === 'tc' || (S.level === 'easy' && S.focus !== 'v');
+    const bf = oneB ? S.focus : xFocus();
+    const bq = bf === 't' ? 'Vilket toleransband ger' : bf === 'k' ? 'Vilket sjätte band ger' : bf === 'd' ? 'Vilka band ger siffrorna' : bf === 'x' ? 'Vilket band ger multiplikatorn' : 'Vilket motstånd har värdet';
+    const bigTxt = S.level === 'ultra' ? `${S.vText} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}` : null;
+    h += `<p class="prompt">${bq}</p><p class="big">${bigTxt ? bigTxt : S.level === 'easy' && S.focus === 'd' ? digitStr(S.q).split('').join(' ') : S.level === 'easy' && S.focus === 'x' ? fmtMult(C[S.q[nd(S.q)]].m) : S.level === 'easy' ? fmtVal(v) : bf && !oneB ? ({v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc)})[bf] : oneB ? ({v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc)})[S.focus] : `${fmtVal(v)} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`}</p>${hintsHTML()}`;
+    if (oneB) {
+      h += bmcHTML();
+    } else if (L.choice) {
+      if (!S.opts) {
+        // Lätt: bara ohm i frågan, så alternativen måste skilja sig i värde
+        S.opts = shuffle([S.q, ...(S.level === 'easy' ? valueDistractors(S.q) : distractors(S.q))]);
+        S.optStyles = S.opts.map(o => o === S.q ? S.style : (L.varied ? variedStyle(o, false) : stdStyle(n)));
+      }
+      h += `<div class="opts rgrid">${S.opts.map((o,i) =>
+        `<button class="opt r" data-opt="${i}">${svg(o,{style:S.optStyles[i],label:'Motstånd: '+colorNames(o)})}</button>`).join('')}</div>`;
+    } else {
+      // Mästare: ibland sitter motståndet vänt, och då byggs det baklänges (Band 1 är toleransänden).
+      // Bredden och mellanrummet på de tomma banden visar alltid åt vilket håll det sitter.
+      const read = readBuild(), st = {...stdStyle(n), flip: !!S.bflip};
+      h += `<div class="res">${svg(read,{style: st, active: S.bflip ? n - 1 - S.slot : S.slot, label:'Ditt motstånd'})}</div>`;
+      const labels = S.level === 'ultra' ? Array.from({length:n}, (_, i) => 'Band ' + (i + 1)) : slotLabels(n);
+      h += `<div class="slots">${labels.map((l,i) => {
+        const k = S.build[i];
+        const locked = S.askSlots && !S.askSlots.includes(i);
+        return `<button class="slot" data-slot="${i}" aria-pressed="${S.slot===i}"${locked ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}<span>${k?C[k].n:'Välj'}</span></button>`;
+      }).join('')}</div>`;
+      // Expert och Mästare: alla tolv färger i en blandad ordning som ligger still under hela frågan.
+      // Ingen hjälp med vilka färger som passar bandet. Svaret rättas när sista bandet är valt.
+      const keys = S.palAll ||= shuffle(DIG.concat(['gold','silver']));
+      h += `<div class="palette">${keys.map(k =>
+        `<button class="pc" data-color="${k}"><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
+    }
+  }
+  h += `<div id="fb"></div>`;
+  q.innerHTML = h;
+}
+
+function parseVal(s){
+  s = s.trim().toLowerCase().replace(/\s|ω|ohm/g,'').replace(',', '.');
+  const mul = x => x === 'k' ? 1e3 : x === 'm' ? 1e6 : 1;
+  let m = s.match(/^(\d+)([rkm])(\d+)$/);
+  if (m) return parseFloat(m[1] + '.' + m[3]) * mul(m[2]);
+  m = s.match(/^(\d*\.?\d+)([rkm]?)$/);
+  if (m) return parseFloat(m[1]) * mul(m[2]);
+  return NaN;
+}
+const parseTol = s => parseFloat(s.replace(/[±%+\s]/g,'').replace(',', '.'));
+const parseTc = s => parseFloat(s.toLowerCase().replace(/ppm|\/k|\s/g,'').replace(',', '.'));
+const close = (a,b) => Math.abs(a-b) < 1e-6 * Math.max(1, Math.abs(b));
+
+function finish(ok){
+  S.answered = true; S.total++;
+  if (ok) { S.right++; if (!S.usedHint) S.streak++; } else S.streak = 0;
+  if (S.streak > S.best) { S.best = S.streak; save('fargkoden-best', S.best); }
+  const prevLv = S.lvBest[S.level] || 0;
+  S.unlockedNow = null;
+  if (S.mode === 'play' && S.level !== 'ultra' && S.streak > prevLv) {
+    S.lvBest[S.level] = S.streak; save('fargkoden-stars', JSON.stringify(S.lvBest));
+    const nx = ORDER[ORDER.indexOf(S.level) + 1];
+    if (prevLv < UNLOCK_AT && S.streak >= UNLOCK_AT && nx && nx !== 'ultra') S.unlockedNow = nx;
+  }
+  if (S.level === 'ultra' && S.exam && !S.exam.done) recordExam(ok);
+  updateScore();
+  const q = document.getElementById('q'), L = LV[S.level];
+  q.querySelectorAll('button, input').forEach(el => el.disabled = true);
+  if (S.type === 'series' && S.sr) { srFeedback(ok); afterFeedback(); return; }
+  if (S.type === 'series' && S.stol) { stolFeedback(ok); afterFeedback(); return; }
+  if (S.type === 'series') { seriesFeedback(ok); afterFeedback(); return; }
+  const b = S.q, n = b.length, k = nd(b), v = valueOf(b), t = tolOf(b), tc = tcOf(b);
+  const chips = b.map((c,i) => `<li><span class="sw" style="${swStyle(c)}"></span>${C[c].n} ${bandDetail(c, roleOf(n,i))}</li>`).join('');
+  const digits = b.slice(0, k).map(c => C[c].d).join('');
+  document.getElementById('fb').innerHTML = `<div class="feedback ${fbClass(ok)}" role="status">
+    <h2>${fbHead(ok)}</h2>
+    ${S.type === 'dir' && S.ambig ? `<p>Det går inte att avgöra utan multimeter. Motståndet kan vara ${fmtAll(b)} eller ${fmtAll(b.slice().reverse())}.</p>`
+      : S.type === 'dir' ? `<p>Det läses från ${S.style.flip ? 'höger' : 'vänster'} och är ${fmtAll(b)}.</p>`
+      : ((S.type === 'read' || S.type === 'build') && S.level === 'easy') ? easyFull(ok, b)
+      : ok ? '' : `<p>Rätt svar är ${fmtAll(b)}.</p>`}
+    ${!ok && S.parts ? partsHTML(S.parts) : ''}
+    ${S.level === 'tc' && S.n === 6 ? `<p class="dir">${tcFact(b)}</p>` : ''}
+    ${S.type === 'build' && S.bflip && !ok ? (S.build.join() === b.join()
+      ? '<p><b>Rätt färger, men åt fel håll.</b> Motståndet satt vänt: det breda toleransbandet satt till vänster, så Band 1 var slutet. Du byggde det som om det satt rättvänt.</p>'
+      : '<p>Motståndet satt vänt: det breda toleransbandet satt till vänster, så Band 1 var slutet.</p>') : ''}
+    ${(!ok && S.type==='build' && !L.choice && bandsValid(readBuild())) ? `<p>Ditt motstånd är ogiltigt: ${bandsValid(readBuild())}.</p>` : ''}
+    ${(!ok && S.type==='build' && (!L.choice || S.level === 'medium')) ? `<div class="res">${svg(b,{label:'Rätt motstånd: '+colorNames(b)})}</div>` : ''}
+    ${(S.style.flip && S.type !== 'build' && !S.ambig) ? `<p>Rättvänt ser det ut så här:</p><div class="res">${svg(b,{style:{...S.style,flip:false},label:'Rättvänt motstånd: '+colorNames(b)})}</div>` : ''}
+    ${S.ambig ? meterFB(v, t, `Med en multimeter avgör du det. Visar den något i stil med det här är det ${fmtAll(b)}:`) : meterFB(v, t)}
+    ${tipCost(ok)}
+    ${S.ambig ? '' : `<p class="calc">${digits} ${fmtMult(C[b[k]].m)} = ${fmtVal(v)}, ${fmtTol(t)}${tc != null ? ', ' + fmtTc(tc) : ''}</p>
+    <ul class="chips">${chips}</ul>`}
+    ${S.type !== 'series' && !S.ambig ? `<p class="dir">${stdInfo(b)}</p>` : ''}
+    ${((L.varied && S.type==='read') || S.type==='dir') ? `<p class="dir">${directionText(b, S.style)}</p>` : ''}
+    <button class="primary" id="next">Nästa fråga</button></div>`;
+  showFeedback();
+  afterFeedback();
+}
+const fbClass = ok => !ok ? 'bad' : S.usedHint ? 'tip' : 'ok';
+const fbHead = ok => !ok ? 'Inte riktigt' : S.usedHint ? 'Rätt, men med tips' : 'Rätt!';
+const tipCost = ok => ok && S.usedHint ? `<p class="cost">Tipset kostade: sviten ökar inte och står kvar på ${S.streak}.</p>` : '';
+function showFeedback(){
+  const box = document.querySelector('#fb .feedback');
+  if (!box) return;
+  if (box.scrollIntoView) box.scrollIntoView({block: box.offsetHeight > innerHeight * 0.9 ? 'start' : 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth'});
+  document.getElementById('next').focus({preventScroll:true});
+}
+// Upplåst-dialog som berättar vad nästa nivå lär ut
+const LEARN = {
+  easy: 'Som Lärling läser du av resistansen. De första banden är siffror och bandet efter är multiplikatorn, alltså hur många nollor som ska till. Du övar på siffrorna och multiplikatorn var för sig och på hela värdet, och toleransen behöver du inte kunna än.',
+  medium: 'Som Gesäll lägger du till toleransen, det breda bandet i slutet som säger hur mycket värdet får avvika. Motstånden ser också olika ut, med olika kroppsfärger, former och nyanser, precis som i verkligheten.',
+  tc: 'Som Mästare lär du dig det sjätte bandet: temperaturkoefficienten i ppm/K, som säger hur mycket resistansen ändras per grad. Sexbandsmotstånd dyker upp oftare här.',
+  hard: 'Som Stormästare svarar du på allt på en gång. Du knappar in värden, bygger motstånd band för band ur en blandad palett och lär dig standardvärdena och E-serierna. Ungefär vart tionde motstånd är inte standard. När du känner dig redo väntar Eldprovet.'
+};
+function afterFeedback(){
+  if (S.level === 'ultra' && S.exam && S.exam.done) document.getElementById('next').textContent = 'Se resultatet';
+  if (!S.unlockedNow) return;
+  const lv = S.unlockedNow, dlg = document.getElementById('unlockDlg');
+  document.getElementById('dlgTitle').textContent = `${lvName(lv)}`;
+  document.getElementById('dlgText').textContent = `5 rätt i rad! Du har låst upp nästa nivå. ${LEARN[lv]}`;
+  const go = document.getElementById('dlgGo');
+  go.textContent = `Gå till ${lvName(lv)}`;
+  go.onclick = () => { dlg.hidden = true; document.querySelector(`[data-level="${lv}"]`).click(); };
+  document.getElementById('dlgStay').onclick = () => { dlg.hidden = true; document.getElementById('next')?.focus({preventScroll:true}); };
+  dlg.hidden = false;
+  go.focus();
+}
+document.addEventListener('keydown', e => {
+  const dlg = document.getElementById('unlockDlg');
+  if (!dlg.hidden && e.key === 'Escape') { dlg.hidden = true; e.stopImmediatePropagation(); }
+}, true);
+
+function answerRead(){
+  if (S.answered) return;
+  const E = S.entry, ultra = S.level === 'ultra', six = S.n === 6;
+  const hint = document.getElementById('hint');
+  const say = m => { hint.textContent = m; hint.hidden = false; };
+  let vIn, tIn, kIn = null;
+  if (ultra) {
+    vIn = parseVal(E.v); tIn = parseTol(E.t); if (six) kIn = parseTc(E.k);
+    if (isNaN(vIn)) return say('Skriv resistansen, t.ex. 470, 4,7k eller 4k7.');
+    if (isNaN(tIn)) return say('Skriv toleransen i procent, t.ex. 5.');
+    if (six && isNaN(kIn)) return say('Skriv temperaturkoefficienten, t.ex. 50.');
+  } else if (xFocus()) {
+    const xf = xFocus();
+    let ok, part;
+    if (xf === 'v') {
+      const d = parseFloat(E.v.replace(',', '.'));
+      if (isNaN(d)) return say('Skriv in siffrorna på knappsatsen.');
+      if (E.mult == null) return say('Välj en multiplikator.');
+      vIn = d * E.mult; ok = close(vIn, valueOf(S.q)); S.parts = compareValues(vIn, valueOf(S.q));
+    } else if (xf === 't') {
+      if (E.tol == null) return say('Välj en tolerans.');
+      ok = close(E.tol, tolOf(S.q)); S.parts = null;
+    } else {
+      if (E.tc == null) return say('Välj en temperaturkoefficient.');
+      ok = close(E.tc, tcOf(S.q)); S.parts = null;
+    }
+    hint.hidden = true;
+    return finish(ok);
+  } else {
+    const d = parseFloat(E.v.replace(',', '.'));
+    if (isNaN(d)) return say('Skriv in siffrorna på knappsatsen.');
+    if (E.mult == null) return say('Välj en multiplikator.');
+    if (E.tol == null) return say('Välj en tolerans.');
+    if (six && E.tc == null) return say('Välj en temperaturkoefficient.');
+    vIn = d * E.mult; tIn = E.tol; kIn = E.tc;
+  }
+  hint.hidden = true;
+  S.parts = compareValues(vIn, valueOf(S.q)).concat(
+    [{label:'Tolerans', ok: close(tIn, tolOf(S.q)), yours: fmtTol(tIn), right: fmtTol(tolOf(S.q))}],
+    six ? [{label:'Temperaturkoefficient', ok: close(kIn, tcOf(S.q)), yours: fmtTc(kIn), right: fmtTc(tcOf(S.q))}] : []);
+  finish(close(vIn, valueOf(S.q)) && close(tIn, tolOf(S.q)) && (!six || close(kIn, tcOf(S.q))));
+}
+
+// Knappsats för Läs av på Svår och Ultra
+const MULTS = [0.01, 0.1, 1, 10, 100, 1e3, 1e4, 1e5, 1e6];
+const TOL_VALS = [10, 5, 2, 1, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01];
+const TC_VALS = [250, 100, 50, 25, 20, 15, 10, 5, 1];
+const newEntry = () => ({v:'', t:'', k:'', mult:null, tol:null, tc:null, field:'v'});
+function entryHTML(){
+  const E = S.entry, ultra = S.level === 'ultra', six = S.n === 6;
+  const caret = f => (ultra ? E.field === f : f === 'v') ? '<span class="caret"></span>' : '';
+  const keys = ['7','8','9','4','5','6','1','2','3',',','0','⌫'];
+  const keyBtn = (k, cls = '', dis = false) => `<button class="key ${cls}" data-key="${k}"${dis ? ' disabled' : ''} aria-label="${k === '⌫' ? 'Radera' : k === 'next' ? 'Nästa fält' : k}">${k === 'next' ? 'Nästa' : k}</button>`;
+  let h = '<div class="entry">';
+  if (ultra) {
+    const box = (f, lab, pre, val, unit) => `<button class="ebox${E.field === f ? ' active' : ''}" data-field="${f}"><span class="elab">${lab}</span><span class="eval">${pre}${val}${caret(f)}<span class="eunit">${unit}</span></span></button>`;
+    const vTxt = /[kM]$/.test(E.v) ? E.v.slice(0, -1) + ' ' + E.v.slice(-1) : E.v;
+    const vUnit = /[kM]$/.test(E.v) ? 'Ω' : ' Ω';
+    h += `<div class="eboxes">${box('v', 'Resistans', '', vTxt, vUnit)}${box('t', 'Tolerans', '±', E.t, ' %')}${six ? box('k', 'Temp.koeff.', '', E.k, ' ppm/K') : ''}</div>`;
+    h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}${keyBtn('k', 'fn', E.field !== 'v')}${keyBtn('M', 'fn', E.field !== 'v')}${keyBtn('next', 'fn')}</div>`;
+  } else {
+    const d = parseFloat(E.v.replace(',', '.'));
+    const pre = !isNaN(d) && E.mult != null ? `= ${fmtVal(Math.round(d * E.mult * 1e6) / 1e6)}` : '';
+    if (!xFocus() || xFocus() === 'v') h += `<div class="ebox active solo"><span class="elab">Siffror</span><span class="eval">${E.v}${caret('v')}<span class="emul">${E.mult != null ? fmtMult(E.mult) : '× ?'}</span></span><span class="epre">${pre}</span></div>`;
+    if (!xFocus() || xFocus() === 'v') h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}</div>`;
+    const chips = (attr, vals, cur, lab) => `<div><p class="grp-lbl">${lab}</p><div class="chiprow">${vals.map(v =>
+      `<button class="chip" data-${attr}="${v}" aria-pressed="${cur === v}">${attr === 'mult' ? fmtMult(v) : attr === 'tol' ? fmtTol(v) : fmtTc(v)}</button>`).join('')}</div></div>`;
+    const xf = xFocus();
+    if (!xf || xf === 'v') h += chips('mult', MULTS, E.mult, 'Multiplikator');
+    if (!xf || xf === 't') h += chips('tol', TOL_VALS, E.tol, 'Tolerans');
+    if ((!xf && six) || xf === 'k') h += chips('tc', TC_VALS, E.tc, 'Temperaturkoefficient');
+  }
+  h += '</div><p class="hint" id="hint" hidden></p><button class="primary" id="submit">Svara</button>';
+  return h;
+}
+function keyPress(k){
+  if (S.answered) return;
+  const E = S.entry, ultra = S.level === 'ultra';
+  const f = ultra ? E.field : 'v';
+  const order = S.n === 6 ? ['v','t','k'] : ['v','t'];
+  if (k === 'next') { E.field = order[(order.indexOf(E.field) + 1) % order.length]; render(); return; }
+  let str = E[f];
+  if (k === '⌫') str = str.slice(0, -1);
+  else if (k === ',') { if (!str.includes(',') && !/[kM]/.test(str)) str = (str || '0') + ','; }
+  else if (k === 'k' || k === 'M') { if (f === 'v' && str && !/[kM]/.test(str) && !str.endsWith(',')) str += k; }
+  else if (/^\d$/.test(k) && str.replace(/\D/g, '').length < 7) str += k;
+  E[f] = str;
+  render();
+}
+
+document.getElementById('q').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn || btn.disabled) return;
+  if (btn.dataset.opt != null) {
+    if (S.answered) return;
+    const i = +btn.dataset.opt, ok = key(S.opts[i]) === key(S.q);
+    S.parts = S.type === 'read'
+      ? compareValues(valueOf(S.opts[i]), valueOf(S.q))
+      : compareBands(S.opts[i], S.q, {tol: S.level !== 'easy', tc: S.level !== 'easy'});
+    document.querySelectorAll('[data-opt]').forEach(b => {
+      if (key(S.opts[+b.dataset.opt]) === key(S.q)) b.classList.add('ok');
+    });
+    if (!ok) btn.classList.add('bad');
+    finish(ok);
+  } else if (btn.id === 'examStart') {
+    startExam();
+  } else if (btn.id === 'examGo') {
+    document.querySelector(`[data-level="${btn.dataset.go}"]`).click();
+  } else if (btn.dataset.sr) {
+    if (S.answered) return;
+    const right = S.sr.answer, ok = btn.dataset.sr === right;
+    document.querySelector(`[data-sr="${right}"]`).classList.add('ok');
+    if (!ok) btn.classList.add('bad');
+    finish(ok);
+  } else if (btn.dataset.stol) {
+    if (S.answered) return;
+    const right = S.stol.ser, ok = btn.dataset.stol === right;
+    document.querySelector(`[data-stol="${right}"]`).classList.add('ok');
+    if (!ok) btn.classList.add('bad');
+    finish(ok);
+  } else if (btn.dataset.ser) {
+    if (S.answered) return;
+    const k = btn.dataset.ser, L = LV[S.level], set = S.ser.set;
+    if (L.choice) {
+      const right = set[0] || 'none', ok = k === right;
+      document.querySelector(`[data-ser="${right}"]`).classList.add('ok');
+      if (!ok) btn.classList.add('bad');
+      finish(ok);
+    } else {
+      const sel = S.serSel;
+      if (k === 'none') { const had = sel.has('none'); sel.clear(); if (!had) sel.add('none'); }
+      else { sel.delete('none'); sel.has(k) ? sel.delete(k) : sel.add(k); }
+      document.querySelectorAll('[data-ser]').forEach(b => b.setAttribute('aria-pressed', sel.has(b.dataset.ser)));
+      document.getElementById('serSubmit').disabled = sel.size === 0;
+    }
+  } else if (btn.id === 'serSubmit') {
+    const truth = new Set(S.ser.set.length ? S.ser.set : ['none']), sel = S.serSel;
+    const ok = truth.size === sel.size && [...truth].every(x => sel.has(x));
+    document.querySelectorAll('[data-ser]').forEach(b => {
+      const k = b.dataset.ser;
+      if (truth.has(k)) b.classList.add('ok'); else if (sel.has(k)) b.classList.add('bad');
+    });
+    finish(ok);
+  } else if (btn.dataset.dir) {
+    if (S.answered) return;
+    const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left', ok = btn.dataset.dir === right;
+    document.querySelector(`[data-dir="${right}"]`).classList.add('ok');
+    if (!ok) btn.classList.add('bad');
+    finish(ok);
+  } else if (btn.dataset.slot != null) {
+    S.slot = +btn.dataset.slot; render();
+  } else if (btn.dataset.color) {
+    if (S.answered) return;
+    S.build[S.slot] = btn.dataset.color;
+    const nextEmpty = S.build.findIndex((k,i) => !k && i > S.slot);
+    let leftEmpty = -1;
+    for (let i = S.slot - 1; i >= 0; i--) if (!S.build[i]) { leftEmpty = i; break; }
+    S.slot = nextEmpty !== -1 ? nextEmpty : leftEmpty !== -1 ? leftEmpty : S.slot;
+    render();
+    if (S.build.every(Boolean)) {
+      S.parts = compareBands(readBuild(), S.q, {tol:true, tc:true});
+      finish(readBuild().join() === S.q.join());
+    }
+  } else if (btn.id === 'check') {
+    S.parts = compareBands(S.build, S.q, {tol:true, tc:true});
+    finish(S.build.join() === S.q.join());
+  } else if (btn.dataset.pick) {
+    if (S.answered) return;
+    const [g, i] = btn.dataset.pick.split(':');
+    S.pick[g] = +i; answerMC();
+  } else if (btn.dataset.vpick != null) {
+    if (S.answered) return;
+    answerBMC(+btn.dataset.vpick);
+  } else if (btn.dataset.kpick) {
+    if (S.answered) return;
+    answerBMC(btn.dataset.kpick);
+  } else if (btn.dataset.tpick) {
+    if (S.answered) return;
+    answerBMC(btn.dataset.tpick);
+  } else if (btn.id === 'bSubmit') {
+    answerBMC();
+  } else if (btn.id === 'mcSubmit') {
+    answerMC();
+  } else if (btn.dataset.key) {
+    keyPress(btn.dataset.key);
+  } else if (btn.dataset.field) {
+    S.entry.field = btn.dataset.field; render();
+  } else if (btn.dataset.mult != null) {
+    S.entry.mult = +btn.dataset.mult; render();
+  } else if (btn.dataset.tol != null) {
+    S.entry.tol = +btn.dataset.tol; render();
+  } else if (btn.dataset.tc != null) {
+    S.entry.tc = +btn.dataset.tc; render();
+  } else if (btn.dataset.hint) {
+    useHint(btn.dataset.hint);
+  } else if (btn.id === 'measure') {
+    measure();
+  } else if (btn.id === 'submit') {
+    answerRead();
+  } else if (btn.id === 'next') {
+    next();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  const typing = S.type === 'read' && !LV[S.level].choice && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
+  if (typing) {
+    const map = {Backspace:'⌫', ',':',', '.':',', k:'k', K:'k', m:'M', M:'M', Tab:'next'};
+    const k = /^\d$/.test(e.key) ? e.key : map[e.key];
+    if (k && (S.level === 'ultra' || !['k','M','next'].includes(k))) { e.preventDefault(); keyPress(k); return; }
+  }
+  if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return;
+  if (S.answered) { next(); return; }
+  if (S.type === 'read' && !LV[S.level].choice) answerRead();
+});
+
+function bindSeg(attr, prop, store){
+  const btns = document.querySelectorAll(`[data-${attr}]`);
+  const sync = () => btns.forEach(x => x.setAttribute('aria-pressed', x.dataset[attr] === S[prop]));
+  btns.forEach(b => b.addEventListener('click', () => {
+    if ((prop === 'level' || prop === 'part') && S[prop] !== b.dataset[attr]) S.streak = 0;
+    if (prop === 'level' && S.level !== b.dataset[attr]) { S.right = 0; S.total = 0; S.exam = null; }
+    S[prop] = b.dataset[attr]; save(store, S[prop]); sync(); next();
+  }));
+  sync();
+}
+bindSeg('level', 'level', 'fargkoden-level');
+document.getElementById('tGive').addEventListener('click', () => {
+  const lv = ORDER.find(l => l !== 'ultra' && !unlocked(l));
+  if (lv) { S.lvBest[ORDER[ORDER.indexOf(lv) - 1]] = UNLOCK_AT; save('fargkoden-stars', JSON.stringify(S.lvBest)); }
+  updateScore();
+});
+document.getElementById('tReset').addEventListener('click', () => {
+  ORDER.forEach(lv => S.lvBest[lv] = 0);
+  save('fargkoden-stars', JSON.stringify(S.lvBest));
+  S.streak = 0; S.right = 0; S.total = 0; S.exam = null; S.level = 'intro'; save('fargkoden-level', 'intro');
+  document.querySelectorAll('[data-level]').forEach(x => x.setAttribute('aria-pressed', x.dataset.level === 'intro'));
+  next();
+});
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+  if (S.mode !== b.dataset.mode) S.streak = 0;
+  S.mode = b.dataset.mode; save('fargkoden-mode', S.mode); next();
+}));
+bindSeg('part', 'part', 'fargkoden-part');
+
+document.getElementById('ref').innerHTML =
+  '<thead><tr><th>Färg</th><th>Siffra</th><th>Multiplikator</th><th>Tolerans</th><th>Temp.koeff.</th></tr></thead><tbody>' +
+  DIG.concat(['gold','silver']).map(k => {
+    const c = C[k];
+    return `<tr><td><span class="sw" style="${swStyle(k)};vertical-align:-4px;margin-right:8px"></span>${c.n}</td><td>${c.d ?? ''}</td><td>${fmtMult(c.m)}</td><td>${c.t ? fmtTol(c.t) : ''}</td><td>${c.tc ? fmtTc(c.tc) : ''}</td></tr>`;
+  }).join('') + '</tbody>';
+
+// Multimeter: visar ett värde inom toleransen
+function meterRead(v, tol){
+  return v * (1 + (Math.random()*2 - 1) * tol / 100 * 0.9);
+}
+function meterFmt(v){
+  let x = v, u = 'Ω';
+  if (v >= 1e6) { x = v/1e6; u = 'MΩ'; } else if (v >= 1e3) { x = v/1e3; u = 'kΩ'; }
+  const d = x < 2 ? 3 : x < 20 ? 2 : x < 200 ? 1 : 0;
+  return {txt: x.toFixed(d), u};
+}
+// Det mätaren faktiskt visar, avrundat till displayens upplösning.
+// Hamnar avrundningen utanför toleransen (bara möjligt vid mycket snäva toleranser) visas det nominella värdet.
+function meterShown(raw, v, tol){
+  const f = meterFmt(raw), mul = f.u === 'MΩ' ? 1e6 : f.u === 'kΩ' ? 1e3 : 1;
+  const shown = Math.round(parseFloat(f.txt) * mul * 1e6) / 1e6;
+  return Math.abs(shown - v) <= v * tol / 100 + 1e-9 ? shown : v;
+}
+const METER_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="5" rx="1"/><circle cx="12" cy="15.5" r="2.6"/><path d="M12 15.5l1.6-1.6"/></svg>';
+function meterHTML(){
+  return `<div class="meter-wrap"><button class="ghost" id="measure"${S.usedMeter ? ' disabled' : ''}>${METER_ICON}Mät med multimeter</button><div id="meter" aria-live="polite">${S.usedMeter ? meterLcd(S.meterVal) : ''}</div></div>`;
+}
+function meterLcd(v){
+  const f = meterFmt(v);
+  return `<span class="meter"><span class="probe r"></span><span class="lcd" role="img" aria-label="Mätaren visar ${f.txt.replace('.', ',')} ${f.u}">${f.txt}<small>${f.u}</small></span><span class="probe b"></span></span>`;
+}
+function measure(){
+  if (S.usedMeter || S.answered || !hintsOn()) return;
+  S.usedMeter = true; S.usedHint = true;
+  S.meterVal = meterShown(meterRead(valueOf(S.q), tolOf(S.q)), valueOf(S.q), tolOf(S.q));
+  document.getElementById('measure').disabled = true;
+  const el = document.getElementById('meter');
+  if (reduceMotion()) { el.innerHTML = meterLcd(S.meterVal); return; }
+  let i = 0;
+  const t = setInterval(() => {
+    if (++i > 7 || S.answered) { clearInterval(t); el.innerHTML = meterLcd(S.meterVal); return; }
+    el.innerHTML = meterLcd(S.meterVal * (1 + (Math.random()*2 - 1) * 0.08 / i));
+  }, 70);
+}
+
+function valueDistractors(b){
+  const v = valueOf(b), seen = new Set([v]), out = [];
+  for (let i = 0; i < 12 && out.length < 3; i++) distractors(b).forEach(x => { const xv = valueOf(x); if (!seen.has(xv) && out.length < 3) { seen.add(xv); out.push(x); } });
+  while (out.length < 3) { const x = genBands(b.length); if (!seen.has(valueOf(x))) { seen.add(valueOf(x)); out.push(x); } }
+  return out;
+}
+function easyFull(ok, b){
+  const t = tolOf(b), tc = tcOf(b);
+  const rest = `toleransen ${fmtTol(t)}${tc != null ? ` och temperaturkoefficienten ${fmtTc(tc)}` : ''}`;
+  return ok ? `<p>Motståndet är ${fmtVal(valueOf(b))} med ${rest}.</p>`
+            : `<p>Rätt svar är ${fmtVal(valueOf(b))}, med ${rest}.</p>`;
+}
+
+// Ganska svårt, Läs av: separata flerval för resistans, tolerans och temperaturkoefficient
+function pickWrong(pool, right, n){
+  return shuffle(pool.filter(x => !close(x, right))).slice(0, n);
+}
+function buildMC(){
+  const b = S.q, v = valueOf(b), t = tolOf(b), tc = tcOf(b);
+  const vals = new Set();
+  for (let i = 0; i < 12 && vals.size < 3; i++) distractors(b).forEach(x => { const xv = valueOf(x); if (!close(xv, v) && vals.size < 3) vals.add(xv); });
+  while (vals.size < 3) { const xv = valueOf(genBands(b.length)); if (!close(xv, v)) vals.add(xv); }
+  const tolPool = b.length === 4 ? [5, 10, 2, 1, 0.5] : [1, 2, 0.5, 0.25, 0.1, 0.05, 5, 10];
+  const mc = {
+    v: shuffle([v, ...vals]),
+    t: shuffle([t, ...pickWrong(tolPool, t, 3)]),
+    d: S.level === 'easy' ? shuffle([digitStr(b), ...digitDistractors(b).map(digitStr)]) : null,
+    x: S.level === 'easy' ? shuffle([C[b[nd(b)]].m, ...multChoices(b).filter(c => c !== b[nd(b)]).map(c => C[c].m)]) : null,
+    k: S.level === 'tc' && tc != null ? shuffle([tc, ...pickWrong([100, 50, 25, 15, 10, 5, 250, 20, 1], tc, 3)]) : null
+  };
+  return mc;
+}
+const MC_LABELS = {v:'Resistans', t:'Tolerans', k:'Temperaturkoefficient', d:'Siffror', x:'Multiplikator'};
+// Lärling: siffror och multiplikator var för sig
+const digitStr = b => b.slice(0, nd(b)).map(c => C[c].d).join('');
+const NEAR_DIGIT = {0:[1,8], 1:[2,3,0], 2:[1,3,7], 3:[2,1,4], 4:[3,5], 5:[6,4], 6:[7,5,8], 7:[6,8,2], 8:[9,7,6], 9:[8,4]};
+function digitDistractors(b){
+  const k = nd(b), d = b.slice(0, k).map(c => C[c].d), seen = new Set([d.join('')]), out = [];
+  const add = arr => { if (arr[0] === 0) return; const s2 = arr.join(''); if (!seen.has(s2) && out.length < 3) { seen.add(s2); out.push(arr.map(x => DIG[x])); } };
+  if (d[0] !== d[1]) add([d[1], d[0], ...d.slice(2)]);
+  for (let i = 0; i < k; i++) shuffle([...(NEAR_DIGIT[d[i]] || [])]).forEach(x => { const a = d.slice(); a[i] = x; add(a); });
+  while (out.length < 3) add(Array.from({length:k}, (_, i) => i === 0 ? 1 + Math.floor(Math.random() * 9) : Math.floor(Math.random() * 10)));
+  return out;
+}
+function multChoices(b){
+  const right = b[nd(b)], i = MO.indexOf(right);
+  const near = [MO[i - 1], MO[i + 1], MO[i - 2], MO[i + 2], ...(LOOKALIKE[right] || [])].filter(c => c && MO.includes(c) && c !== right && MO.indexOf(c) <= 8);
+  const pick = [...new Set(shuffle(near))].slice(0, 3);
+  while (pick.length < 3) { const c = rnd(MO.slice(0, 9)); if (c !== right && !pick.includes(c)) pick.push(c); }
+  return shuffle([right, ...pick]);
+}
+const mcFmt = (g, x) => g === 'v' ? fmtVal(x) : g === 't' ? fmtTol(x) : g === 'd' ? x.split('').join(' ') : g === 'x' ? fmtMult(x) : fmtTc(x);
+const mcEq = (a, b) => typeof a === 'string' ? a === b : close(a, b);
+function mcHTML(){
+  if (!S.mc) { S.mc = buildMC(); S.pick = {v:null, t:null, k:null, d:null, x:null}; S.mcGone = {v:new Set(), t:new Set(), k:new Set(), d:new Set(), x:new Set()}; }
+  const groups = [S.focus];
+  return groups.map(g => `<div class="mcgroup"><p class="grp-lbl">${MC_LABELS[g]}</p><div class="opts mc">${S.mc[g].map((x,i) => {
+    const gone = S.mcGone[g].has(i);
+    return `<button class="opt${gone ? ' gone' : ''}" data-pick="${g}:${i}" aria-pressed="${S.pick[g] === i}"${gone ? ' disabled' : ''}>${mcFmt(g, x)}</button>`;
+  }).join('')}</div></div>`).join('');
+}
+function mcTruth(g){ return g === 'v' ? valueOf(S.q) : g === 't' ? tolOf(S.q) : g === 'd' ? digitStr(S.q) : g === 'x' ? C[S.q[nd(S.q)]].m : tcOf(S.q); }
+function answerMC(){
+  if (S.answered) return;
+  const groups = [S.focus];
+  const missing = groups.find(g => S.pick[g] == null);
+  if (missing) { const h = document.getElementById('hint'); if (!h) return; h.textContent = `Välj ${MC_LABELS[missing].toLowerCase()} också.`; h.hidden = false; return; }
+  let ok = true;
+  S.parts = S.focus === 'v' ? compareValues(S.mc.v[S.pick.v], valueOf(S.q)) : null;
+  groups.forEach(g => {
+    const right = S.mc[g].findIndex(x => mcEq(x, mcTruth(g)));
+    if (S.pick[g] !== right) ok = false;
+    document.querySelector(`[data-pick="${g}:${right}"]`).classList.add('ok');
+    if (S.pick[g] !== right) document.querySelector(`[data-pick="${g}:${S.pick[g]}"]`).classList.add('bad');
+  });
+  finish(ok);
+}
+
+// Ganska svårt, Bygg: först resistansen (fyra val), sedan toleransen (fyra val). Temperaturkoefficient ingår inte.
+const LOOKALIKE = {
+  black:['brown','grey','violet'], brown:['red','orange','black'], red:['brown','orange','violet'],
+  orange:['red','yellow','brown'], yellow:['orange','gold','white'], green:['blue','grey','yellow'],
+  blue:['violet','green','grey'], violet:['blue','grey','red'], grey:['silver','white','violet'],
+  white:['grey','silver','yellow'], gold:['yellow','brown','orange','silver'], silver:['grey','white','gold']
+};
+function tolChoices(){
+  const k = nd(S.q), right = S.q[k+1];
+  const pool = (S.n === 4 ? ['gold','silver','brown','red'] : ['brown','red','green','blue','violet','gold']).filter(c => c !== right);
+  const near = (LOOKALIKE[right] || []).filter(c => pool.includes(c));
+  const rest = shuffle(pool.filter(c => !near.includes(c)));
+  return shuffle([right, ...shuffle(near).concat(rest).slice(0, 3)]);
+}
+function tcChoices(){
+  const right = S.q[5], pool = TCS.filter(c => c !== right);
+  const near = (LOOKALIKE[right] || []).filter(c => pool.includes(c));
+  return shuffle([right, ...shuffle(near).concat(shuffle(pool.filter(c => !near.includes(c)))).slice(0, 3)]);
+}
+function bmcHTML(){
+  const k = nd(S.q);
+  if (!S.bopts) {
+    S.bopts = S.focus === 'v'
+      ? {v: shuffle([S.q, ...valueDistractors(S.q)]).map(o => o.slice(0, k+1))}
+      : S.focus === 'k' ? {k: tcChoices()} : S.focus === 'd' ? {d: shuffle([S.q.slice(0, k), ...digitDistractors(S.q)])}
+      : S.focus === 'x' ? {x: multChoices(S.q)} : {t: tolChoices()};
+  }
+  const blank0 = n => Array(n).fill(null);
+  if (S.focus === 'd') {
+    let h = `<div class="res">${svg(blank0(k).concat(S.q.slice(k)), {label:'Motståndet med sifferbanden tomma', mark:S.mark})}</div>`;
+    h += `<div class="mcgroup"><p class="grp-lbl">Siffror</p><div class="opts rgrid">${S.bopts.d.map((o,i) =>
+      `<button class="opt r" data-vpick="${i}">${svg(o.concat(blank0(S.n - k)), {label:'Sifferband: ' + colorNames(o)})}</button>`).join('')}</div></div>`;
+    return h;
+  }
+  if (S.focus === 'x') {
+    let h = `<div class="res">${svg(S.q.slice(0, k).concat([null], S.q.slice(k + 1)), {label:'Motståndet med multiplikatorbandet tomt', mark:S.mark})}</div>`;
+    h += `<div class="mcgroup"><p class="grp-lbl">Multiplikator</p><div class="opts mc">${S.bopts.x.map(c =>
+      `<button class="opt bc" data-tpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
+    return h;
+  }
+  if (S.focus === 'k') {
+    let h = `<div class="res">${svg(S.q.slice(0, 5).concat([null]), {label:'Motståndet med sjätte bandet tomt', mark:S.mark})}</div>`;
+    h += `<div class="mcgroup"><p class="grp-lbl">Temperaturkoefficient</p><div class="opts mc">${S.bopts.k.map(c =>
+      `<button class="opt bc" data-kpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
+    return h;
+  }
+  const blank = n => Array(n).fill(null);
+  const tail = S.n === 6 ? [S.q[5]] : [];
+  let h;
+  if (S.focus === 'v') {
+    // Toleransen (och TK) är redan ifyllda, välj resistansbanden
+    h = `<div class="res">${svg(blank(k+1).concat([S.q[k+1]], tail), {label:'Motståndet med resistansbanden tomma'})}</div>`;
+    h += `<div class="mcgroup"><p class="grp-lbl">Resistans</p><div class="opts rgrid">${S.bopts.v.map((o,i) =>
+      `<button class="opt r" data-vpick="${i}">${svg(o.concat(blank(S.n - k - 1)), {label:'Resistansband: ' + colorNames(o)})}</button>`).join('')}</div></div>`;
+  } else {
+    // Resistansbanden är redan ifyllda, välj toleransbandet
+    h = `<div class="res">${svg(S.q.slice(0, k+1).concat([null], tail), {label:'Motståndet med toleransbandet tomt', mark:S.mark})}</div>`;
+    h += `<div class="mcgroup"><p class="grp-lbl">Tolerans</p><div class="opts mc">${S.bopts.t.map(c =>
+      `<button class="opt bc" data-tpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
+  }
+  if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet, temperaturkoefficienten, är redan ifyllt. Det behöver du inte kunna på den här nivån.</p>';
+  return h;
+}
+function answerBMC(pick){
+  if (S.answered) return;
+  const k = nd(S.q);
+  let ok;
+  if (S.focus === 'd') {
+    const right = S.bopts.d.findIndex(o => o.join() === S.q.slice(0, k).join());
+    ok = pick === right;
+    document.querySelector(`[data-vpick="${right}"]`).classList.add('ok');
+    if (!ok) document.querySelector(`[data-vpick="${pick}"]`).classList.add('bad');
+    S.parts = null;
+  } else if (S.focus === 'x') {
+    const right = S.q[k];
+    ok = pick === right;
+    document.querySelector(`[data-tpick="${right}"]`).classList.add('ok');
+    if (!ok) document.querySelector(`[data-tpick="${pick}"]`).classList.add('bad');
+    S.parts = null;
+  } else if (S.focus === 'v') {
+    const right = S.bopts.v.findIndex(o => o.join() === S.q.slice(0, k+1).join());
+    ok = pick === right;
+    document.querySelector(`[data-vpick="${right}"]`).classList.add('ok');
+    if (!ok) document.querySelector(`[data-vpick="${pick}"]`).classList.add('bad');
+    S.parts = compareBands(S.bopts.v[pick].concat(S.q.slice(k+1)), S.q);
+  } else if (S.focus === 'k') {
+    const right = S.q[5];
+    ok = pick === right;
+    document.querySelector(`[data-kpick="${right}"]`).classList.add('ok');
+    if (!ok) document.querySelector(`[data-kpick="${pick}"]`).classList.add('bad');
+    S.parts = null;
+  } else {
+    const right = S.q[k+1];
+    ok = pick === right;
+    document.querySelector(`[data-tpick="${right}"]`).classList.add('ok');
+    if (!ok) document.querySelector(`[data-tpick="${pick}"]`).classList.add('bad');
+    S.parts = null;
+  }
+  finish(ok);
+}
+
+function tcFact(b){
+  const tc = tcOf(b), v = valueOf(b), d = v * tc * 1e-6;
+  const small = d >= 1 ? fmtVal(Math.round(d * 100) / 100)
+    : d >= 0.01 ? d.toLocaleString('sv-SE', {maximumSignificantDigits: 2}) + ' Ω'
+    : (d * 1000).toLocaleString('sv-SE', {maximumSignificantDigits: 2}) + ' mΩ';
+  return `${fmtTc(tc)} betyder att resistansen ändras med högst ${tc} miljondelar per grad. För ${fmtVal(v)} blir det ungefär ${small} per grad.`;
+}
+
+// Uppdelad felåterkoppling: vilka delar av svaret som var rätt och fel
+const bandTxt = (k, role) => {
+  const c = C[k];
+  const val = role === 'digit' ? c.d : role === 'mult' ? (c.m != null ? fmtMult(c.m) : null) : role === 'tol' ? (c.t != null ? fmtTol(c.t) : null) : (c.tc != null ? fmtTc(c.tc) : null);
+  return val == null || val === undefined ? `${c.n} (betyder inget här)` : `${c.n} (${val})`;
+};
+function compareBands(user, truth, opts = {}){
+  const k = nd(truth), parts = [];
+  const ud = user.slice(0, k), td = truth.slice(0, k);
+  const digTxt = arr => arr.map(c => C[c].n).join('–') + ` (${arr.map(c => C[c].d ?? '?').join('')})`;
+  parts.push({label:'Siffror', ok: ud.join() === td.join(), yours: digTxt(ud), right: digTxt(td)});
+  parts.push({label:'Multiplikator', ok: user[k] === truth[k], yours: bandTxt(user[k], 'mult'), right: bandTxt(truth[k], 'mult')});
+  if (opts.tol && user[k+1] != null) parts.push({label:'Tolerans', ok: user[k+1] === truth[k+1], yours: bandTxt(user[k+1], 'tol'), right: bandTxt(truth[k+1], 'tol')});
+  if (opts.tc && truth.length === 6 && user[5] != null) parts.push({label:'Temperaturkoefficient', ok: user[5] === truth[5], yours: bandTxt(user[5], 'tc'), right: bandTxt(truth[5], 'tc')});
+  return parts;
+}
+const sigDigits = x => x.toExponential(8).split('e')[0].replace('.', '').replace(/0+$/, '') || '0';
+const magnitude = x => Math.floor(Math.log10(x) + 1e-9);
+function compareValues(vIn, vTrue){
+  const dOk = sigDigits(vIn) === sigDigits(vTrue);
+  const mOk = dOk ? close(vIn, vTrue) : magnitude(vIn) === magnitude(vTrue);
+  return [
+    {label:'Siffror', ok: dOk, yours: sigDigits(vIn).split('').join(' '), right: sigDigits(vTrue).split('').join(' ')},
+    {label:'Multiplikator', ok: mOk, yours: fmtVal(vIn), right: fmtVal(vTrue)}
+  ];
+}
+function partsHTML(parts){
+  return `<ul class="parts">${parts.map(p => `<li><span class="pill ${p.ok ? 'p-ok' : 'p-bad'}">${p.ok ? 'Rätt' : 'Fel'}</span><span><b>${p.label}</b>${p.ok ? '' : `: du svarade ${p.yours}, rätt är ${p.right}`}</span></li>`).join('')}</ul>`;
+}
+
+// Tips per frågetyp
+const HINT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>';
+// Tips finns bara på den nivå där man lär sig saken. På nästa nivå förväntas man kunna den.
+const LEVEL_SKILL = {easy:['v','d','x'], medium:['t'], tc:['k']};
+function hintList(){
+  if (S.type === 'dir') return S.level === 'intro' ? [['explain','Hur läser jag det här?']] : [];
+  if (S.type === 'series') return S.level === 'hard' ? [['near','Visa närmaste standardvärden']] : [];
+  const skills = LEVEL_SKILL[S.level];
+  if (!skills) return [];
+  if (!skills.includes(S.focus)) return [];
+  return S.type === 'read' ? [['bands','Förklara banden']] : [['colors','Vilka färger behövs?']];
+}
+const hintsOn = () => S.level !== 'ultra';
+function hintsHTML(){
+  if (!hintsOn()) return '';
+  const list = hintList();
+  if (list === null) return meterHTML();
+  return `<div class="hints">${list.map(([k,l]) =>
+    `<button class="ghost" data-hint="${k}"${S.hintsUsed.has(k) && k !== 'check' ? ' disabled' : ''}>${HINT_ICON}${l}</button>`).join('')}</div>
+    <div class="hint-out" id="hintOut" aria-live="polite">${S.hintOut}</div>`;
+}
+function bandsValid(bs){
+  const n = bs.length, k = nd(bs);
+  if (!BAND1.includes(bs[0])) return `${C[bs[0]].n} kan inte vara första siffran`;
+  for (let i = 1; i < k; i++) if (!DIG.includes(bs[i])) return `${C[bs[i]].n} är ingen siffra`;
+  if (C[bs[k]].m == null) return `${C[bs[k]].n} är ingen multiplikator`;
+  if (C[bs[k+1]].t == null) return `${C[bs[k+1]].n} är ingen tolerans`;
+  if (n === 6 && C[bs[5]].tc == null) return `${C[bs[5]].n} är ingen temperaturkoefficient`;
+  return null;
+}
+const readingText = bs => { const e = bandsValid(bs); return e ? `går inte. ${e}.` : fmtAll(bs); };
+function neighbors(v, mants){
+  const d0 = Math.pow(10, Math.floor(Math.log10(v)));
+  const all = [];
+  for (const d of [d0/100, d0/10, d0, d0*10]) for (const m of mants) all.push(Math.round(m / 100 * d * 100) / 100);
+  all.sort((a,b) => a - b);
+  const hit = all.find(x => close(x, v));
+  if (hit != null) return `${fmtVal(hit)} (träff)`;
+  const lo = all.filter(x => x < v).pop(), hi = all.find(x => x > v);
+  return `${fmtVal(lo)} och ${fmtVal(hi)}`;
+}
+const plural = (n, one, many) => n === 0 ? 'inga ' + many : n === 1 ? '1 ' + one : n + ' ' + many;
+function useHint(k){
+  if (S.answered || !hintsOn()) return;
+  S.usedHint = true;
+  if (k !== 'check') S.hintsUsed.add(k);
+  const out = document.getElementById('hintOut');
+  if (k === 'fifty' && S.type === 'read' && S.mc) {
+    const groups = [S.focus];
+    groups.forEach(g => {
+      const truth = mcTruth(g);
+      const wrong = S.mc[g].map((x,i) => i).filter(i => !mcEq(S.mc[g][i], truth) && S.pick[g] !== i);
+      shuffle(wrong).slice(0, 2).forEach(i => S.mcGone[g].add(i));
+      if (S.pick[g] != null && S.mcGone[g].has(S.pick[g])) S.pick[g] = null;
+    });
+    S.hintOut = '<p>Två fel alternativ är borttagna i varje grupp.</p>';
+    render();
+    return;
+  } else if (k === 'fifty') {
+    const sim = o => o.filter((c,i) => c === S.q[i]).length;
+    const wrong = S.opts.map((o,i) => i).filter(i => key(S.opts[i]) !== key(S.q));
+    const keep = wrong.slice().sort((a,b) => sim(S.opts[b]) - sim(S.opts[a]))[0];
+    wrong.filter(i => i !== keep).forEach(i => S.removed.add(i));
+    document.querySelectorAll('[data-opt]').forEach(b => {
+      if (S.removed.has(+b.dataset.opt)) { b.classList.add('gone'); b.disabled = true; }
+    });
+    S.hintOut = '<p>Två fel alternativ är borttagna. Ett av de kvarvarande är rätt.</p>';
+  } else if (k === 'split') {
+    const b = S.q, kk = nd(b), digits = b.slice(0, kk).map(c => C[c].d), m = C[b[kk]].m, v = valueOf(b);
+    const ohm = v.toLocaleString('sv-SE');
+    const mTxt = m < 1 ? num(m) : m.toLocaleString('sv-SE');
+    const tail = m < 1
+      ? `Siffrorna är ${andList(digits.map(String))}, och multiplikatorn är ${mTxt}.`
+      : `Siffrorna är ${andList(digits.map(String))}, sedan ${plural(Math.round(Math.log10(m)), 'nolla', 'nollor')}.`;
+    const head = v >= 1e3 ? `${fmtVal(v)} = ${ohm} Ω` : fmtVal(v);
+    S.hintOut = `<p>${head} = ${digits.join('')} × ${mTxt}</p><p>${tail}</p>`;
+  } else if (k === 'check') {
+    let wrongN = 0, empty = 0;
+    document.querySelectorAll('[data-slot]').forEach(el => {
+      const i = +el.dataset.slot, c = S.build[i];
+      if (!c) { empty++; return; }
+      if (c !== S.q[i]) { el.classList.add('wrong'); wrongN++; }
+    });
+    const txt = (wrongN === 0 ? 'Alla valda band stämmer.' : wrongN === 1 ? '1 band är fel och är markerat med rött.' : `${wrongN} band är fel och är markerade med rött.`) +
+      (empty === 0 ? '' : empty === 1 ? ' 1 band är inte valt än.' : ` ${empty} band är inte valda än.`);
+    out.innerHTML = `<p>${txt}</p>`;
+    return;
+  } else if (k === 'colors') {
+    // Bygg: vilka färger behövs för det som frågan gäller
+    const b = S.q, n = b.length, kk = nd(b);
+    const focus = S.focus;
+    const idx = focus === 'v' ? [...Array(kk + 1).keys()] : focus === 'd' ? [...Array(kk).keys()] : focus === 'x' ? [kk] : focus === 't' ? [kk + 1] : [5];
+    const labOf = i => i < kk ? String(i + 1) : i === kk ? '×' : i === kk + 1 ? '±' : 'TK';
+    if (focus !== 'v') S.mark = idx.map(i => [i, labOf(i)]);
+    const rows = idx.map(i => {
+      const r = roleOf(n, i), c = C[b[i]];
+      const what = r === 'digit' ? `siffra ${i + 1}` : r === 'mult' ? 'multiplikator' : r === 'tol' ? 'tolerans' : 'temperaturkoefficient';
+      return `<li><span class="sw" style="${swStyle(b[i])}"></span><span><b>${bandDetail(b[i], r)}</b> är ${c.n} (${what})</span></li>`;
+    }).join('');
+    const head = focus === 'd' ? `Siffrorna ${digitStr(b).split('').join(' ')}. Du behöver:`
+      : focus === 'x' ? `${fmtMult(C[b[kk]].m)} är multiplikatorn. Du behöver:`
+      : focus === 'v'
+      ? (() => { const digits = b.slice(0, kk).map(x => C[x].d).join(''), m = C[b[kk]].m; return `${fmtVal(valueOf(b))} = ${digits} × ${m < 1 ? num(m) : m.toLocaleString('sv-SE')}. Du behöver:`; })()
+      : focus === 't' ? `${fmtTol(tolOf(b))} är toleransbandet längst bort. Du behöver:` : `${fmtTc(tcOf(b))} är det sjätte bandet. Du behöver:`;
+    S.hintOut = `<p>${head}</p><ul class="chips bandexp">${rows}</ul>`;
+    render();
+    return;
+  } else if (k === 'bands') {
+    // Visa vad färgerna betyder på de band som frågan gäller, och markera dem på motståndet
+    const b = S.q, n = b.length, kk = nd(b);
+    const focus = S.focus;
+    const idx = focus === 'v' ? [...Array(kk + 1).keys()] : focus === 'd' ? [...Array(kk).keys()] : focus === 'x' ? [kk] : focus === 't' ? [kk + 1] : [5];
+    const labOf = i => i < kk ? String(i + 1) : i === kk ? '×' : i === kk + 1 ? '±' : 'TK';
+    S.mark = idx.map(i => [i, labOf(i)]);
+    const rows = idx.map(i => {
+      const r = roleOf(n, i), c = C[b[i]];
+      const what = r === 'digit' ? `siffra ${i + 1}` : r === 'mult' ? 'multiplikator' : r === 'tol' ? 'tolerans' : 'temperaturkoefficient';
+      return `<li><span class="sw" style="${swStyle(b[i])}"></span><span><b>${c.n}</b> är ${bandDetail(b[i], r)} (${what})</span></li>`;
+    }).join('');
+    const dirTxt = S.style.flip ? 'Motståndet sitter vänt, så läs från höger.' : 'Läs från vänster.';
+    const how = focus === 'd' ? 'Varje sifferband är en siffra. Skriv dem efter varandra i den ordning de sitter.'
+      : focus === 'x' ? 'Multiplikatorn säger hur många nollor som ska läggas till efter siffrorna. Guld och silver betyder i stället ×0,1 och ×0,01.'
+      : focus === 'v'
+      ? `Skriv siffrorna efter varandra. Multiplikatorn säger sedan vad talet ska multipliceras med, till exempel ×100 betyder två nollor till.`
+      : focus === 't' ? 'Toleransen säger hur mycket det verkliga värdet får avvika från det märkta.'
+      : 'Temperaturkoefficienten säger hur mycket resistansen högst ändras per grad, i miljondelar (ppm).';
+    S.hintOut = `<p>${dirTxt} ${idx.length > 1 ? 'De markerade banden är de' : 'Det markerade bandet är det'} du behöver:</p><ul class="chips bandexp">${rows}</ul><p>${how}</p>`;
+    render();
+    return;
+  } else if (k === 'explain') {
+    // Nybörjare: en vänlig förklaring utifrån ledtrådarna på just det här motståndet. Kostar inget.
+    S.usedHint = false;
+    const st = S.style, t = ['<p>Ett motstånd läses från början, och toleransbandet sitter i slutet (på sex band följt av temperaturkoefficienten). Leta efter det som avslöjar var slutet är:</p>'];
+    if (st.cues.includes('wide')) t.push(st.wideIdx === 5
+      ? '<p><b>Ett band är bredare än de andra.</b> Här är det det sjätte bandet, temperaturkoefficienten, som sitter allra sist. Så märktes motstånd enligt äldre utgåvor av standarden. Börja läsa från andra änden.</p>'
+      : '<p><b>Ett band är bredare än de andra.</b> Det är toleransbandet, och det sitter i slutet. Börja läsa från andra änden.</p>');
+    if (st.cues.includes('gap')) t.push('<p><b>Det finns ett större mellanrum mellan två band.</b> Mellanrummet ligger precis före toleransbandet, alltså nära slutet.</p>');
+    if (st.cues.includes('group')) t.push('<p><b>Banden sitter närmare den ena änden.</b> Där börjar man läsa.</p>');
+    S.hintOut = t.join('');
+  } else if (k === 'both') {
+    const asShown = S.style.flip ? S.q.slice().reverse() : S.q.slice();
+    S.hintOut = `<p>Från vänster: ${readingText(asShown)}</p><p>Från höger: ${readingText(asShown.slice().reverse())}</p>`;
+  } else if (k === 'near') {
+    const v = S.ser.v;
+    S.hintOut = `<p>Närmaste i E24: ${neighbors(v, E24.map(x => x*10))}</p><p>Närmaste i E96: ${neighbors(v, E96)}</p>`;
+  }
+  out.innerHTML = S.hintOut;
+  const btn = document.querySelector(`[data-hint="${k}"]`);
+  if (btn) btn.disabled = true;
+}
+
+// Exempel i guiden
+function exStyle(n, o = {}){
+  const st = n === 3
+    ? {body:'var(--body)', shape:'bone', pal:0, xs:[98,128,158], w:[13,13,13], flip:false, cues:[]}
+    : stdStyle(n);
+  return Object.assign(st, o);
+}
+const eq = n => Array(n).fill(n === 4 ? 13 : 12);
+const EX = {
+  's-first': [[['brown','black','red','gold'], exStyle(4, {xs:[86,108,130,222]}), 'Banden börjar nära vänster ände. Brun–svart–röd–guld = 1 kΩ ±5 %.']],
+  's-wide': [[['red','yellow','white','orange','brown'], exStyle(5), 'Det breda bruna bandet är toleransen. Röd–gul–vit–orange–brun = 249 kΩ ±1 % (exemplet i IEC 60062).']],
+  's-metal': [[['violet','green','yellow','gold'], exStyle(4, {flip:true}), 'Guldet sitter till vänster, så motståndet ska vändas. Violett–grön–gul–guld = 750 kΩ ±5 % (exemplet i IEC 60062).']],
+  's-three': [[['blue','grey','red'], exStyle(3), 'Inget toleransband. Blå–grå–röd = 6,8 kΩ ±20 % (exemplet i IEC 60062).']],
+  's-six': [
+    [['red','yellow','white','orange','brown','red'], exStyle(6), 'Enligt 2016: femte bandet (tolerans) är brett. 249 kΩ ±1 %, 50 ppm/K.'],
+    [['red','yellow','white','orange','brown','red'], exStyle(6, {w:[11,11,11,11,11,16.5], wideIdx:5}), 'Äldre utgåvor: sjätte bandet (TK) är brett. Samma värde.']
+  ],
+  's-tcr': [[['red','yellow','white','orange','brown','red'], exStyle(6, {interrupt:5}), 'Sjätte bandet är avbrutet. Det betyder fortfarande 50 ppm/K.']],
+  's-chip': [[['yellow','violet','red','gold'], exStyle(4, {chip:1}), 'Violett har ett litet avbrott men räknas som helt. Gul–violett–röd–guld = 4,7 kΩ ±5 %.']],
+  's-pink': [[['yellow','violet','pink','gold'], exStyle(4), 'Så märks 47 mΩ ±5 %: gul–violett–rosa–guld, alltså 47 × 0,001 Ω.']],
+  'p-gap': [[['yellow','violet','red','gold'], exStyle(4, {w:eq(4)}), 'Lika breda band, men större mellanrum före guldet. 4,7 kΩ ±5 %.']],
+  'p-metal4': [[['brown','black','orange','silver'], exStyle(4), 'Brun–svart–orange–silver = 10 kΩ ±10 %.']],
+  'p-five': [[['brown','black','black','red','brown'], exStyle(5), 'Brun–svart–svart–röd–brun = 10 kΩ ±1 %. Brun i båda ändar, så bredd och mellanrum avgör. Baklänges skulle det bli 120 Ω ±1 %.']],
+  'p-body': [
+    [['red','red','brown','gold'], exStyle(4, {body:'#dcc596'}), 'Beige kolfilm: röd–röd–brun–guld = 220 Ω ±5 %.'],
+    [['brown','black','black','brown','brown'], exStyle(5, {body:'#5f93d6'}), 'Blå metallfilm: brun–svart–svart–brun–brun = 1 kΩ ±1 %.']
+  ],
+  't-black': [[['brown','black','black'], exStyle(3, {flip:true}), 'Svart till vänster kan inte vara början, så det läses från höger. Brun–svart–svart = 10 Ω ±20 %.']],
+  't-eser': [[['brown','black','red','red'], exStyle(4, {xs:[100,140,180,220], w:eq(4), body:'#d4b07f'}), 'Inga ledtrådar alls. Från vänster 1 kΩ ±2 %, från höger 22 Ω ±1 %. Båda finns i E24, så här behövs en multimeter.']],
+  't-goldmult': [[['yellow','violet','gold','gold'], exStyle(4), 'Gul–violett–guld–guld = 4,7 Ω ±5 %. Guldet närmast mitten är multiplikatorn.']],
+  't-light': [
+    [['brown','red','orange','gold'], exStyle(4), 'I dagsljus: brun–röd–orange–guld = 12 kΩ ±5 %.'],
+    [['brown','red','orange','gold'], exStyle(4, {tint:true}), 'Samma motstånd i gult lampljus (simulerat). Banden flyter ihop.']
+  ]
+};
+document.querySelectorAll('[data-ex]').forEach(el => {
+  const id = el.dataset.ex;
+  if (id === 't-meter') { el.innerHTML = '<figure><figcaption>Exempel: ett motstånd märkt 10 kΩ ±1 % ska mäta mellan 9,9 och 10,1 kΩ. Visar mätaren 9,93 kΩ stämmer det.</figcaption></figure>'; return; }
+  el.innerHTML = (EX[id] || []).map(([b, st, cap]) =>
+    `<figure>${svg(b, {style:st, label:'Exempel: ' + b.map(k => C[k].n).join(', ')})}<figcaption>${cap}</figcaption></figure>`).join('');
+});
+
+// Standardvärdetabell (E-serier)
+const E48 = E96.filter((_, i) => i % 2 === 0);
+const E12 = E24.filter((_, i) => i % 2 === 0);
+const E6 = E12.filter((_, i) => i % 2 === 0);
+const ESER = {E6:[E6,20], E12:[E12,10], E24:[E24,5], E48:[E48,2], E96:[E96,1]};
+const SER_OPTS = ['E6','E12','E24','E48','E96','none'];
+function seriesOf(m3){
+  const out = [];
+  if (m3 % 10 === 0) {
+    const t = m3 / 10;
+    if (E6.includes(t)) out.push('E6');
+    if (E12.includes(t)) out.push('E12');
+    if (E24.includes(t)) out.push('E24');
+  }
+  if (E48.includes(m3)) out.push('E48');
+  if (E96.includes(m3)) out.push('E96');
+  return out;
+}
+function genSeries(){
+  const cat = rnd(['E6','E12','E24','E48','E96','none']);
+  let m3;
+  if (cat === 'none') {
+    do { m3 = Math.random() < 0.5 ? (10 + Math.floor(Math.random()*90)) * 10 : 100 + Math.floor(Math.random()*900); }
+    while (seriesOf(m3).length);
+  } else {
+    const pool = [...E24.map(x => x*10), ...E96].filter(x => seriesOf(x)[0] === cat);
+    m3 = rnd(pool);
+  }
+  const dec = rnd([1,10,100,1000,10000,100000]);
+  return {m3, v: Math.round(m3 / 100 * dec * 100) / 100, set: seriesOf(m3)};
+}
+function nearest(v, mants){
+  let best = null;
+  const d0 = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const d of [d0/10, d0, d0*10]) for (const m of mants) {
+    const c = Math.round(m / 100 * d * 100) / 100;
+    if (!best || Math.abs(Math.log(c/v)) < Math.abs(Math.log(best/v))) best = c;
+  }
+  return best;
+}
+const andList = a => a.length < 2 ? a.join('') : a.slice(0,-1).join(', ') + ' och ' + a[a.length-1];
+// Ett motstånd som passar ett värde: toleransen följer serien (E6 = tre band utan toleransband)
+const SER_TOL = {E6:20, E12:10, E24:5, E48:2, E96:1};
+const TOL_SER = {20:'E6', 10:'E12', 5:'E24', 2:'E48', 1:'E96'};
+const multColor = m => MO.find(c => close(C[c].m, m));
+const STYLE3 = () => ({body:'var(--body)', shape:'bone', pal:0, xs:[98,128,158], w:[13,13,13], flip:false, cues:[]});
+const styleFor = b => b.length === 3 ? STYLE3() : stdStyle(b.length);
+function seriesBands(v, m3, ser){
+  const two = m3 % 10 === 0 && (ser === null ? true : ['E6','E12','E24'].includes(ser));
+  if (two) {
+    const base = m3 / 10, d = [DIG[Math.floor(base / 10)], DIG[base % 10]], mc = multColor(v / base);
+    return ser === 'E6' ? [...d, mc] : [...d, mc, ser === 'E12' ? 'silver' : 'gold'];
+  }
+  const d = [DIG[Math.floor(m3 / 100)], DIG[Math.floor(m3 / 10) % 10], DIG[m3 % 10]];
+  return [...d, multColor(v / m3), ser === 'E48' ? 'red' : 'brown'];
+}
+const pickDec = two => rnd(two ? [1,10,100,1000,10000] : [1,10,100,1000]);
+// Ett slumpat motstånd ur en given serie, med seriens tolerans
+function resistorFromSeries(ser){
+  const list = ['E6','E12','E24'].includes(ser) ? ESER[ser][0].map(x => x * 10) : ESER[ser][0];
+  const m3 = rnd(list), two = ['E6','E12','E24'].includes(ser), v = Math.round(m3 / 100 * pickDec(two) * 100) / 100;
+  return {v, m3, bands: seriesBands(v, m3, ser)};
+}
+// Mästare: läs av motståndet och avgör vilken serie det hör hemma i
+function genSeriesRead(){
+  const cat = rnd(['E6','E12','E24','E48','E96','none','cross']);
+  if (cat !== 'none' && cat !== 'cross') return {...resistorFromSeries(cat), answer: cat};
+  if (cat === 'cross') {
+    // Värde ur en finare serie med en grövre tolerans, t.ex. 16 kΩ ±20 %: finns inte i E6, alltså inte standard
+    const tolSer = rnd(['E6','E12','E48']);
+    const pool = tolSer === 'E48' ? E96.filter(x => !E48.includes(x) && !(x % 10 === 0 && E24.includes(x / 10))) : E24.filter(x => !ESER[tolSer][0].includes(x)).map(x => x * 10);
+    const m3 = rnd(pool), two = tolSer !== 'E48', v = Math.round(m3 / 100 * pickDec(two) * 100) / 100;
+    return {v, m3, bands: seriesBands(v, m3, tolSer), answer: 'none'};
+  }
+  const two = Math.random() < 0.5;
+  let m3;
+  do { m3 = two ? (10 + Math.floor(Math.random() * 90)) * 10 : 100 + Math.floor(Math.random() * 900); } while (seriesOf(m3).length);
+  const v = Math.round(m3 / 100 * pickDec(two) * 100) / 100;
+  return {v, m3, bands: seriesBands(v, m3, null), answer: 'none'};
+}
+const bandsTol = b => b.length === 3 ? 20 : C[b[b.length - 1]].t;
+const mantTxt = m3 => (m3 % 10 === 0 ? (m3 / 100).toFixed(1) : (m3 / 100).toFixed(2)).replace('.', ',');
+// Är motståndet ett standardvärde, i vilken serie, och hur vet man det?
+const SER_ORDER = ['E6','E12','E24','E48','E96','E192'];
+function stdInfo(b){
+  const k = nd(b), digits = b.slice(0, k).map(c => C[c].d).join('');
+  const m3 = k === 2 ? +digits * 10 : +digits, mant = mantTxt(m3);
+  const tol = tolOf(b), tb = `toleransbandet (${C[b[k + 1]].n.toLowerCase()}, ${fmtTol(tol)})`;
+  const ser = TOL_SER[tol] || (tol <= 0.5 ? 'E192' : null);
+  const inSet = seriesOf(m3);
+  const inSer = ser === 'E192' ? inSet.includes('E96') : inSet.includes(ser);
+  if (ser && inSer)
+    return `<b>Standardvärde i ${ser}.</b> Så vet du det: ${tb} hör till ${ser}, och ${mant} finns i ${ser}${ser === 'E192' ? ', som innehåller alla E96-värden' : ''}.`;
+  if (!inSet.length)
+    return `<b>Inte ett standardvärde.</b> ${mant} finns inte i någon E-serie, oavsett tolerans.`;
+  const lowest = inSet[0];
+  if (ser && SER_ORDER.indexOf(lowest) < SER_ORDER.indexOf(ser)) {
+    // E6- och E12-värden ingår i E24, och det är E24 som säljs med snävare toleranser
+    const sold = inSet.includes('E24') ? 'E24' : lowest;
+    return `<b>Standardvärde i ${sold}.</b> ${mant} finns i ${sold}. Egentligen hör ${tb} till ${ser}, där ${mant} inte finns, men ${sold}-värden säljs ofta även med snävare tolerans.`;
+  }
+  return `<b>Inte ett standardvärde med den här toleransen.</b> ${tb.charAt(0).toUpperCase() + tb.slice(1)} hör till ${ser}, och ${mant} finns inte i ${ser}. Det finns först i ${lowest}, som kräver snävare tolerans.`;
+}
+// Gränser med tillräckligt många siffror för att snäva toleranser inte ska avrundas bort (enhet efter det märkta värdet)
+function fmtPrecise(x, ref){
+  const [u, l] = ref >= 1e6 ? [1e6, 'MΩ'] : ref >= 1e3 ? [1e3, 'kΩ'] : [1, 'Ω'];
+  return (x / u).toLocaleString('sv-SE', {maximumSignificantDigits: 5}) + ' ' + l;
+}
+// Facit: hur en mätning med multimeter kan se ut för just det här motståndet
+function meterFB(v, tol, note){
+  const mv = meterShown(meterRead(v, tol), v, tol);
+  return `<div class="meterfb"><p>${note || 'Så här kan en mätning se ut:'}</p>${meterLcd(mv)}
+    <p class="gnote">Toleransen ${fmtTol(tol)} tillåter allt från ${fmtPrecise(v * (1 - tol / 100), v)} till ${fmtPrecise(v * (1 + tol / 100), v)}, så mätvärdet ligger sällan exakt på det märkta värdet.</p></div>`;
+}
+function srFeedback(ok){
+  const r = S.sr, tol = bandsTol(r.bands), ser = TOL_SER[tol];
+  const read = `Motståndet är ${colorNames(r.bands)}, alltså ${fmtVal(r.v)} ${fmtTol(tol)}${r.bands.length === 3 ? ' (tre band, inget toleransband)' : ''}.`;
+  const inAny = seriesOf(r.m3);
+  const why = r.answer === 'none'
+    ? (inAny.length
+      ? `${fmtTol(tol)} hör till ${ser}, men ${mantTxt(r.m3)} finns inte i ${ser} (det finns först i ${inAny[0]}). Med den här toleransen är värdet alltså inte standard.`
+      : `${mantTxt(r.m3)} finns inte i någon standardserie, så värdet är inte standard.`)
+    : `${fmtTol(tol)} hör till ${ser}, och ${mantTxt(r.m3)} finns i ${ser}.`;
+  document.getElementById('fb').innerHTML = `<div class="feedback ${fbClass(ok)}" role="status">
+    <h2>${fbHead(ok)}</h2>
+    <p>${read}</p><p>${why}</p>
+    ${meterFB(r.v, tol)}
+    <p class="dir">Toleransen avgör serien: ±20 % E6, ±10 % E12, ±5 % E24, ±2 % E48, ±1 % E96. Sedan kollar du om värdet finns i den serien.</p>
+    <button class="primary" id="next">Nästa fråga</button></div>`;
+  showFeedback();
+}
+function stolFeedback(ok){
+  const k = S.stol.ser, [vals, tol] = ESER[k];
+  document.getElementById('fb').innerHTML = `<div class="feedback ${fbClass(ok)}" role="status">
+    <h2>${fbHead(ok)}</h2>
+    <p>${k} hör ihop med ${fmtTol(tol)}. Den har ${vals.length} värden per dekad.</p>
+    ${tipCost(ok)}
+    <p class="dir">Fler värden per dekad ger mindre steg mellan värdena, och då räcker en snävare tolerans för att täcka allt: E6 ±20 %, E12 ±10 %, E24 ±5 %, E48 ±2 %, E96 ±1 %.</p>
+    <button class="primary" id="next">Nästa fråga</button></div>`;
+  showFeedback();
+}
+function seriesFeedback(ok){
+  const {v, set} = S.ser, L = LV[S.level];
+  const main = set.length
+    ? `${fmtVal(v)} finns i ${andList(set)}.${L.choice ? ` Minsta serien är ${set[0]}.` : ''}`
+    : `${fmtVal(v)} finns inte i någon standardserie. Närmaste E24-värde är ${fmtVal(nearest(v, E24.map(x => x*10)))} och närmaste E96-värde är ${fmtVal(nearest(v, E96))}.`;
+  document.getElementById('fb').innerHTML = `<div class="feedback ${fbClass(ok)}" role="status">
+    <h2>${fbHead(ok)}</h2>
+    <p>${main}</p>
+    ${tipCost(ok)}
+    <p class="dir">E6 ingår i E12, som ingår i E24. E48 ingår i E96. Ett E6-värde finns alltså även i E12 och E24.</p>
+    <button class="primary" id="next">Nästa fråga</button></div>`;
+  showFeedback();
+}
+let eSel = 'E24';
+try { const e = localStorage.getItem('fargkoden-eser'); if (e && ESER[e]) eSel = e; } catch(e) {}
+function renderE(){
+  const [vals, tol] = ESER[eSel];
+  document.getElementById('eSeg').innerHTML = Object.keys(ESER).map(k =>
+    `<button data-eser="${k}" aria-pressed="${k === eSel}">${k}</button>`).join('');
+  const ex = vals[Math.floor(vals.length*0.6)] / (vals[0] >= 100 ? 100 : 10);
+  document.getElementById('eNote').textContent =
+    `${eSel} har ${vals.length} värden per dekad och hör ihop med ±${tol} %. Varje värde finns i alla dekader, till exempel ${fmtVal(ex)}, ${fmtVal(ex*10)}, ${fmtVal(ex*100)} och ${fmtVal(ex*1000)}.`;
+  const dec = vals[0] >= 100 ? 2 : 1;
+  document.getElementById('eGrid').innerHTML = vals.map(v =>
+    `<span>${(v / (dec === 2 ? 100 : 10)).toFixed(dec).replace('.', ',')}</span>`).join('');
+}
+document.getElementById('eSeg').addEventListener('click', e => {
+  const b = e.target.closest('[data-eser]');
+  if (!b) return;
+  eSel = b.dataset.eser; save('fargkoden-eser', eSel); renderE();
+});
+renderE();
+
+next();
+</script>
+</body>
+</html>
