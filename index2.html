@@ -171,7 +171,6 @@ p.epre{margin:0}
 .ann{display:block;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:.85rem;color:var(--muted);margin-top:4px;line-height:1.3}
 .opt.bc .ann{flex-basis:100%;margin-top:0}
 .ann .sw{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
-.grp-lbl{font-size:.85rem;color:var(--muted);margin:0 0 6px}
 .chiprow{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:6px 12px;font:inherit;font-size:.95rem;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -263,16 +262,16 @@ th{color:var(--muted);font-weight:500}
 
   <details>
     <summary>Om nivåerna</summary>
-    <p class="gnote">Nivåerna heter efter hur långt du kommit, från Nykomling till Stormästare. Du börjar som Nykomling, och <b>5 rätt i rad</b> när du spelar låser upp nästa nivå. Eldprovet är alltid öppet.</p>
+    <p class="gnote">Nivåerna heter efter hur långt du kommit, från Nykomling till Stormästare. Varje nivå lär ut en ny sak, och det mesta du får gäller just den. <b>5 rätt i rad</b> på det nya låser upp nästa nivå. Frågor om det du lärt dig tidigare räknas inte upp, men ett fel på vad som helst nollställer sviten. Eldprovet är alltid öppet.</p>
     <ul class="lvlist">
       <li><b>Nykomling:</b> läsriktning. Du avgör om motståndet ska läsas från vänster eller höger. Det finns alltid en tydlig ledtråd, och tipset kostar inget.</li>
-      <li><b>Lärling:</b> resistansen i ohm, med fyra svarsalternativ och standardutseende. Frågorna gäller ibland hela värdet, ibland bara siffrorna och ibland bara multiplikatorn.</li>
-      <li><b>Gesäll:</b> tolerans. Varje fråga gäller resistansen eller toleransen, och motstånden ser olika ut.</li>
-      <li><b>Mästare:</b> temperaturkoefficient, det sjätte bandet. Sexbandsmotstånd dyker upp oftare.</li>
-      <li><b>Stormästare:</b> allt på en gång. Du knappar in värden, bygger band för band ur en blandad palett och avgör vilken E-serie ett värde hör till. Ungefär vart tionde motstånd är inte standard.</li>
-      <li><b>Eldprovet:</b> 20 frågor som testar allt, utan tips och utan färdiga värden. Motstånd kan sitta vända, och riktningsfrågorna är de kluriga sorterna där bara standardvärden, guld och silver eller en multimeter avgör. Du får en poäng för varje del du klarar, och en färdighet räknas som klarad vid minst hälften rätt. Till sist får du ett utlåtande om vilken nivå du behärskar.</li>
+      <li><b>Lärling:</b> resistansen i ohm, med fyra svarsalternativ. Frågorna gäller ibland hela värdet, ibland bara siffrorna och ibland bara multiplikatorn. Ibland kommer en riktningsfråga från Nykomling.</li>
+      <li><b>Gesäll:</b> tolerans. Resistansen frågas fortfarande som flerval, motstånden ser olika ut, och nu kan de sitta vända.</li>
+      <li><b>Mästare:</b> temperaturkoefficient, det sjätte bandet. Toleransen kommer som flerval, och resistansen knappar du in själv eller bygger ur paletten.</li>
+      <li><b>Stormästare:</b> allt i svår variant. Du knappar in hela värden och bygger motstånd band för band. Nytt är E-serierna, som avgör om ett värde är standard. Ungefär vart tionde motstånd är inte standard, och här räknas alla frågor.</li>
+      <li><b>Eldprovet:</b> 20 frågor som testar allt, utan tips och utan färdiga värden. Motstånd kan sitta vända, och riktningsfrågorna är de kluriga sorterna där bara standardvärden, guld och silver eller en multimeter avgör. Efter varje fråga ser du bara dina poäng. Du får en poäng för varje del du klarar, och en färdighet räknas som klarad vid minst hälften rätt. Till sist får du ett utlåtande om vilken nivå du behärskar.</li>
     </ul>
-    <p class="gnote">Motstånden har 4, 5 eller 6 band, blandat. På de lägre nivåerna frågas bara det du ska kunna där, men facit visar alltid vad alla band betyder. Under Läge kan du från Lärling och uppåt välja Öva och träna på en del i taget. Tips finns bara på den nivå där du lär dig något nytt, och på nästa nivå förväntas du kunna det. Rätt svar med tips räknas, men sviten står still.</p>
+    <p class="gnote">Det du lärde dig på nivån närmast under kommer som flerval. Det du lärde dig tidigare än så kommer i svår variant: du knappar in värdet, väljer ur hela listan eller bygger ur paletten. Under Läge kan du från Lärling och uppåt välja Öva och träna på en del i taget, i samma format som på nivån. Tips finns bara för det nya på varje nivå. Rätt svar med tips räknas, men sviten står still.</p>
   </details>
 
   <details class="guide">
@@ -719,6 +718,8 @@ function directionText(b, st){
   return t.join(' ');
 }
 
+// Det som sviten räknar på varje nivå
+const SKILL_WORD = {intro:'läsriktning', easy:'resistans', medium:'tolerans', tc:'temperaturkoefficient', hard:'allt'};
 function updateScore(){
   let tail = '';
   if (S.level === 'ultra') {
@@ -728,7 +729,7 @@ function updateScore(){
   else {
     const nx = ORDER[ORDER.indexOf(S.level) + 1];
     tail = nx === 'ultra' ? '<span>Redo? Testa dig i Eldprovet</span>'
-      : !unlocked(nx) ? `<span><b>${Math.min(S.streak, UNLOCK_AT)}</b> av ${UNLOCK_AT} i rad till ${lvName(nx)}</span>`
+      : !unlocked(nx) ? `<span><b>${Math.min(S.streak, UNLOCK_AT)}</b> av ${UNLOCK_AT} i rad på ${SKILL_WORD[S.level]} till ${lvName(nx)}</span>`
       : `<span>${lvName(nx)} är upplåst</span>`;
   }
   document.getElementById('score').innerHTML =
@@ -815,7 +816,7 @@ function next(){
   S.n = n; S.q = genBands(n);
   S.answered = false; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.ambig = false; S.bflip = false;
   S.bpick = null; S.pickDir = null; S.pickSr = null; S.ok = null;
-  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.palOrder = {}; S.palAll = null; S.entry = newEntry();
+  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.palAll = null; S.entry = newEntry();
   S.vText = valueNotation(valueOf(S.q));
   S.flipQ = flipOK() && S.type !== 'dir' && Math.random() < 0.5;
   S.build = Array(n).fill(null); S.slot = 0; S.eCase = false;
@@ -892,10 +893,6 @@ function slotLabels(n){
   l.push('Multiplikator', 'Tolerans');
   if (n === 6) l.push('Temp.koeff.');
   return l;
-}
-function slotKeys(n, i){
-  const r = roleOf(n, i);
-  return r === 'digit' ? (i === 0 ? BAND1 : DIG) : r === 'mult' ? MO : r === 'tol' ? TOL : TCS;
 }
 
 // Huvudknappen: samma plats i varje fråga. Svara där svaret måste bekräftas, annars Nästa (grå tills man svarat).
@@ -1055,10 +1052,10 @@ function moreHTML(){
 }
 // Upplåst-dialog som berättar vad nästa nivå lär ut
 const LEARN = {
-  easy: 'Som Lärling läser du av resistansen. De första banden är siffror och bandet efter är multiplikatorn, alltså hur många nollor som ska till. Du övar på siffrorna och multiplikatorn var för sig och på hela värdet, och toleransen behöver du inte kunna än.',
-  medium: 'Som Gesäll lägger du till toleransen, det breda bandet i slutet som säger hur mycket värdet får avvika. Motstånden ser också olika ut, med olika kroppsfärger, former och nyanser, precis som i verkligheten.',
-  tc: 'Som Mästare lär du dig det sjätte bandet: temperaturkoefficienten i ppm/K, som säger hur mycket resistansen ändras per grad. Sexbandsmotstånd dyker upp oftare här.',
-  hard: 'Som Stormästare svarar du på allt på en gång. Du knappar in värden, bygger motstånd band för band ur en blandad palett och lär dig standardvärdena och E-serierna. Ungefär vart tionde motstånd är inte standard. När du känner dig redo väntar Eldprovet.'
+  easy: 'Som Lärling läser du av resistansen. De första banden är siffror och bandet efter är multiplikatorn, alltså hur många nollor som ska till. Du övar på siffrorna, multiplikatorn och hela värdet. Ibland kommer en riktningsfråga, men det är resistansfrågorna som för dig framåt.',
+  medium: 'Som Gesäll lär du dig toleransen, det breda bandet i slutet som säger hur mycket värdet får avvika. Resistansen kommer som flerval, motstånden ser olika ut och kan sitta vända. Det är toleransfrågorna som räknas, men ett fel på vad som helst nollställer sviten.',
+  tc: 'Som Mästare lär du dig det sjätte bandet: temperaturkoefficienten i ppm/K, som säger hur mycket resistansen ändras per grad. Toleransen kommer som flerval, och resistansen knappar du nu in själv eller bygger ur paletten.',
+  hard: 'Som Stormästare kommer allt i svår variant: du knappar in hela värden och bygger motstånd band för band ur en blandad palett. Nytt är standardvärdena och E-serierna. Här räknas alla frågor. När du känner dig redo väntar Eldprovet.'
 };
 function afterFeedback(){
   if (!S.unlockedNow) return;
@@ -1330,7 +1327,6 @@ function buildMC(){
   };
   return mc;
 }
-const MC_LABELS = {v:'Resistans', t:'Tolerans', k:'Temperaturkoefficient', d:'Siffror', x:'Multiplikator'};
 // Lärling: siffror och multiplikator var för sig
 const digitStr = b => b.slice(0, nd(b)).map(c => C[c].d).join('');
 const NEAR_DIGIT = {0:[1,8], 1:[2,3,0], 2:[1,3,7], 3:[2,1,4], 4:[3,5], 5:[6,4], 6:[7,5,8], 7:[6,8,2], 8:[9,7,6], 9:[8,4]};
@@ -1508,15 +1504,6 @@ function hintsHTML(){
   return `<div class="hints">${list.map(([k,l]) =>
     `<button class="ghost" data-hint="${k}"${S.hintsUsed.has(k) ? ' disabled' : ''}>${HINT_ICON}${l}</button>`).join('')}</div>
     <div class="hint-out" id="hintOut" aria-live="polite">${S.hintOut}</div>`;
-}
-function bandsValid(bs){
-  const n = bs.length, k = nd(bs);
-  if (!BAND1.includes(bs[0])) return `${C[bs[0]].n} kan inte vara första siffran`;
-  for (let i = 1; i < k; i++) if (!DIG.includes(bs[i])) return `${C[bs[i]].n} är ingen siffra`;
-  if (C[bs[k]].m == null) return `${C[bs[k]].n} är ingen multiplikator`;
-  if (C[bs[k+1]].t == null) return `${C[bs[k+1]].n} är ingen tolerans`;
-  if (n === 6 && C[bs[5]].tc == null) return `${C[bs[5]].n} är ingen temperaturkoefficient`;
-  return null;
 }
 function neighbors(v, mants){
   const d0 = Math.pow(10, Math.floor(Math.log10(v)));
