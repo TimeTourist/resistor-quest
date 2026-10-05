@@ -78,6 +78,9 @@ html,body{overflow-x:clip}
 .sweep path{stroke:var(--ok)}
 .note text{fill:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:700}
 .blab{fill:var(--muted)}
+.calcrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin:14px 0 0;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.7rem;font-weight:600}
+.calcrow .zeros{color:var(--ok);margin-left:-8px}
+.calcrow .pre{color:var(--ok)}
 .palstrip{display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin:14px 0 0;padding:8px 6px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .palstrip .sw{width:16px;height:16px}
 .palstrip .fake{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 8px 2px 4px;border-radius:999px;background:var(--bad);color:#fff;font-weight:700}
@@ -1278,9 +1281,16 @@ const GRADES = {
         if (vals.length < 4 && x >= 10 && x < 1e9 && !vals.includes(x)) vals.push(x);
       shuffle(vals);
       const zeros = ['inga nollor', 'en nolla', 'två nollor', 'tre nollor', 'fyra nollor', 'fem nollor', 'sex nollor'][mi];
-      S.cq = {prompt:'Hur stor är resistansen?', layout:'mc', right: vals.indexOf(v),
-        res: () => svg(S.q, {style: S.style, bracket: [{dim:true}]}),
+      // Vid fel: banden får sina värden ett i taget, sedan byggs talet upp under motståndet och rätt svar studsar
+      const k = ds.length, T = {start: .3, step: .45};
+      T.eq = T.start + (k + 1) * T.step + .2; T.land = T.eq + (v >= 1000 ? 2.1 : 1.5); T.total = T.land + .9;
+      const wrongNow = () => S.answered && !S.ok;
+      const tok = (txt, at, cls = '') => `<span class="mk ${cls}" style="animation-delay:${at.toFixed(2)}s">${txt}</span>`;
+      S.cq = {prompt:'Hur stor är resistansen?', layout:'mc', right: vals.indexOf(v), anim: T,
+        res: () => svg(S.q, {style: S.style, bracket: [{dim:true}],
+          ...(wrongNow() ? {mark: ds.map((d, j) => [j, String(d)]).concat([[k, fmtMult(10 ** mi)]]), markKind: 'ok', markAnim: T} : {})}),
         opts: vals.map(x => ({html: fmtVal(x)})),
+        facit: () => `<div class="calcrow" aria-hidden="true">${tok(String(base), T.eq)}${mi ? tok('0'.repeat(mi), T.eq + .5, 'zeros') : ''}${tok(`= ${ohmTxt(v)}`, T.eq + (mi ? 1 : .5))}${v >= 1000 ? tok(`= ${fmtVal(v)}`, T.eq + 1.6, 'pre') : ''}</div>`,
         wrong: `${base} och ${zeros} = ${ohmTxt(v)}${v >= 1000 ? ` = ${fmtVal(v)}` : ''}.`};
     }),
     // Stormästare: fem band, guld och silver som multiplikator, knappa in eller bygg, kan sitta vänt

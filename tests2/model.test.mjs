@@ -158,7 +158,7 @@ test('Peka på band: Motståndets Stormästare frågar efter första bandet, äv
 });
 
 test('Text: rätt svar ger ingen text, fel svar ger exakt en rad', () => {
-  for (const [topic, g] of [['ohm', 3], ['tol', 3], ['e', 2]]) {
+  for (const [topic, g] of [['tol', 3], ['e', 2]]) {
     const t = atGrade(topic, g);
     t.g('next()'); answer(t, true);
     assert.equal(t.$$('#q .lesson').length, 0, `${topic} ${g} rätt`);
@@ -206,7 +206,7 @@ test('Resistansen: klammern, fyra band till och med Mästare, fem band på Storm
 });
 
 test('Rätt svar: nästa fråga kommer av sig själv, fel svar väntar på Nästa', async () => {
-  const t = atGrade('ohm', 3, {}, );
+  const t = atGrade('tol', 3, {}, );
   t.g('S.instant = false');
   t.g('next()');
   const before = t.g('S.cq.prompt + S.cq.right');
@@ -225,7 +225,7 @@ test('Rätt svar: nästa fråga kommer av sig själv, fel svar väntar på Näst
 });
 
 test('Hoppa över: Enter under spänningen visar utfallet direkt', () => {
-  const t = atGrade('ohm', 3);
+  const t = atGrade('tol', 3);
   t.g('S.instant = false');
   t.g('next()');
   answer(t, false);
@@ -583,6 +583,22 @@ test('Testläge: rätt svar har en grön pil, i vanligt läge syns ingen', () =>
   const t = atGrade('ohm', 3);
   t.g('next()');
   assert.equal(t.$$('#q .cheat, #q .cheatmark, #q .cheatline').length, 0);
+});
+
+test('Resistansen Mästare fel: banden får sina värden och talet byggs upp', () => {
+  const t = atGrade('ohm', 3);
+  for (let i = 0; i < 15; i++) {
+    t.g('S.grade.ohm = 3; next()');
+    const k = t.g('nd(S.q)'), right = t.g('S.cq.right');
+    answer(t, false);
+    assert.equal(t.$$('#q .res .mk.ok').length, k + 1, 'siffrorna och multiplikatorn');
+    const row = t.$('#q .calcrow').textContent.replace(/\s/g, '');
+    assert.ok(row.startsWith(t.g('digitStr(S.q)')), row);
+    assert.ok(row.includes(t.g('ohmTxt(valueOf(S.q))').replace(/\s/g, '')), row);
+    assert.ok(t.$(`[data-c="${right}"]`).classList.contains('land'));
+    assert.equal(t.$$('#q .lesson').length, 0);
+    assert.ok(t.g('qAnim().total') >= 3);
+  }
 });
 
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
