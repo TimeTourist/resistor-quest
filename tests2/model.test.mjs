@@ -434,6 +434,11 @@ test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort',
   assert.ok(lock >= 1200, `låst i ${lock} ms`);
   await new Promise(r => setTimeout(r, lock - 200));
   assert.equal(t.$('#gbar').querySelectorAll('.gseg.cur .cracks .on').length, 1, 'en spricka på aktuell grad');
+  // Vid fel ligger stapeln kvar tills man trycker
+  await new Promise(r => setTimeout(r, 900));
+  assert.ok(t.$('#gbar').classList.contains('show'), 'stapeln ligger kvar efter fel');
+  t.g('S.lockUntil = 0'); cont(t);
+  assert.ok(!t.$('#gbar').classList.contains('show'), 'trycket tar bort stapeln');
   t.g('stopTimer(); clearBar()');
 });
 

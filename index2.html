@@ -1629,8 +1629,8 @@ function barFX(P, startAt){
         if (!calm) [0, 1, 2].forEach(i => dust(cell(P.to.g, i), null, 7, 'out'));
         barDraw(P.to, P.topic); b.classList.add('newgrade', 'fell');
       });
-      later(startAt + BAR_DOWN - .1, () => b.classList.remove('show'));
-    } else later(startAt + BAR_WRONG - .1, () => b.classList.remove('show'));
+    }
+    // Vid fel ligger stapeln kvar tills man trycker vidare
   }
 }
 // Ljuden skapas med Web Audio. Varje ljud är en egen funktion så att det kan bytas mot en ljudfil senare.
