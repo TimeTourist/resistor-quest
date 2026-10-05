@@ -166,6 +166,10 @@ p.epre{margin:0}
 .opts.mc{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
 .opts.mc .opt{font-size:1.3rem;min-height:50px}
 .opt.bc{display:flex;align-items:center;justify-content:center;gap:8px;font-size:1.15rem}
+.opt.bc{flex-wrap:wrap}
+.ann{display:block;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:.85rem;color:var(--muted);margin-top:4px;line-height:1.3}
+.opt.bc .ann{flex-basis:100%;margin-top:0}
+.ann .sw{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
 .grp-lbl{font-size:.85rem;color:var(--muted);margin:0 0 6px}
 .chiprow{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:6px 12px;font:inherit;font-size:.95rem;cursor:pointer}
@@ -209,6 +213,8 @@ th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-
 th{color:var(--muted);font-weight:500}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){
+  .res.turn svg{animation:turn .45s ease-out}
+  @keyframes turn{from{transform:scaleX(-1)}}
   .lesson{animation:pop .18s ease-out}
   @keyframes pop{from{transform:translateY(4px);opacity:0}}
 }
@@ -914,7 +920,8 @@ ${hintsHTML()}
   } else if (S.type === 'dir') {
     const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
-    h += `<p class="prompt">Från vilket håll ska motståndet läsas?</p><div class="res">${svg(S.q,{style:S.style})}</div>${hintsHTML()}
+    const turn = S.answered && S.level !== 'ultra' && S.style.flip && !S.ambig;
+    h += `<p class="prompt">Från vilket håll ska motståndet läsas?</p><div class="res${turn ? ' turn' : ''}">${svg(S.q, {style: turn ? {...S.style, flip:false} : S.style})}</div>${hintsHTML()}
       <div class="opts">${dBtn('left', 'Från vänster')}${dBtn('right', 'Från höger')}${S.level === 'ultra' ? dBtn('none', 'Går ej att avgöra utan multimeter', ' wide') : ''}</div>`;
   } else if (S.type === 'read') {
     const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
@@ -1341,11 +1348,28 @@ function markCls(isRight, isPicked){
   return isRight ? ' ok' : isPicked ? ' bad' : '';
 }
 const disAttr = () => S.answered ? ' disabled' : '';
+// Vad ett alternativ motsvarar i färger: värde till siffer- och multiplikatorband (k siffror), null om det inte går
+function valueBands(v, k){
+  for (const c of MO) {
+    const d = v / C[c].m, r = Math.round(d);
+    if (close(d, r) && r >= 10 ** (k - 1) && r < 10 ** k) return String(r).split('').map(x => DIG[+x]).concat([c]);
+  }
+  return null;
+}
+const swatches = cs => cs.map(c => `<span class="sw" style="${swStyle(c)}" title="${C[c].n}"></span>`).join('');
+function mcAnn(g, x){
+  const cs = g === 'v' ? valueBands(x, nd(S.q)) : g === 'd' ? x.split('').map(d => DIG[+d])
+    : g === 'x' ? [MO.find(c => close(C[c].m, x))] : g === 't' ? [TOL.find(c => close(C[c].t, x))] : [TCS.find(c => C[c].tc === x)];
+  if (!cs || cs.some(c => !c)) return '';
+  return `<small class="ann">${swatches(cs)}${cs.length === 1 ? ' ' + C[cs[0]].n : ''}</small>`;
+}
+// Resistansen som siffer- och multiplikatorbanden i en motståndsbild ger
+const partValue = o => Math.round(+o.slice(0, -1).map(c => C[c].d).join('') * C[o[o.length - 1]].m * 100) / 100;
 function mcHTML(){
   if (!S.mc) { S.mc = buildMC(); S.pick = {v:null, t:null, k:null, d:null, x:null}; }
   const g = S.focus, right = S.mc[g].findIndex(x => mcEq(x, mcTruth(g)));
   return `<div class="mcgroup"><div class="opts mc">${S.mc[g].map((x,i) =>
-    `<button class="opt${markCls(i === right, S.pick[g] === i)}" data-pick="${g}:${i}"${disAttr()}>${mcFmt(g, x)}</button>`).join('')}</div></div>`;
+    `<button class="opt${markCls(i === right, S.pick[g] === i)}" data-pick="${g}:${i}"${disAttr()}>${mcFmt(g, x)}${S.answered ? mcAnn(g, x) : ''}</button>`).join('')}</div></div>`;
 }
 function mcTruth(g){ return g === 'v' ? valueOf(S.q) : g === 't' ? tolOf(S.q) : g === 'd' ? digitStr(S.q) : g === 'x' ? C[S.q[nd(S.q)]].m : tcOf(S.q); }
 function answerMC(){
@@ -1382,12 +1406,13 @@ function bmcHTML(){
       : S.focus === 'x' ? {x: multChoices(S.q)} : {t: tolChoices()};
   }
   const right = bmcRight(), st = {...stdStyle(S.n), flip: S.flipQ};
-  const imgBtn = (o, i, lab) => `<button class="opt r${markCls(i === right, S.bpick === i)}" data-vpick="${i}"${disAttr()}>${svg(o, {style: st, label: lab})}</button>`;
-  const colBtn = (c, attr) => `<button class="opt bc${markCls(c === right, S.bpick === c)}" data-${attr}="${c}"${disAttr()}><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`;
+  const imgBtn = (o, i, lab, ann) => `<button class="opt r${markCls(i === right, S.bpick === i)}" data-vpick="${i}"${disAttr()}>${svg(o, {style: st, label: lab})}${S.answered ? `<small class="ann">${ann}</small>` : ''}</button>`;
+  const role = S.focus === 'x' ? 'mult' : S.focus === 'k' ? 'tc' : 'tol';
+  const colBtn = (c, attr) => `<button class="opt bc${markCls(c === right, S.bpick === c)}" data-${attr}="${c}"${disAttr()}><span class="sw" style="${swStyle(c)}"></span>${C[c].n}${S.answered ? `<small class="ann">${bandDetail(c, role)}</small>` : ''}</button>`;
   const blank = n => Array(n).fill(null);
   const target = (b, label) => `<div class="res">${svg(b, {style: st, label, mark: S.mark})}</div>`;
   if (S.focus === 'd') return target(blank(k).concat(S.q.slice(k)), 'Motståndet med sifferbanden tomma')
-    + `<div class="mcgroup"><div class="opts rgrid">${S.bopts.d.map((o,i) => imgBtn(o.concat(blank(S.n - k)), i, 'Sifferband: ' + colorNames(o))).join('')}</div></div>`;
+    + `<div class="mcgroup"><div class="opts rgrid">${S.bopts.d.map((o,i) => imgBtn(o.concat(blank(S.n - k)), i, 'Sifferband: ' + colorNames(o), o.map(c => C[c].d).join(' '))).join('')}</div></div>`;
   if (S.focus === 'x') return target(S.q.slice(0, k).concat([null], S.q.slice(k + 1)), 'Motståndet med multiplikatorbandet tomt')
     + `<div class="mcgroup"><div class="opts mc">${S.bopts.x.map(c => colBtn(c, 'tpick')).join('')}</div></div>`;
   if (S.focus === 'k') return target(S.q.slice(0, 5).concat([null]), 'Motståndet med sjätte bandet tomt')
@@ -1397,7 +1422,7 @@ function bmcHTML(){
   if (S.focus === 'v') {
     // Toleransen (och TK) är redan ifyllda, välj resistansbanden
     h = target(blank(k+1).concat([S.q[k+1]], tail), 'Motståndet med resistansbanden tomma')
-      + `<div class="mcgroup"><div class="opts rgrid">${S.bopts.v.map((o,i) => imgBtn(o.concat(blank(S.n - k - 1)), i, 'Resistansband: ' + colorNames(o))).join('')}</div></div>`;
+      + `<div class="mcgroup"><div class="opts rgrid">${S.bopts.v.map((o,i) => imgBtn(o.concat(blank(S.n - k - 1)), i, 'Resistansband: ' + colorNames(o), fmtVal(partValue(o)))).join('')}</div></div>`;
   } else {
     // Resistansbanden är redan ifyllda, välj toleransbandet
     h = target(S.q.slice(0, k+1).concat([null], tail), 'Motståndet med toleransbandet tomt')
