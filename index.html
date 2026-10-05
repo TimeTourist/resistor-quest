@@ -68,6 +68,9 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .score b{color:var(--ink);font-weight:600}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
 .prompt{font-size:1.05rem;margin:0 0 8px;color:var(--muted)}
+.qtop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.qtop .prompt{margin:0;padding-top:8px}
+.qtop .primary{margin:0;flex:none;padding:10px 20px}
 .big{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:600;font-size:clamp(2.4rem,10vw,3.4rem);line-height:1.05;margin:0 0 8px}
 .res svg{width:100%;height:auto;max-width:560px;display:block;margin:0 auto}
 .opts{display:grid;gap:10px;margin-top:16px;grid-template-columns:1fr 1fr}
@@ -83,13 +86,20 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .opt.bad{border-color:var(--bad);background:var(--bad-bg)}
 .opt:disabled{cursor:default}
 @media (max-width:440px){.opts.rgrid{grid-template-columns:1fr}}
-.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:16px}
 .big .tc{display:block;font-size:.5em;color:var(--muted);font-weight:500}
-.field label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:4px}
-.field input{width:100%;font:inherit;font-size:1.2rem;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
 .primary{margin-top:16px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;padding:12px 22px;cursor:pointer}
 .primary:disabled{opacity:.45;cursor:default}
 .hint{color:var(--bad);font-size:.95rem;margin:8px 0 0}
+.lesson{margin:14px 0 0;border-radius:10px;padding:10px 14px;line-height:1.45}
+.lesson.ok{background:var(--ok-bg)}
+.lesson.bad{background:var(--bad-bg)}
+.lesson.tip{background:var(--tip-bg)}
+.examsign{margin:14px 0 0;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.4rem;font-weight:600}
+.more{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+.more[hidden]{display:none}
+.more h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.5rem;line-height:1.1;margin:0 0 8px}
+.more p{margin:0 0 6px}
+.opt.chosen{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
 .slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:8px;margin-top:8px}
 .slot{border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:8px 4px;font:inherit;font-size:.8rem;line-height:1.2;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
 .slot[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
@@ -99,18 +109,9 @@ h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font
 .pc{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px;font:inherit;font-size:.92rem;cursor:pointer;text-align:left}
 .pc small{color:var(--muted);margin-left:auto}
 .pc:hover:not(:disabled){border-color:var(--accent)}
-.feedback{margin-top:18px;border-radius:10px;padding:14px 16px}
-.feedback.ok{background:var(--ok-bg)}
-.feedback.bad{background:var(--bad-bg)}
-.feedback.tip{background:var(--tip-bg)}
-.cost{font-weight:600}
-.parts{list-style:none;padding:0;margin:8px 0 10px;display:grid;gap:6px}
-.parts li{display:flex;gap:8px;align-items:baseline;line-height:1.4}
 .pill{flex:none;font-size:.75rem;font-weight:700;padding:1px 8px;border-radius:999px;color:#fff;min-width:3.2em;text-align:center}
 .p-ok{background:var(--ok)}
 .p-bad{background:var(--bad)}
-.feedback h2{margin:0 0 4px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.7rem;line-height:1.1}
-.feedback p{margin:0 0 6px}
 .calc{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.3rem}
 .chips{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 0;padding:0;list-style:none;font-size:.95rem}
 .dir{margin-top:10px!important;font-size:.95rem;color:var(--muted)}
@@ -145,12 +146,17 @@ details[hidden]{display:none}
 .entry{margin-top:14px;display:grid;gap:12px}
 .eboxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
 .ebox{display:block;text-align:left;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:8px 12px;font:inherit;cursor:pointer}
-.ebox.solo{cursor:default}
 .ebox.active{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.ebox.ok,.slot.ok{border-color:var(--ok);background:var(--ok-bg)}
+.ebox.bad,.slot.bad{border-color:var(--bad);background:var(--bad-bg)}
+.ebox s,.slot s{color:var(--muted)}
+.ebox .right{color:var(--ink)}
+.entry .chiprow{gap:8px}
+.entry .chip{font-size:1.05rem;padding:8px 14px}
+p.epre{margin:0}
 .elab{display:block;font-size:.8rem;color:var(--muted)}
 .eval{display:block;font-family:"Share Tech Mono",ui-monospace,Menlo,Consolas,monospace;font-size:1.6rem;line-height:1.3;min-height:1.3em;white-space:nowrap;overflow-x:auto}
 .eunit{color:var(--muted)}
-.emul{color:var(--accent);margin-left:12px}
 .epre{display:block;color:var(--muted);font-size:.95rem;min-height:1.4em}
 .caret{display:inline-block;width:2px;height:1em;background:var(--accent);vertical-align:-3px;margin-left:1px}
 @media (prefers-reduced-motion:no-preference){.caret{animation:blink 1s steps(1) infinite}@keyframes blink{50%{opacity:0}}}
@@ -164,7 +170,10 @@ details[hidden]{display:none}
 .opts.mc{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
 .opts.mc .opt{font-size:1.3rem;min-height:50px}
 .opt.bc{display:flex;align-items:center;justify-content:center;gap:8px;font-size:1.15rem}
-.grp-lbl{font-size:.85rem;color:var(--muted);margin:0 0 6px}
+.opt.bc{flex-wrap:wrap}
+.ann{display:block;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:.85rem;color:var(--muted);margin-top:4px;line-height:1.3}
+.opt.bc .ann{flex-basis:100%;margin-top:0}
+.ann .sw{width:14px;height:14px;vertical-align:-2px;margin-right:2px}
 .chiprow{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:6px 12px;font:inherit;font-size:.95rem;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -207,7 +216,9 @@ th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-
 th{color:var(--muted);font-weight:500}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){
-  .feedback{animation:pop .18s ease-out}
+  .res.turn svg{animation:turn .45s ease-out}
+  @keyframes turn{from{transform:scaleX(-1)}}
+  .lesson,.examsign{animation:pop .18s ease-out}
   @keyframes pop{from{transform:translateY(4px);opacity:0}}
 }
 </style>
@@ -250,19 +261,20 @@ th{color:var(--muted);font-weight:500}
 
   <p class="score" id="score"></p>
   <section class="card" id="q" aria-live="polite"></section>
+  <section class="more" id="more" aria-label="Allt om motståndet" hidden></section>
 
   <details>
     <summary>Om nivåerna</summary>
-    <p class="gnote">Nivåerna heter efter hur långt du kommit, från Nykomling till Stormästare. Du börjar som Nykomling, och <b>5 rätt i rad</b> när du spelar låser upp nästa nivå. Eldprovet är alltid öppet.</p>
+    <p class="gnote">Nivåerna heter efter hur långt du kommit, från Nykomling till Stormästare. Varje nivå lär ut en ny sak, och det mesta du får gäller just den. <b>5 rätt i rad</b> på det nya låser upp nästa nivå. Frågor om det du lärt dig tidigare räknas inte upp, men ett fel på vad som helst nollställer sviten. Eldprovet är alltid öppet.</p>
     <ul class="lvlist">
       <li><b>Nykomling:</b> läsriktning. Du avgör om motståndet ska läsas från vänster eller höger. Det finns alltid en tydlig ledtråd, och tipset kostar inget.</li>
-      <li><b>Lärling:</b> resistansen i ohm, med fyra svarsalternativ och standardutseende. Frågorna gäller ibland hela värdet, ibland bara siffrorna och ibland bara multiplikatorn.</li>
-      <li><b>Gesäll:</b> tolerans. Varje fråga gäller resistansen eller toleransen, och motstånden ser olika ut.</li>
-      <li><b>Mästare:</b> temperaturkoefficient, det sjätte bandet. Sexbandsmotstånd dyker upp oftare.</li>
-      <li><b>Stormästare:</b> allt på en gång. Du knappar in värden, bygger band för band ur en blandad palett och avgör vilken E-serie ett värde hör till. Ungefär vart tionde motstånd är inte standard.</li>
-      <li><b>Eldprovet:</b> 20 frågor som testar allt, utan tips och utan färdiga värden. Motstånd kan sitta vända, och riktningsfrågorna är de kluriga sorterna där bara standardvärden, guld och silver eller en multimeter avgör. Du får en poäng för varje del du klarar, och en färdighet räknas som klarad vid minst hälften rätt. Till sist får du ett utlåtande om vilken nivå du behärskar.</li>
+      <li><b>Lärling:</b> resistansen i ohm, med fyra svarsalternativ. Frågorna gäller ibland hela värdet, ibland bara siffrorna och ibland bara multiplikatorn. Ibland kommer en riktningsfråga från Nykomling.</li>
+      <li><b>Gesäll:</b> tolerans. Resistansen frågas fortfarande som flerval, motstånden ser olika ut, och nu kan de sitta vända.</li>
+      <li><b>Mästare:</b> temperaturkoefficient, det sjätte bandet. Toleransen kommer som flerval, och resistansen knappar du in själv eller bygger ur paletten.</li>
+      <li><b>Stormästare:</b> allt i svår variant. Du knappar in hela värden och bygger motstånd band för band. Nytt är E-serierna, som avgör om ett värde är standard. Ungefär vart tionde motstånd är inte standard, och här räknas alla frågor.</li>
+      <li><b>Eldprovet:</b> 20 frågor som testar allt, utan tips och utan färdiga värden. Motstånd kan sitta vända, och riktningsfrågorna är de kluriga sorterna där bara standardvärden, guld och silver eller en multimeter avgör. Efter varje fråga ser du bara dina poäng. Du får en poäng för varje del du klarar, och en färdighet räknas som klarad vid minst hälften rätt. Till sist får du ett utlåtande om vilken nivå du behärskar.</li>
     </ul>
-    <p class="gnote">Motstånden har 4, 5 eller 6 band, blandat. På de lägre nivåerna frågas bara det du ska kunna där, men facit visar alltid vad alla band betyder. Under Läge kan du från Lärling och uppåt välja Öva och träna på en del i taget. Tips finns bara på den nivå där du lär dig något nytt, och på nästa nivå förväntas du kunna det. Rätt svar med tips räknas, men sviten står still.</p>
+    <p class="gnote">Det du lärde dig på nivån närmast under kommer som flerval. Det du lärde dig tidigare än så kommer i svår variant: du knappar in värdet, väljer ur hela listan eller bygger ur paletten. Under Läge kan du från Lärling och uppåt välja Öva och träna på en del i taget, i samma format som på nivån. Tips finns bara för det nya på varje nivå. Rätt svar med tips räknas, men sviten står still.</p>
   </details>
 
   <details class="guide">
@@ -379,13 +391,10 @@ const GEN = {
   tc:['brown','brown','red','red','orange','yellow','blue','violet']
 };
 const BODIES = ['#dcc596','#d4b07f','#e8bda6','#9cc3e6','#5f93d6','#a9d3c0'];
+// varied: motstånden ser olika ut (kroppsfärg, form, nyans)
 const LV = {
-  intro:{choice:true, varied:true, flip:false},
-  easy:{choice:true, varied:false, flip:false},
-  medium:{choice:true, varied:true, flip:false},
-  tc:{choice:true, varied:true, flip:false},
-  hard:{choice:false, varied:true, flip:false},
-  ultra:{choice:false, varied:true, flip:true}
+  intro:{varied:true}, easy:{varied:false}, medium:{varied:true},
+  tc:{varied:true}, hard:{varied:true}, ultra:{varied:true}
 };
 const LV_KEYS = Object.keys(LV);
 const E24 = [10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91];
@@ -394,8 +403,6 @@ const E96 = [100,102,105,107,110,113,115,118,121,124,127,130,133,137,140,143,147
 // Öva: välj en del och öva på den på nivåns sätt (Lärling, Gesäll, Mästare, Stormästare)
 const partActive = () => S.mode === 'practice' && ['easy','medium','tc','hard'].includes(S.level);
 const partsFor = lv => lv === 'easy' ? ['v','d','x'] : lv === 'medium' ? ['v','t'] : lv === 'tc' ? ['v','t','k'] : lv === 'hard' ? ['v','t','k','e'] : [];
-// focus som gäller i Stormästare-frågor (null = hela svaret)
-const xFocus = () => partActive() && S.level === 'hard' && S.part !== 'e' ? S.part : null;
 function syncPartAvail(){
   document.getElementById('partSeg').hidden = !partActive();
   const avail = partsFor(S.level);
@@ -403,7 +410,7 @@ function syncPartAvail(){
   if (avail.length && !avail.includes(S.part)) S.part = 'v';
   document.querySelectorAll('[data-part]').forEach(x => x.setAttribute('aria-pressed', x.dataset.part === S.part));
 }
-const S = {level:'intro',kind:'mix',right:0,total:0,streak:0,best:0,q:null,n:4,type:null,answered:false,opts:null,optStyles:null,build:null,slot:0,style:null,eCase:false};
+const S = {level:'intro',right:0,total:0,streak:0,best:0,q:null,n:4,type:null,answered:false,build:null,slot:0,style:null,eCase:false};
 try {
   S.best = +localStorage.getItem('fargkoden-best') || 0;
   const lv = localStorage.getItem('fargkoden-level');
@@ -425,6 +432,48 @@ const ORDER = ['intro','easy','medium','tc','hard','ultra'];
 const lvName = lv => document.querySelector(`[data-level="${lv}"] span`).textContent;
 const unlocked = lv => { if (lv === 'ultra') return true; const i = ORDER.indexOf(lv); return i <= 0 || (S.lvBest[ORDER[i - 1]] || 0) >= UNLOCK_AT; };
 const cleared = lv => lv !== 'ultra' && (S.lvBest[lv] || 0) >= UNLOCK_AT;
+
+// Nivåmodell: varje nivå lär ut en ny färdighet. Förra nivåns färdighet kommer som flerval,
+// äldre färdigheter i svår variant (knappsats, hela listan, palett, vända motstånd).
+const SKILL_ORDER = ['dir','v','t','k','e'];
+const NEW_SKILL = {intro:'dir', easy:'v', medium:'t', tc:'k', hard:'e'};
+const NEW_SHARE = 0.6;
+// 'new', 'mc', 'hard' eller null (färdigheten kommer först senare)
+function skillFormat(level, skill){
+  if (level === 'ultra') return 'hard';
+  // Stormästare: allt i svår variant utom E-serien, som är nivåns nya färdighet
+  if (level === 'hard') return skill === 'e' ? 'new' : 'hard';
+  const li = ORDER.indexOf(level), si = SKILL_ORDER.indexOf(skill);
+  return si > li ? null : si === li ? 'new' : si === li - 1 ? 'mc' : 'hard';
+}
+// Vända motstånd i läs- och byggfrågor när läsriktningen är två nivåer gammal
+const flipOK = () => skillFormat(S.level, 'dir') === 'hard';
+// Bara rätt på det nya räknar upp. Fel på vad som helst nollställer. Rätt med tips står still.
+const nextStreak = (streak, ok, usedHint, counts) => !ok ? 0 : counts && !usedHint ? streak + 1 : streak;
+// Vad nästa fråga gäller: färdighet, del, format och frågetyp
+function planQuestion(){
+  const lv = S.level;
+  if (lv === 'ultra') return {skill:'all', focus:'all', fmt:'hard', type:S.examItem.t, counts:false};
+  if (partActive()) {
+    const skill = ['d','x'].includes(S.part) ? 'v' : S.part;
+    const fmt = skillFormat(lv, skill) === 'hard' ? 'hard' : 'mc';
+    return {skill, focus: skill === 'e' ? null : S.part, fmt, type: skill === 'e' ? 'series' : rnd(['read','build']), counts:true};
+  }
+  if (lv === 'intro') return {skill:'dir', focus:null, fmt:'mc', type:'dir', counts:true};
+  if (lv === 'hard') return Math.random() < 0.4
+    ? {skill:'e', focus:null, fmt:'mc', type:'series', counts:true}
+    : {skill:'all', focus:'all', fmt:'hard', type:rnd(['read','build']), counts:true};
+  const fresh = NEW_SKILL[lv];
+  // Riktning i svår variant är ingen egen fråga, den syns som vända motstånd
+  const old = SKILL_ORDER.filter(s => s !== fresh && (skillFormat(lv, s) === 'mc' || (skillFormat(lv, s) === 'hard' && s !== 'dir')));
+  const skill = !old.length || Math.random() < NEW_SHARE ? fresh : rnd(old);
+  const fmt = skillFormat(lv, skill) === 'hard' ? 'hard' : 'mc';
+  if (skill === 'dir') return {skill, focus:null, fmt, type:'dir', counts:false};
+  const focus = skill === 'v' && lv === 'easy' ? rnd(['v','d','x']) : skill;
+  return {skill, focus, fmt, type:rnd(['read','build']), counts: skill === fresh};
+}
+// Svår variant som gäller en del (Mästare: resistans, Öva på Stormästare), annars null
+const hardFocus = () => S.plan && S.plan.fmt === 'hard' && S.focus !== 'all' ? S.focus : null;
 function syncLocks(){
   document.querySelectorAll('[data-level]').forEach(b => {
     const lv = b.dataset.level, open = unlocked(lv);
@@ -672,6 +721,8 @@ function directionText(b, st){
   return t.join(' ');
 }
 
+// Det som sviten räknar på varje nivå
+const SKILL_WORD = {intro:'läsriktning', easy:'resistans', medium:'tolerans', tc:'temperaturkoefficient', hard:'allt'};
 function updateScore(){
   let tail = '';
   if (S.level === 'ultra') {
@@ -681,7 +732,7 @@ function updateScore(){
   else {
     const nx = ORDER[ORDER.indexOf(S.level) + 1];
     tail = nx === 'ultra' ? '<span>Redo? Testa dig i Eldprovet</span>'
-      : !unlocked(nx) ? `<span><b>${Math.min(S.streak, UNLOCK_AT)}</b> av ${UNLOCK_AT} i rad till ${lvName(nx)}</span>`
+      : !unlocked(nx) ? `<span><b>${Math.min(S.streak, UNLOCK_AT)}</b> av ${UNLOCK_AT} i rad på ${SKILL_WORD[S.level]} till ${lvName(nx)}</span>`
       : `<span>${lvName(nx)} är upplåst</span>`;
   }
   document.getElementById('score').innerHTML =
@@ -702,8 +753,10 @@ function examQueue(){
   return shuffle(q);
 }
 function startExam(){ S.exam = {queue: examQueue(), i: 0, score: {}, done: false}; S.streak = 0; next(); }
+const examTotals = () => Object.values(S.exam.score).reduce((a, x) => ({ok: a.ok + x.ok, n: a.n + x.n}), {ok:0, n:0});
 function recordExam(ok){
   const sc = S.exam.score, add = (k, g) => { sc[k] = sc[k] || {ok:0, n:0}; sc[k].n++; if (g) sc[k].ok++; };
+  const before = examTotals();
   if (S.type === 'dir') add(S.examItem.hard ? 'dirx' : 'dir', ok);
   else if (S.type === 'series') add('e', ok);
   else {
@@ -712,6 +765,8 @@ function recordExam(ok){
     add('t', g('Tolerans'));
     if (S.n === 6) add('k', g('Temperaturkoefficient'));
   }
+  const after = examTotals();
+  S.examLast = {ok: after.ok - before.ok, n: after.n - before.n};
   S.exam.i++;
   if (S.exam.i >= EXAM_N) S.exam.done = true;
 }
@@ -750,6 +805,7 @@ function showExamCard(){
       ${goLv && unlocked(goLv) ? `<button class="primary" id="examGo" data-go="${goLv}">Öva som ${lvName(goLv)}</button>` : ''}</div></div>`;
   }
   q.innerHTML = h;
+  document.getElementById('more').hidden = true;
   updateScore();
 }
 function next(){
@@ -757,22 +813,27 @@ function next(){
   syncPartAvail();
   if (S.level === 'ultra' && (!S.exam || S.exam.done)) { S.answered = true; S.type = 'exam'; showExamCard(); return; }
   S.examItem = S.level === 'ultra' ? S.exam.queue[S.exam.i] : null;
-  const n = S.examItem && S.examItem.n ? S.examItem.n : partActive() && S.part === 'k' ? 6 : pickN(), L = LV[S.level];
+  S.plan = planQuestion();
+  S.type = S.plan.type; S.focus = S.plan.focus;
+  const n = S.examItem && S.examItem.n ? S.examItem.n : S.focus === 'k' ? 6 : pickN(), L = LV[S.level];
   S.n = n; S.q = genBands(n);
-  const kinds = ['read','build'].concat(seriesOK() ? ['series'] : [], S.level === 'ultra' ? ['dir'] : []);
-  S.type = S.examItem ? S.examItem.t : partActive() ? (S.part === 'e' ? 'series' : rnd(['read','build'])) : S.kind === 'mix' ? rnd(kinds) : S.kind;
-  S.answered = false; S.opts = null; S.optStyles = null;
-  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.palOrder = {}; S.palAll = null; S.entry = newEntry(); S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.ambig = false; S.bflip = false; S.vText = valueNotation(valueOf(S.q)); S.focus = partActive() && S.part !== 'e' ? S.part : S.level === 'easy' ? rnd(['v','d','x']) : S.level === 'tc' && n === 6 ? rnd(['v','t','k','k']) : rnd(['v','t']);
+  S.answered = false; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.ambig = false; S.bflip = false;
+  S.bpick = null; S.pickDir = null; S.pickSr = null; S.ok = null;
+  S.usedHint = false; S.hintsUsed = new Set(); S.hintOut = ''; S.palAll = null; S.entry = newEntry();
+  S.vText = valueNotation(valueOf(S.q));
+  S.flipQ = flipOK() && S.type !== 'dir' && Math.random() < 0.5;
   S.build = Array(n).fill(null); S.slot = 0; S.eCase = false;
   if (S.type === 'series') {
     S.sr = genSeriesRead();
     S.ser = {v: S.sr.v, m3: S.sr.m3, set: seriesOf(S.sr.m3)};
   }
-  if (S.level === 'ultra' && S.type === 'build') S.bflip = Math.random() < 0.5;
-  const xf = xFocus();
-  if (xf && S.type === 'build') {
-    const k0 = nd(S.q), ask = xf === 'v' ? [...Array(k0 + 1).keys()] : xf === 't' ? [k0 + 1] : [5];
-    S.build = S.q.map((c, i) => ask.includes(i) ? null : c);
+  S.bflip = S.type === 'build' && S.plan.fmt === 'hard' && S.flipQ;
+  const hf = hardFocus();
+  if (hf && S.type === 'build') {
+    // ask är platser i motståndet. Sitter det vänt byggs det baklänges, så platserna speglas.
+    const k0 = nd(S.q), ask0 = hf === 'v' ? [...Array(k0 + 1).keys()] : hf === 't' ? [k0 + 1] : [5];
+    const ask = S.bflip ? ask0.map(a => n - 1 - a).sort((a, b) => a - b) : ask0;
+    S.build = S.build.map((_, i) => ask.includes(i) ? null : truthAt(i));
     S.slot = ask[0]; S.askSlots = ask;
   } else S.askSlots = null;
   if (S.type === 'dir') {
@@ -795,19 +856,20 @@ function next(){
     }
     S.style.flip = flip;
   } else {
-    S.style = L.varied ? variedStyle(S.q, L.flip && S.type === 'read' && Math.random() < 0.5) : stdStyle(n);
+    const fl = S.type === 'read' && S.flipQ;
+    S.style = L.varied ? variedStyle(S.q, fl) : {...stdStyle(n), flip: fl};
   }
   render();
+  // Ingen automatisk skroll efter svar. Har man skrollat ner till Allt om motståndet tas kortet tillbaka i bild.
+  const card = document.getElementById('q');
+  if (card.getBoundingClientRect().top < 0 && card.scrollIntoView) card.scrollIntoView({block:'start', behavior: reduceMotion() ? 'auto' : 'smooth'});
 }
 
-// Seriefrågor finns bara på Stormästare och i Eldprovet
-const seriesOK = () => S.level === 'hard' || S.level === 'ultra';
 // Två lägen: Spela (allt blandat, låser upp nivåer) och Öva (en del i taget).
 // Öva finns från Lärling till Stormästare. Nykomling har bara en sorts fråga, och Eldprovet har ett eget upplägg.
 const practiceOK = () => ['easy','medium','tc','hard'].includes(S.level);
 function syncModes(){
   if (!practiceOK() && S.mode === 'practice') S.mode = 'play';
-  S.kind = S.level === 'intro' ? 'dir' : 'mix';
   // Färgkod och standardvärden är hjälp som bara visas när man övar
   document.querySelectorAll('[data-mode]').forEach(b => {
     b.setAttribute('aria-pressed', b.dataset.mode === S.mode);
@@ -835,76 +897,80 @@ function slotLabels(n){
   if (n === 6) l.push('Temp.koeff.');
   return l;
 }
-function slotKeys(n, i){
-  const r = roleOf(n, i);
-  return r === 'digit' ? (i === 0 ? BAND1 : DIG) : r === 'mult' ? MO : r === 'tol' ? TOL : TCS;
-}
 
+// Huvudknappen: samma plats i varje fråga. Svara där svaret måste bekräftas, annars Nästa (grå tills man svarat).
+const needsSubmit = () => S.type === 'read' && S.plan.fmt === 'hard';
+function entryReady(){
+  const E = S.entry;
+  if (S.level === 'ultra') return E.v !== '' && E.t !== '' && (S.n !== 6 || E.k !== '');
+  return entryFields().every(fieldFilled);
+}
+function mainBtnHTML(){
+  if (S.answered) return `<button class="primary" id="main">${S.level === 'ultra' && S.exam && S.exam.done ? 'Se resultatet' : 'Nästa'}</button>`;
+  if (needsSubmit()) return `<button class="primary" id="main"${entryReady() ? '' : ' disabled'}>Svara</button>`;
+  return '<button class="primary" id="main" disabled>Nästa</button>';
+}
+// Bygg med palett: rätt färg för plats i som den byggs (Band 1 är toleransänden när motståndet sitter vänt)
+const truthAt = i => S.bflip ? S.q[S.n - 1 - i] : S.q[i];
+// Frågan med huvudknappen uppe till höger, så att knappen står still när facit dyker upp
+const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p>${mainBtnHTML()}</div>`;
 function render(){
   updateScore();
-  const q = document.getElementById('q'), L = LV[S.level], n = S.n;
+  const q = document.getElementById('q'), n = S.n;
   const v = valueOf(S.q), t = tolOf(S.q), tc = tcOf(S.q);
   let h = '';
   if (S.type === 'series') {
     const full = S.level === 'hard' ? `<p class="big">${fmtVal(S.sr.v)} ${fmtTol(bandsTol(S.sr.bands))}</p>` : '';
-    h += `<p class="prompt">Vilken E-serie hör motståndet hemma i?</p>${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
+    h += `${topHTML('Vilken E-serie hör motståndet hemma i?')}${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
 ${hintsHTML()}
-      <div class="opts">${SER_OPTS.map(k => `<button class="opt" data-sr="${k}">${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
+      <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
-    h += `<p class="prompt">Från vilket håll ska motståndet läsas?</p><div class="res">${svg(S.q,{style:S.style})}</div>${hintsHTML()}
-      <div class="opts"><button class="opt" data-dir="left">Från vänster</button><button class="opt" data-dir="right">Från höger</button>${S.level === 'ultra' ? '<button class="opt wide" data-dir="none">Går ej att avgöra utan multimeter</button>' : ''}</div>`;
+    const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left';
+    const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
+    const turn = S.answered && S.level !== 'ultra' && S.style.flip && !S.ambig;
+    h += `${topHTML('Från vilket håll ska motståndet läsas?')}<div class="res${turn ? ' turn' : ''}">${svg(S.q, {style: turn ? {...S.style, flip:false} : S.style})}</div>${hintsHTML()}
+      <div class="opts">${dBtn('left', 'Från vänster')}${dBtn('right', 'Från höger')}${S.level === 'ultra' ? dBtn('none', 'Går ej att avgöra utan multimeter', ' wide') : ''}</div>`;
   } else if (S.type === 'read') {
-    const oneQ = S.level === 'medium' || S.level === 'tc' || (S.level === 'easy' && S.focus !== 'v');
-    const fq = oneQ ? S.focus : xFocus();
-    const rq = fq ? ({v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?', d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?'})[fq] : 'Vilket värde har motståndet?';
-    h += `<p class="prompt">${rq}</p><div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>${hintsHTML()}`;
-    if (oneQ) {
-      h += mcHTML();
-      if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet är temperaturkoefficienten. Den behöver du inte kunna på den här nivån.</p>';
-    } else if (L.choice) {
-      // Lärling: bara resistansen i alternativen, alla med olika värden
-      if (!S.opts) S.opts = shuffle([S.q, ...valueDistractors(S.q)]);
-      h += `<div class="opts">${S.opts.map((o,i) =>
-        `<button class="opt" data-opt="${i}">${fmtVal(valueOf(o))}</button>`).join('')}</div>`;
-    } else {
-      h += entryHTML();
-    }
+    const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
+      d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?', all:'Vilket värde har motståndet?'}[S.focus];
+    h += `${topHTML(rq)}<div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>${hintsHTML()}`;
+    h += S.plan.fmt !== 'hard' ? mcHTML() : S.level === 'ultra' ? entryHTML() : fieldsHTML();
+    if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet är temperaturkoefficienten. Den behöver du inte kunna på den här nivån.</p>';
   } else {
-    const oneB = S.level === 'medium' || S.level === 'tc' || (S.level === 'easy' && S.focus !== 'v');
-    const bf = oneB ? S.focus : xFocus();
-    const bq = bf === 't' ? 'Vilket toleransband ger' : bf === 'k' ? 'Vilket sjätte band ger' : bf === 'd' ? 'Vilka band ger siffrorna' : bf === 'x' ? 'Vilket band ger multiplikatorn' : 'Vilket motstånd har värdet';
-    const bigTxt = S.level === 'ultra' ? `${S.vText} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}` : null;
-    h += `<p class="prompt">${bq}</p><p class="big">${bigTxt ? bigTxt : S.level === 'easy' && S.focus === 'd' ? digitStr(S.q).split('').join(' ') : S.level === 'easy' && S.focus === 'x' ? fmtMult(C[S.q[nd(S.q)]].m) : S.level === 'easy' ? fmtVal(v) : bf && !oneB ? ({v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc)})[bf] : oneB ? ({v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc)})[S.focus] : `${fmtVal(v)} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`}</p>${hintsHTML()}`;
-    if (oneB) {
+    const bq = {v:'Vilket motstånd har värdet', all:'Vilket motstånd har värdet', t:'Vilket toleransband ger', k:'Vilket sjätte band ger',
+      d:'Vilka band ger siffrorna', x:'Vilket band ger multiplikatorn'}[S.focus];
+    const big = S.level === 'ultra' ? `${S.vText} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`
+      : {v:fmtVal(v), t:fmtTol(t), k:fmtTc(tc), d:digitStr(S.q).split('').join(' '), x:fmtMult(C[S.q[nd(S.q)]].m),
+         all:`${fmtVal(v)} ${fmtTol(t)}${tc != null ? `<span class="tc">${fmtTc(tc)}</span>` : ''}`}[S.focus];
+    h += `${topHTML(bq)}<p class="big">${big}</p>${hintsHTML()}`;
+    if (S.plan.fmt !== 'hard') {
       h += bmcHTML();
-    } else if (L.choice) {
-      if (!S.opts) {
-        // Lärling: bara ohm i frågan, så alternativen måste skilja sig i värde
-        S.opts = shuffle([S.q, ...(S.level === 'easy' ? valueDistractors(S.q) : distractors(S.q))]);
-        S.optStyles = S.opts.map(o => o === S.q ? S.style : (L.varied ? variedStyle(o, false) : stdStyle(n)));
-      }
-      h += `<div class="opts rgrid">${S.opts.map((o,i) =>
-        `<button class="opt r" data-opt="${i}">${svg(o,{style:S.optStyles[i],label:'Motstånd: '+colorNames(o)})}</button>`).join('')}</div>`;
     } else {
       // Eldprovet: ibland sitter motståndet vänt, och då byggs det baklänges (Band 1 är toleransänden).
       // Bredden och mellanrummet på de tomma banden visar alltid åt vilket håll det sitter.
       const read = readBuild(), st = {...stdStyle(n), flip: !!S.bflip};
       h += `<div class="res">${svg(read,{style: st, active: S.bflip ? n - 1 - S.slot : S.slot, label:'Ditt motstånd'})}</div>`;
-      const labels = S.level === 'ultra' ? Array.from({length:n}, (_, i) => 'Band ' + (i + 1)) : slotLabels(n);
+      const labels = S.level === 'ultra' || S.bflip ? Array.from({length:n}, (_, i) => 'Band ' + (i + 1)) : slotLabels(n);
       h += `<div class="slots">${labels.map((l,i) => {
         const k = S.build[i];
         const locked = S.askSlots && !S.askSlots.includes(i);
-        return `<button class="slot" data-slot="${i}" aria-pressed="${S.slot===i}"${locked ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}<span>${k?C[k].n:'Välj'}</span></button>`;
+        const mark = S.answered && S.level !== 'ultra' && !locked ? (k === truthAt(i) ? ' ok' : ' bad') : '';
+        const val = mark === ' bad'
+          ? `<span><s>${C[k].n}</s> <span class="sw" style="${swStyle(truthAt(i))}"></span>${C[truthAt(i)].n}</span>`
+          : `<span>${k ? C[k].n : 'Välj'}</span>`;
+        return `<button class="slot${mark}" data-slot="${i}" aria-pressed="${S.slot===i && !S.answered}"${locked || S.answered ? ' disabled' : ''}><span class="sw ${k?'':'empty'}" ${k?`style="${swStyle(k)}"`:''}></span>${l}${val}</button>`;
       }).join('')}</div>`;
       // Stormästare och Eldprovet: alla tolv färger i en blandad ordning som ligger still under hela frågan.
       // Ingen hjälp med vilka färger som passar bandet. Svaret rättas när sista bandet är valt.
       const keys = S.palAll ||= shuffle(DIG.concat(['gold','silver']));
       h += `<div class="palette">${keys.map(k =>
-        `<button class="pc" data-color="${k}"><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
+        `<button class="pc" data-color="${k}"${disAttr()}><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
     }
   }
-  h += `<div id="fb"></div>`;
+  h += lessonHTML();
   q.innerHTML = h;
+  const more = document.getElementById('more');
+  more.innerHTML = moreHTML(); more.hidden = !more.innerHTML;
 }
 
 function parseVal(s){
@@ -921,8 +987,9 @@ const parseTc = s => parseFloat(s.toLowerCase().replace(/ppm|\/k|\s/g,'').replac
 const close = (a,b) => Math.abs(a-b) < 1e-6 * Math.max(1, Math.abs(b));
 
 function finish(ok){
-  S.answered = true; S.total++;
-  if (ok) { S.right++; if (!S.usedHint) S.streak++; } else S.streak = 0;
+  S.answered = true; S.ok = ok; S.total++;
+  if (ok) S.right++;
+  S.streak = nextStreak(S.streak, ok, S.usedHint, S.plan.counts);
   if (S.streak > S.best) { S.best = S.streak; save('fargkoden-best', S.best); }
   const prevLv = S.lvBest[S.level] || 0;
   S.unlockedNow = null;
@@ -932,55 +999,72 @@ function finish(ok){
     if (prevLv < UNLOCK_AT && S.streak >= UNLOCK_AT && nx && nx !== 'ultra') S.unlockedNow = nx;
   }
   if (S.level === 'ultra' && S.exam && !S.exam.done) recordExam(ok);
-  updateScore();
-  const q = document.getElementById('q'), L = LV[S.level];
-  q.querySelectorAll('button, input').forEach(el => el.disabled = true);
-  if (S.type === 'series') { srFeedback(ok); afterFeedback(); return; }
-  const b = S.q, n = b.length, k = nd(b), v = valueOf(b), t = tolOf(b), tc = tcOf(b);
-  const chips = b.map((c,i) => `<li><span class="sw" style="${swStyle(c)}"></span>${C[c].n} ${bandDetail(c, roleOf(n,i))}</li>`).join('');
-  const digits = b.slice(0, k).map(c => C[c].d).join('');
-  document.getElementById('fb').innerHTML = `<div class="feedback ${fbClass(ok)}" role="status">
-    <h2>${fbHead(ok)}</h2>
-    ${S.type === 'dir' && S.ambig ? `<p>Det går inte att avgöra utan multimeter. Motståndet kan vara ${fmtAll(b)} eller ${fmtAll(b.slice().reverse())}.</p>`
-      : S.type === 'dir' ? `<p>Det läses från ${S.style.flip ? 'höger' : 'vänster'} och är ${fmtAll(b)}.</p>`
-      : ((S.type === 'read' || S.type === 'build') && S.level === 'easy') ? easyFull(ok, b)
-      : ok ? '' : `<p>Rätt svar är ${fmtAll(b)}.</p>`}
-    ${!ok && S.parts ? partsHTML(S.parts) : ''}
-    ${S.level === 'tc' && S.n === 6 ? `<p class="dir">${tcFact(b)}</p>` : ''}
-    ${S.type === 'build' && S.bflip && !ok ? (S.build.join() === b.join()
-      ? '<p><b>Rätt färger, men åt fel håll.</b> Motståndet satt vänt: det breda toleransbandet satt till vänster, så Band 1 var slutet. Du byggde det som om det satt rättvänt.</p>'
-      : '<p>Motståndet satt vänt: det breda toleransbandet satt till vänster, så Band 1 var slutet.</p>') : ''}
-    ${(!ok && S.type==='build' && !L.choice && bandsValid(readBuild())) ? `<p>Ditt motstånd är ogiltigt: ${bandsValid(readBuild())}.</p>` : ''}
-    ${(!ok && S.type==='build' && (!L.choice || S.level === 'medium')) ? `<div class="res">${svg(b,{label:'Rätt motstånd: '+colorNames(b)})}</div>` : ''}
-    ${(S.style.flip && S.type !== 'build' && !S.ambig) ? `<p>Rättvänt ser det ut så här:</p><div class="res">${svg(b,{style:{...S.style,flip:false},label:'Rättvänt motstånd: '+colorNames(b)})}</div>` : ''}
-    ${S.ambig ? meterFB(v, t, `Med en multimeter avgör du det. Visar den något i stil med det här är det ${fmtAll(b)}:`) : meterFB(v, t)}
-    ${tipCost(ok)}
-    ${S.ambig ? '' : `<p class="calc">${digits} ${fmtMult(C[b[k]].m)} = ${fmtVal(v)}, ${fmtTol(t)}${tc != null ? ', ' + fmtTc(tc) : ''}</p>
-    <ul class="chips">${chips}</ul>`}
-    ${S.type !== 'series' && !S.ambig ? `<p class="dir">${stdInfo(b)}</p>` : ''}
-    ${((L.varied && S.type==='read') || S.type==='dir') ? `<p class="dir">${directionText(b, S.style)}</p>` : ''}
-    <button class="primary" id="next">Nästa fråga</button></div>`;
-  showFeedback();
+  render();
+  document.getElementById('main').focus({preventScroll:true});
   afterFeedback();
 }
 const fbClass = ok => !ok ? 'bad' : S.usedHint ? 'tip' : 'ok';
-const fbHead = ok => !ok ? 'Inte riktigt' : S.usedHint ? 'Rätt, men med tips' : 'Rätt!';
-const tipCost = ok => ok && S.usedHint ? `<p class="cost">Tipset kostade: sviten ökar inte och står kvar på ${S.streak}.</p>` : '';
-function showFeedback(){
-  const box = document.querySelector('#fb .feedback');
-  if (!box) return;
-  if (box.scrollIntoView) box.scrollIntoView({block: box.offsetHeight > innerHeight * 0.9 ? 'start' : 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth'});
-  document.getElementById('next').focus({preventScroll:true});
+const fbHead = ok => !ok ? 'Inte riktigt.' : S.usedHint ? 'Rätt, men med tips.' : 'Rätt!';
+// En rad om det frågan lär ut
+function lessonText(){
+  // Färgen som adjektiv till ett band (ett band är rött, gult ...)
+  const NEUTER = {black:'svart', brown:'brunt', red:'rött', orange:'orange', yellow:'gult', green:'grönt', blue:'blått', violet:'violett', grey:'grått', white:'vitt', gold:'guld', silver:'silver'};
+  const b = S.q, k = nd(b), name = c => NEUTER[c] || C[c].n.toLowerCase();
+  if (S.type === 'dir') return directionText(b, S.style);
+  if (S.type === 'series') return seriesWhy();
+  const t = {
+    v: () => `${digitStr(b)} ${fmtMult(C[b[k]].m)} = ${fmtVal(valueOf(b))}.`,
+    d: () => `Sifferbanden (${b.slice(0, k).map(c => C[c].n.toLowerCase()).join(', ')}) ger ${digitStr(b).split('').join(' ')}.`,
+    x: () => `Multiplikatorbandet är ${name(b[k])}, alltså ${fmtMult(C[b[k]].m)}.`,
+    t: () => `Toleransbandet är ${name(b[k+1])}, alltså ${fmtTol(tolOf(b))}.`,
+    k: () => `Sjätte bandet är ${name(b[5])}, alltså ${fmtTc(tcOf(b))}.`,
+    all: () => `${digitStr(b)} ${fmtMult(C[b[k]].m)} = ${fmtAll(b)}.`
+  }[S.focus]();
+  const flipped = (S.type === 'read' && S.style.flip) || S.bflip ? ' Motståndet satt vänt, så det läses från höger.' : '';
+  const turned = S.bflip && !S.ok && S.build.join() === b.join() ? ' Du hade rätt färger men byggde åt fel håll: det breda toleransbandet satt till vänster, så Band 1 var slutet.' : '';
+  return t + flipped + turned;
+}
+function lessonHTML(){
+  if (!S.answered) return '';
+  // Eldprovet: inget facit, bara poängen
+  if (S.level === 'ultra') {
+    const L = S.examLast, T = examTotals();
+    return `<p class="examsign" role="status">${L.ok} av ${L.n} ${L.n === 1 ? 'del' : 'delar'} · totalt ${T.ok}/${T.n} poäng</p>`;
+  }
+  const cost = S.ok && S.usedHint ? ` Tipset kostade: sviten står kvar på ${S.streak}.` : '';
+  return `<p class="lesson ${fbClass(S.ok)}" role="status"><b>${fbHead(S.ok)}</b> ${lessonText()}${cost}</p>`;
+}
+// Allt om motståndet, under kortet
+function moreHTML(){
+  if (!S.answered || S.level === 'ultra') return '';
+  let h = '<h2>Allt om motståndet</h2>';
+  if (S.type === 'series') {
+    const r = S.sr, tol = bandsTol(r.bands);
+    return h + `<div class="res">${svg(r.bands, {style: styleFor(r.bands), label: 'Motstånd: ' + colorNames(r.bands)})}</div>
+      <p>Motståndet är ${colorNames(r.bands)}, alltså ${fmtVal(r.v)} ${fmtTol(tol)}${r.bands.length === 3 ? ' (tre band, inget toleransband)' : ''}.</p>
+      ${meterFB(r.v, tol)}
+      <p class="dir">Toleransen avgör serien: ±20 % E6, ±10 % E12, ±5 % E24, ±2 % E48, ±1 % E96. Sedan kollar du om värdet finns i den serien.</p>`;
+  }
+  const b = S.q, n = b.length, k = nd(b), v = valueOf(b), t = tolOf(b), tc = tcOf(b);
+  const chips = b.map((c,i) => `<li><span class="sw" style="${swStyle(c)}"></span>${C[c].n} ${bandDetail(c, roleOf(n,i))}</li>`).join('');
+  const st = S.type === 'build' ? stdStyle(n) : {...S.style, flip:false};
+  h += `<div class="res">${svg(b, {style: st, label: 'Motståndet rättvänt: ' + colorNames(b)})}</div>
+    <p class="calc">${digitStr(b)} ${fmtMult(C[b[k]].m)} = ${fmtVal(v)}, ${fmtTol(t)}${tc != null ? ', ' + fmtTc(tc) : ''}</p>
+    <ul class="chips">${chips}</ul>
+    ${meterFB(v, t)}
+    <p class="dir">${stdInfo(b)}</p>`;
+  if (n === 6) h += `<p class="dir">${tcFact(b)}</p>`;
+  if (S.type === 'read' && LV[S.level].varied) h += `<p class="dir">${directionText(b, S.style)}</p>`;
+  return h;
 }
 // Upplåst-dialog som berättar vad nästa nivå lär ut
 const LEARN = {
-  easy: 'Som Lärling läser du av resistansen. De första banden är siffror och bandet efter är multiplikatorn, alltså hur många nollor som ska till. Du övar på siffrorna och multiplikatorn var för sig och på hela värdet, och toleransen behöver du inte kunna än.',
-  medium: 'Som Gesäll lägger du till toleransen, det breda bandet i slutet som säger hur mycket värdet får avvika. Motstånden ser också olika ut, med olika kroppsfärger, former och nyanser, precis som i verkligheten.',
-  tc: 'Som Mästare lär du dig det sjätte bandet: temperaturkoefficienten i ppm/K, som säger hur mycket resistansen ändras per grad. Sexbandsmotstånd dyker upp oftare här.',
-  hard: 'Som Stormästare svarar du på allt på en gång. Du knappar in värden, bygger motstånd band för band ur en blandad palett och lär dig standardvärdena och E-serierna. Ungefär vart tionde motstånd är inte standard. När du känner dig redo väntar Eldprovet.'
+  easy: 'Som Lärling läser du av resistansen. De första banden är siffror och bandet efter är multiplikatorn, alltså hur många nollor som ska till. Du övar på siffrorna, multiplikatorn och hela värdet. Ibland kommer en riktningsfråga, men det är resistansfrågorna som för dig framåt.',
+  medium: 'Som Gesäll lär du dig toleransen, det breda bandet i slutet som säger hur mycket värdet får avvika. Resistansen kommer som flerval, motstånden ser olika ut och kan sitta vända. Det är toleransfrågorna som räknas, men ett fel på vad som helst nollställer sviten.',
+  tc: 'Som Mästare lär du dig det sjätte bandet: temperaturkoefficienten i ppm/K, som säger hur mycket resistansen ändras per grad. Toleransen kommer som flerval, och resistansen knappar du nu in själv eller bygger ur paletten.',
+  hard: 'Som Stormästare kommer allt i svår variant: du knappar in hela värden och bygger motstånd band för band ur en blandad palett. Nytt är standardvärdena och E-serierna. Här räknas alla frågor. När du känner dig redo väntar Eldprovet.'
 };
 function afterFeedback(){
-  if (S.level === 'ultra' && S.exam && S.exam.done) document.getElementById('next').textContent = 'Se resultatet';
   if (!S.unlockedNow) return;
   const lv = S.unlockedNow, dlg = document.getElementById('unlockDlg');
   document.getElementById('dlgTitle').textContent = `${lvName(lv)}`;
@@ -988,7 +1072,7 @@ function afterFeedback(){
   const go = document.getElementById('dlgGo');
   go.textContent = `Gå till ${lvName(lv)}`;
   go.onclick = () => { dlg.hidden = true; document.querySelector(`[data-level="${lv}"]`).click(); };
-  document.getElementById('dlgStay').onclick = () => { dlg.hidden = true; document.getElementById('next')?.focus({preventScroll:true}); };
+  document.getElementById('dlgStay').onclick = () => { dlg.hidden = true; document.getElementById('main')?.focus({preventScroll:true}); };
   dlg.hidden = false;
   go.focus();
 }
@@ -1008,30 +1092,15 @@ function answerRead(){
     if (isNaN(vIn)) return say('Skriv resistansen, t.ex. 470, 4,7k eller 4k7.');
     if (isNaN(tIn)) return say('Skriv toleransen i procent, t.ex. 5.');
     if (six && isNaN(kIn)) return say('Skriv temperaturkoefficienten, t.ex. 50.');
-  } else if (xFocus()) {
-    const xf = xFocus();
-    let ok, part;
-    if (xf === 'v') {
-      const d = parseFloat(E.v.replace(',', '.'));
-      if (isNaN(d)) return say('Skriv in siffrorna på knappsatsen.');
-      if (E.mult == null) return say('Välj en multiplikator.');
-      vIn = d * E.mult; ok = close(vIn, valueOf(S.q)); S.parts = compareValues(vIn, valueOf(S.q));
-    } else if (xf === 't') {
-      if (E.tol == null) return say('Välj en tolerans.');
-      ok = close(E.tol, tolOf(S.q)); S.parts = null;
-    } else {
-      if (E.tc == null) return say('Välj en temperaturkoefficient.');
-      ok = close(E.tc, tcOf(S.q)); S.parts = null;
-    }
-    hint.hidden = true;
-    return finish(ok);
   } else {
-    const d = parseFloat(E.v.replace(',', '.'));
-    if (isNaN(d)) return say('Skriv in siffrorna på knappsatsen.');
-    if (E.mult == null) return say('Välj en multiplikator.');
-    if (E.tol == null) return say('Välj en tolerans.');
-    if (six && E.tc == null) return say('Välj en temperaturkoefficient.');
-    vIn = d * E.mult; tIn = E.tol; kIn = E.tc;
+    const fs = entryFields();
+    if (!fs.every(fieldFilled)) return;
+    const ok = {}, vT = valueOf(S.q);
+    if (fs.includes('v')) { const [d, m] = compareValues(digitsIn() * E.mult, vT); ok.v = d.ok; ok.x = m.ok; }
+    if (fs.includes('t')) ok.t = close(E.tol, tolOf(S.q));
+    if (fs.includes('k')) ok.k = close(E.tc, tcOf(S.q));
+    S.fieldOk = ok;
+    return finish(fs.every(f => ok[f]));
   }
   hint.hidden = true;
   S.parts = compareValues(vIn, valueOf(S.q)).concat(
@@ -1045,36 +1114,60 @@ const MULTS = [0.01, 0.1, 1, 10, 100, 1e3, 1e4, 1e5, 1e6];
 const TOL_VALS = [10, 5, 2, 1, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01];
 const TC_VALS = [250, 100, 50, 25, 20, 15, 10, 5, 1];
 const newEntry = () => ({v:'', t:'', k:'', mult:null, tol:null, tc:null, field:'v'});
+// Eldprovet: resistans, tolerans och TK skrivs in fritt
 function entryHTML(){
-  const E = S.entry, ultra = S.level === 'ultra', six = S.n === 6;
-  const caret = f => (ultra ? E.field === f : f === 'v') ? '<span class="caret"></span>' : '';
+  const E = S.entry, six = S.n === 6;
+  const caret = f => E.field === f && !S.answered ? '<span class="caret"></span>' : '';
   const keys = ['7','8','9','4','5','6','1','2','3',',','0','⌫'];
-  const keyBtn = (k, cls = '', dis = false) => `<button class="key ${cls}" data-key="${k}"${dis ? ' disabled' : ''} aria-label="${k === '⌫' ? 'Radera' : k === 'next' ? 'Nästa fält' : k}">${k === 'next' ? 'Nästa' : k}</button>`;
-  let h = '<div class="entry">';
-  if (ultra) {
-    const box = (f, lab, pre, val, unit) => `<button class="ebox${E.field === f ? ' active' : ''}" data-field="${f}"><span class="elab">${lab}</span><span class="eval">${pre}${val}${caret(f)}<span class="eunit">${unit}</span></span></button>`;
-    const vTxt = /[kM]$/.test(E.v) ? E.v.slice(0, -1) + ' ' + E.v.slice(-1) : E.v;
-    const vUnit = /[kM]$/.test(E.v) ? 'Ω' : ' Ω';
-    h += `<div class="eboxes">${box('v', 'Resistans', '', vTxt, vUnit)}${box('t', 'Tolerans', '±', E.t, ' %')}${six ? box('k', 'Temp.koeff.', '', E.k, ' ppm/K') : ''}</div>`;
-    h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}${keyBtn('k', 'fn', E.field !== 'v')}${keyBtn('M', 'fn', E.field !== 'v')}${keyBtn('next', 'fn')}</div>`;
-  } else {
-    const d = parseFloat(E.v.replace(',', '.'));
-    const pre = !isNaN(d) && E.mult != null ? `= ${fmtVal(Math.round(d * E.mult * 1e6) / 1e6)}` : '';
-    if (!xFocus() || xFocus() === 'v') h += `<div class="ebox active solo"><span class="elab">Siffror</span><span class="eval">${E.v}${caret('v')}<span class="emul">${E.mult != null ? fmtMult(E.mult) : '× ?'}</span></span><span class="epre">${pre}</span></div>`;
-    if (!xFocus() || xFocus() === 'v') h += `<div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}</div>`;
-    const chips = (attr, vals, cur, lab) => `<div><p class="grp-lbl">${lab}</p><div class="chiprow">${vals.map(v =>
-      `<button class="chip" data-${attr}="${v}" aria-pressed="${cur === v}">${attr === 'mult' ? fmtMult(v) : attr === 'tol' ? fmtTol(v) : fmtTc(v)}</button>`).join('')}</div></div>`;
-    const xf = xFocus();
-    if (!xf || xf === 'v') h += chips('mult', MULTS, E.mult, 'Multiplikator');
-    if (!xf || xf === 't') h += chips('tol', TOL_VALS, E.tol, 'Tolerans');
-    if ((!xf && six) || xf === 'k') h += chips('tc', TC_VALS, E.tc, 'Temperaturkoefficient');
+  const keyBtn = (k, cls = '', dis = false) => `<button class="key ${cls}" data-key="${k}"${dis || S.answered ? ' disabled' : ''} aria-label="${k === '⌫' ? 'Radera' : k === 'next' ? 'Nästa fält' : k}">${k === 'next' ? 'Nästa' : k}</button>`;
+  const box = (f, lab, pre, val, unit) => `<button class="ebox${E.field === f && !S.answered ? ' active' : ''}" data-field="${f}"${disAttr()}><span class="elab">${lab}</span><span class="eval">${pre}${val}${caret(f)}<span class="eunit">${unit}</span></span></button>`;
+  const vTxt = /[kM]$/.test(E.v) ? E.v.slice(0, -1) + ' ' + E.v.slice(-1) : E.v;
+  const vUnit = /[kM]$/.test(E.v) ? 'Ω' : ' Ω';
+  return `<div class="entry"><div class="eboxes">${box('v', 'Resistans', '', vTxt, vUnit)}${box('t', 'Tolerans', '±', E.t, ' %')}${six ? box('k', 'Temp.koeff.', '', E.k, ' ppm/K') : ''}</div>
+    <div class="keypad">${keys.map(k => keyBtn(k, /[,⌫]/.test(k) ? 'fn' : '')).join('')}${keyBtn('k', 'fn', E.field !== 'v')}${keyBtn('M', 'fn', E.field !== 'v')}${keyBtn('next', 'fn')}</div></div>
+    <p class="hint" id="hint" hidden></p>`;
+}
+// Svår variant, läs av: rutor överst och ett inmatningsfält i taget under.
+// Siffror har knappsats, de andra hela värdelistan. Val i en lista går vidare till nästa tomma ruta.
+const FIELD_LBL = {v:'Siffror', x:'Multiplikator', t:'Tolerans', k:'Temp.koeff.'};
+const FIELD_PROP = {v:'v', x:'mult', t:'tol', k:'tc'};
+const FIELD_VALS = {x:MULTS, t:TOL_VALS, k:TC_VALS};
+const FIELD_FMT = {x:fmtMult, t:fmtTol, k:fmtTc};
+const entryFields = () => S.focus === 'all' ? ['v','x','t'].concat(S.n === 6 ? ['k'] : []) : S.focus === 'v' ? ['v','x'] : [S.focus];
+const digitsIn = () => parseFloat(S.entry.v.replace(',', '.'));
+const fieldFilled = f => f === 'v' ? !isNaN(digitsIn()) : S.entry[FIELD_PROP[f]] != null;
+// Rätt multiplikator räknas mot siffrorna man skrev, om det går (47 ger ×100 för 4,7 kΩ)
+const multFor = () => { const m = valueOf(S.q) / digitsIn(); return MULTS.find(x => close(x, m)) ?? C[S.q[nd(S.q)]].m; };
+const fieldTruth = f => f === 'v' ? digitStr(S.q) : f === 'x' ? fmtMult(multFor()) : f === 't' ? fmtTol(tolOf(S.q)) : fmtTc(tcOf(S.q));
+function fieldsHTML(){
+  const E = S.entry, fs = entryFields(), done = S.answered;
+  if (!fs.includes(E.field)) E.field = fs[0];
+  const boxes = fs.map(f => {
+    const p = FIELD_PROP[f], raw = f === 'v' ? E.v : E[p] != null ? FIELD_FMT[f](E[p]) : '';
+    let txt = raw + (!done && E.field === f && f === 'v' ? '<span class="caret"></span>' : '');
+    let cls = !done && E.field === f ? ' active' : '';
+    if (done) {
+      cls += S.fieldOk[f] ? ' ok' : ' bad';
+      if (!S.fieldOk[f]) txt = `<s>${raw || '–'}</s> <span class="right">${fieldTruth(f)}</span>`;
+    }
+    return `<button class="ebox${cls}" data-field="${f}"${disAttr()}><span class="elab">${FIELD_LBL[f]}</span><span class="eval">${txt}</span></button>`;
+  }).join('');
+  const pre = fs.includes('v') && !isNaN(digitsIn()) && E.mult != null ? `<p class="epre">= ${fmtVal(Math.round(digitsIn() * E.mult * 1e6) / 1e6)}</p>` : '';
+  let panel = '';
+  if (!done && E.field === 'v') {
+    panel = `<div class="keypad">${['7','8','9','4','5','6','1','2','3',',','0','⌫'].map(k =>
+      `<button class="key${/[,⌫]/.test(k) ? ' fn' : ''}" data-key="${k}" aria-label="${k === '⌫' ? 'Radera' : k}">${k}</button>`).join('')}</div>`;
+  } else if (!done) {
+    const f = E.field, p = FIELD_PROP[f];
+    panel = `<div class="chiprow" role="group" aria-label="${FIELD_LBL[f]}">${FIELD_VALS[f].map(x =>
+      `<button class="chip" data-fval="${x}" aria-pressed="${E[p] === x}">${FIELD_FMT[f](x)}</button>`).join('')}</div>`;
   }
-  h += '</div><p class="hint" id="hint" hidden></p><button class="primary" id="submit">Svara</button>';
-  return h;
+  return `<div class="entry"><div class="eboxes">${boxes}</div>${pre}${panel}</div><p class="hint" id="hint" hidden></p>`;
 }
 function keyPress(k){
   if (S.answered) return;
   const E = S.entry, ultra = S.level === 'ultra';
+  if (!ultra) E.field = 'v';
   const f = ultra ? E.field : 'v';
   const order = S.n === 6 ? ['v','t','k'] : ['v','t'];
   if (k === 'next') { E.field = order[(order.indexOf(E.field) + 1) % order.length]; render(); return; }
@@ -1090,33 +1183,17 @@ function keyPress(k){
 document.getElementById('q').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn || btn.disabled) return;
-  if (btn.dataset.opt != null) {
-    if (S.answered) return;
-    const i = +btn.dataset.opt, ok = key(S.opts[i]) === key(S.q);
-    S.parts = S.type === 'read'
-      ? compareValues(valueOf(S.opts[i]), valueOf(S.q))
-      : compareBands(S.opts[i], S.q, {tol: S.level !== 'easy', tc: S.level !== 'easy'});
-    document.querySelectorAll('[data-opt]').forEach(b => {
-      if (key(S.opts[+b.dataset.opt]) === key(S.q)) b.classList.add('ok');
-    });
-    if (!ok) btn.classList.add('bad');
-    finish(ok);
-  } else if (btn.id === 'examStart') {
+  if (btn.id === 'examStart') {
     startExam();
   } else if (btn.id === 'examGo') {
     document.querySelector(`[data-level="${btn.dataset.go}"]`).click();
   } else if (btn.dataset.sr) {
     if (S.answered) return;
-    const right = S.sr.answer, ok = btn.dataset.sr === right;
-    document.querySelector(`[data-sr="${right}"]`).classList.add('ok');
-    if (!ok) btn.classList.add('bad');
-    finish(ok);
+    S.pickSr = btn.dataset.sr; finish(btn.dataset.sr === S.sr.answer);
   } else if (btn.dataset.dir) {
     if (S.answered) return;
-    const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left', ok = btn.dataset.dir === right;
-    document.querySelector(`[data-dir="${right}"]`).classList.add('ok');
-    if (!ok) btn.classList.add('bad');
-    finish(ok);
+    const right = S.ambig ? 'none' : S.style.flip ? 'right' : 'left';
+    S.pickDir = btn.dataset.dir; finish(btn.dataset.dir === right);
   } else if (btn.dataset.slot != null) {
     S.slot = +btn.dataset.slot; render();
   } else if (btn.dataset.color) {
@@ -1144,39 +1221,33 @@ document.getElementById('q').addEventListener('click', e => {
   } else if (btn.dataset.tpick) {
     if (S.answered) return;
     answerBMC(btn.dataset.tpick);
-  } else if (btn.id === 'bSubmit') {
-    answerBMC();
-  } else if (btn.id === 'mcSubmit') {
-    answerMC();
   } else if (btn.dataset.key) {
     keyPress(btn.dataset.key);
   } else if (btn.dataset.field) {
     S.entry.field = btn.dataset.field; render();
-  } else if (btn.dataset.mult != null) {
-    S.entry.mult = +btn.dataset.mult; render();
-  } else if (btn.dataset.tol != null) {
-    S.entry.tol = +btn.dataset.tol; render();
-  } else if (btn.dataset.tc != null) {
-    S.entry.tc = +btn.dataset.tc; render();
+  } else if (btn.dataset.fval != null) {
+    const E = S.entry, fs = entryFields();
+    E[FIELD_PROP[E.field]] = +btn.dataset.fval;
+    const after = fs.slice(fs.indexOf(E.field) + 1).concat(fs).find(f => !fieldFilled(f));
+    if (after) E.field = after;
+    render();
   } else if (btn.dataset.hint) {
     useHint(btn.dataset.hint);
-  } else if (btn.id === 'submit') {
-    answerRead();
-  } else if (btn.id === 'next') {
-    next();
+  } else if (btn.id === 'main') {
+    if (S.answered) next(); else if (needsSubmit()) answerRead();
   }
 });
 
 document.addEventListener('keydown', e => {
-  const typing = S.type === 'read' && !LV[S.level].choice && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
+  const typing = S.type === 'read' && S.plan && S.plan.fmt === 'hard' && !S.answered && !e.ctrlKey && !e.metaKey && !e.altKey;
   if (typing) {
     const map = {Backspace:'⌫', ',':',', '.':',', k:'k', K:'k', m:'M', M:'M', Tab:'next'};
     const k = /^\d$/.test(e.key) ? e.key : map[e.key];
-    if (k && (S.level === 'ultra' || !['k','M','next'].includes(k))) { e.preventDefault(); keyPress(k); return; }
+    if (k && (S.level === 'ultra' || (!['k','M','next'].includes(k) && entryFields().includes('v')))) { e.preventDefault(); keyPress(k); return; }
   }
   if (e.key !== 'Enter' || e.target.tagName === 'BUTTON') return;
   if (S.answered) { next(); return; }
-  if (S.type === 'read' && !LV[S.level].choice) answerRead();
+  if (needsSubmit() && entryReady()) answerRead();
 });
 
 function bindSeg(attr, prop, store){
@@ -1245,12 +1316,6 @@ function valueDistractors(b){
   while (out.length < 3) { const x = genBands(b.length); if (!seen.has(valueOf(x))) { seen.add(valueOf(x)); out.push(x); } }
   return out;
 }
-function easyFull(ok, b){
-  const t = tolOf(b), tc = tcOf(b);
-  const rest = `toleransen ${fmtTol(t)}${tc != null ? ` och temperaturkoefficienten ${fmtTc(tc)}` : ''}`;
-  return ok ? `<p>Motståndet är ${fmtVal(valueOf(b))} med ${rest}.</p>`
-            : `<p>Rätt svar är ${fmtVal(valueOf(b))}, med ${rest}.</p>`;
-}
 
 // Lärling, Gesäll och Mästare, Läs av: flerval för den del frågan gäller
 function pickWrong(pool, right, n){
@@ -1265,13 +1330,12 @@ function buildMC(){
   const mc = {
     v: shuffle([v, ...vals]),
     t: shuffle([t, ...pickWrong(tolPool, t, 3)]),
-    d: S.level === 'easy' ? shuffle([digitStr(b), ...digitDistractors(b).map(digitStr)]) : null,
-    x: S.level === 'easy' ? shuffle([C[b[nd(b)]].m, ...multChoices(b).filter(c => c !== b[nd(b)]).map(c => C[c].m)]) : null,
-    k: S.level === 'tc' && tc != null ? shuffle([tc, ...pickWrong([100, 50, 25, 15, 10, 5, 250, 20, 1], tc, 3)]) : null
+    d: S.focus === 'd' ? shuffle([digitStr(b), ...digitDistractors(b).map(digitStr)]) : null,
+    x: S.focus === 'x' ? shuffle([C[b[nd(b)]].m, ...multChoices(b).filter(c => c !== b[nd(b)]).map(c => C[c].m)]) : null,
+    k: tc != null ? shuffle([tc, ...pickWrong([100, 50, 25, 15, 10, 5, 250, 20, 1], tc, 3)]) : null
   };
   return mc;
 }
-const MC_LABELS = {v:'Resistans', t:'Tolerans', k:'Temperaturkoefficient', d:'Siffror', x:'Multiplikator'};
 // Lärling: siffror och multiplikator var för sig
 const digitStr = b => b.slice(0, nd(b)).map(c => C[c].d).join('');
 const NEAR_DIGIT = {0:[1,8], 1:[2,3,0], 2:[1,3,7], 3:[2,1,4], 4:[3,5], 5:[6,4], 6:[7,5,8], 7:[6,8,2], 8:[9,7,6], 9:[8,4]};
@@ -1292,27 +1356,41 @@ function multChoices(b){
 }
 const mcFmt = (g, x) => g === 'v' ? fmtVal(x) : g === 't' ? fmtTol(x) : g === 'd' ? x.split('').join(' ') : g === 'x' ? fmtMult(x) : fmtTc(x);
 const mcEq = (a, b) => typeof a === 'string' ? a === b : close(a, b);
+// Facit i knapparna: rätt svar grönt, fel val rött. I Eldprovet markeras bara valet.
+function markCls(isRight, isPicked){
+  if (!S.answered) return '';
+  if (S.level === 'ultra') return isPicked ? ' chosen' : '';
+  return isRight ? ' ok' : isPicked ? ' bad' : '';
+}
+const disAttr = () => S.answered ? ' disabled' : '';
+// Vad ett alternativ motsvarar i färger: värde till siffer- och multiplikatorband (k siffror), null om det inte går
+function valueBands(v, k){
+  for (const c of MO) {
+    const d = v / C[c].m, r = Math.round(d);
+    if (close(d, r) && r >= 10 ** (k - 1) && r < 10 ** k) return String(r).split('').map(x => DIG[+x]).concat([c]);
+  }
+  return null;
+}
+const swatches = cs => cs.map(c => `<span class="sw" style="${swStyle(c)}" title="${C[c].n}"></span>`).join('');
+function mcAnn(g, x){
+  const cs = g === 'v' ? valueBands(x, nd(S.q)) : g === 'd' ? x.split('').map(d => DIG[+d])
+    : g === 'x' ? [MO.find(c => close(C[c].m, x))] : g === 't' ? [TOL.find(c => close(C[c].t, x))] : [TCS.find(c => C[c].tc === x)];
+  if (!cs || cs.some(c => !c)) return '';
+  return `<small class="ann">${swatches(cs)}${cs.length === 1 ? ' ' + C[cs[0]].n : ''}</small>`;
+}
+// Resistansen som siffer- och multiplikatorbanden i en motståndsbild ger
+const partValue = o => Math.round(+o.slice(0, -1).map(c => C[c].d).join('') * C[o[o.length - 1]].m * 100) / 100;
 function mcHTML(){
   if (!S.mc) { S.mc = buildMC(); S.pick = {v:null, t:null, k:null, d:null, x:null}; }
-  const groups = [S.focus];
-  return groups.map(g => `<div class="mcgroup"><p class="grp-lbl">${MC_LABELS[g]}</p><div class="opts mc">${S.mc[g].map((x,i) =>
-    `<button class="opt" data-pick="${g}:${i}" aria-pressed="${S.pick[g] === i}">${mcFmt(g, x)}</button>`).join('')}</div></div>`).join('');
+  const g = S.focus, right = S.mc[g].findIndex(x => mcEq(x, mcTruth(g)));
+  return `<div class="mcgroup"><div class="opts mc">${S.mc[g].map((x,i) =>
+    `<button class="opt${markCls(i === right, S.pick[g] === i)}" data-pick="${g}:${i}"${disAttr()}>${mcFmt(g, x)}${S.answered ? mcAnn(g, x) : ''}</button>`).join('')}</div></div>`;
 }
 function mcTruth(g){ return g === 'v' ? valueOf(S.q) : g === 't' ? tolOf(S.q) : g === 'd' ? digitStr(S.q) : g === 'x' ? C[S.q[nd(S.q)]].m : tcOf(S.q); }
 function answerMC(){
   if (S.answered) return;
-  const groups = [S.focus];
-  const missing = groups.find(g => S.pick[g] == null);
-  if (missing) { const h = document.getElementById('hint'); if (!h) return; h.textContent = `Välj ${MC_LABELS[missing].toLowerCase()} också.`; h.hidden = false; return; }
-  let ok = true;
-  S.parts = S.focus === 'v' ? compareValues(S.mc.v[S.pick.v], valueOf(S.q)) : null;
-  groups.forEach(g => {
-    const right = S.mc[g].findIndex(x => mcEq(x, mcTruth(g)));
-    if (S.pick[g] !== right) ok = false;
-    document.querySelector(`[data-pick="${g}:${right}"]`).classList.add('ok');
-    if (S.pick[g] !== right) document.querySelector(`[data-pick="${g}:${S.pick[g]}"]`).classList.add('bad');
-  });
-  finish(ok);
+  const g = S.focus;
+  finish(mcEq(S.mc[g][S.pick[g]], mcTruth(g)));
 }
 
 // Lärling, Gesäll och Mästare, Bygg: välj banden för den del frågan gäller
@@ -1342,80 +1420,45 @@ function bmcHTML(){
       : S.focus === 'k' ? {k: tcChoices()} : S.focus === 'd' ? {d: shuffle([S.q.slice(0, k), ...digitDistractors(S.q)])}
       : S.focus === 'x' ? {x: multChoices(S.q)} : {t: tolChoices()};
   }
-  const blank0 = n => Array(n).fill(null);
-  if (S.focus === 'd') {
-    let h = `<div class="res">${svg(blank0(k).concat(S.q.slice(k)), {label:'Motståndet med sifferbanden tomma', mark:S.mark})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Siffror</p><div class="opts rgrid">${S.bopts.d.map((o,i) =>
-      `<button class="opt r" data-vpick="${i}">${svg(o.concat(blank0(S.n - k)), {label:'Sifferband: ' + colorNames(o)})}</button>`).join('')}</div></div>`;
-    return h;
-  }
-  if (S.focus === 'x') {
-    let h = `<div class="res">${svg(S.q.slice(0, k).concat([null], S.q.slice(k + 1)), {label:'Motståndet med multiplikatorbandet tomt', mark:S.mark})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Multiplikator</p><div class="opts mc">${S.bopts.x.map(c =>
-      `<button class="opt bc" data-tpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
-    return h;
-  }
-  if (S.focus === 'k') {
-    let h = `<div class="res">${svg(S.q.slice(0, 5).concat([null]), {label:'Motståndet med sjätte bandet tomt', mark:S.mark})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Temperaturkoefficient</p><div class="opts mc">${S.bopts.k.map(c =>
-      `<button class="opt bc" data-kpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
-    return h;
-  }
+  const right = bmcRight(), st = {...stdStyle(S.n), flip: S.flipQ};
+  const imgBtn = (o, i, lab, ann) => `<button class="opt r${markCls(i === right, S.bpick === i)}" data-vpick="${i}"${disAttr()}>${svg(o, {style: st, label: lab})}${S.answered ? `<small class="ann">${ann}</small>` : ''}</button>`;
+  const role = S.focus === 'x' ? 'mult' : S.focus === 'k' ? 'tc' : 'tol';
+  const colBtn = (c, attr) => `<button class="opt bc${markCls(c === right, S.bpick === c)}" data-${attr}="${c}"${disAttr()}><span class="sw" style="${swStyle(c)}"></span>${C[c].n}${S.answered ? `<small class="ann">${bandDetail(c, role)}</small>` : ''}</button>`;
   const blank = n => Array(n).fill(null);
+  const target = (b, label) => `<div class="res">${svg(b, {style: st, label, mark: S.mark})}</div>`;
+  if (S.focus === 'd') return target(blank(k).concat(S.q.slice(k)), 'Motståndet med sifferbanden tomma')
+    + `<div class="mcgroup"><div class="opts rgrid">${S.bopts.d.map((o,i) => imgBtn(o.concat(blank(S.n - k)), i, 'Sifferband: ' + colorNames(o), o.map(c => C[c].d).join(' '))).join('')}</div></div>`;
+  if (S.focus === 'x') return target(S.q.slice(0, k).concat([null], S.q.slice(k + 1)), 'Motståndet med multiplikatorbandet tomt')
+    + `<div class="mcgroup"><div class="opts mc">${S.bopts.x.map(c => colBtn(c, 'tpick')).join('')}</div></div>`;
+  if (S.focus === 'k') return target(S.q.slice(0, 5).concat([null]), 'Motståndet med sjätte bandet tomt')
+    + `<div class="mcgroup"><div class="opts mc">${S.bopts.k.map(c => colBtn(c, 'kpick')).join('')}</div></div>`;
   const tail = S.n === 6 ? [S.q[5]] : [];
   let h;
   if (S.focus === 'v') {
     // Toleransen (och TK) är redan ifyllda, välj resistansbanden
-    h = `<div class="res">${svg(blank(k+1).concat([S.q[k+1]], tail), {label:'Motståndet med resistansbanden tomma'})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Resistans</p><div class="opts rgrid">${S.bopts.v.map((o,i) =>
-      `<button class="opt r" data-vpick="${i}">${svg(o.concat(blank(S.n - k - 1)), {label:'Resistansband: ' + colorNames(o)})}</button>`).join('')}</div></div>`;
+    h = target(blank(k+1).concat([S.q[k+1]], tail), 'Motståndet med resistansbanden tomma')
+      + `<div class="mcgroup"><div class="opts rgrid">${S.bopts.v.map((o,i) => imgBtn(o.concat(blank(S.n - k - 1)), i, 'Resistansband: ' + colorNames(o), fmtVal(partValue(o)))).join('')}</div></div>`;
   } else {
     // Resistansbanden är redan ifyllda, välj toleransbandet
-    h = `<div class="res">${svg(S.q.slice(0, k+1).concat([null], tail), {label:'Motståndet med toleransbandet tomt', mark:S.mark})}</div>`;
-    h += `<div class="mcgroup"><p class="grp-lbl">Tolerans</p><div class="opts mc">${S.bopts.t.map(c =>
-      `<button class="opt bc" data-tpick="${c}"><span class="sw" style="${swStyle(c)}"></span>${C[c].n}</button>`).join('')}</div></div>`;
+    h = target(S.q.slice(0, k+1).concat([null], tail), 'Motståndet med toleransbandet tomt')
+      + `<div class="mcgroup"><div class="opts mc">${S.bopts.t.map(c => colBtn(c, 'tpick')).join('')}</div></div>`;
   }
   if (S.n === 6 && S.level === 'medium') h += '<p class="gnote">Sjätte bandet, temperaturkoefficienten, är redan ifyllt. Det behöver du inte kunna på den här nivån.</p>';
   return h;
 }
 function answerBMC(pick){
   if (S.answered) return;
-  const k = nd(S.q);
-  let ok;
-  if (S.focus === 'd') {
-    const right = S.bopts.d.findIndex(o => o.join() === S.q.slice(0, k).join());
-    ok = pick === right;
-    document.querySelector(`[data-vpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-vpick="${pick}"]`).classList.add('bad');
-    S.parts = null;
-  } else if (S.focus === 'x') {
-    const right = S.q[k];
-    ok = pick === right;
-    document.querySelector(`[data-tpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-tpick="${pick}"]`).classList.add('bad');
-    S.parts = null;
-  } else if (S.focus === 'v') {
-    const right = S.bopts.v.findIndex(o => o.join() === S.q.slice(0, k+1).join());
-    ok = pick === right;
-    document.querySelector(`[data-vpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-vpick="${pick}"]`).classList.add('bad');
-    S.parts = compareBands(S.bopts.v[pick].concat(S.q.slice(k+1)), S.q);
-  } else if (S.focus === 'k') {
-    const right = S.q[5];
-    ok = pick === right;
-    document.querySelector(`[data-kpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-kpick="${pick}"]`).classList.add('bad');
-    S.parts = null;
-  } else {
-    const right = S.q[k+1];
-    ok = pick === right;
-    document.querySelector(`[data-tpick="${right}"]`).classList.add('ok');
-    if (!ok) document.querySelector(`[data-tpick="${pick}"]`).classList.add('bad');
-    S.parts = null;
-  }
-  finish(ok);
+  S.bpick = pick;
+  finish(pick === bmcRight());
 }
 
+// Rätt val i byggflervalet: index för motståndsbilder (v, d), färg för ett enskilt band (x, t, k)
+function bmcRight(){
+  const k = nd(S.q);
+  if (S.focus === 'd') return S.bopts.d.findIndex(o => o.join() === S.q.slice(0, k).join());
+  if (S.focus === 'v') return S.bopts.v.findIndex(o => o.join() === S.q.slice(0, k+1).join());
+  return S.focus === 'x' ? S.q[k] : S.focus === 'k' ? S.q[5] : S.q[k+1];
+}
 function tcFact(b){
   const tc = tcOf(b), v = valueOf(b), d = v * tc * 1e-6;
   const small = d >= 1 ? fmtVal(Math.round(d * 100) / 100)
@@ -1450,9 +1493,6 @@ function compareValues(vIn, vTrue){
     {label:'Multiplikator', ok: mOk, yours: fmtVal(vIn), right: fmtVal(vTrue)}
   ];
 }
-function partsHTML(parts){
-  return `<ul class="parts">${parts.map(p => `<li><span class="pill ${p.ok ? 'p-ok' : 'p-bad'}">${p.ok ? 'Rätt' : 'Fel'}</span><span><b>${p.label}</b>${p.ok ? '' : `: du svarade ${p.yours}, rätt är ${p.right}`}</span></li>`).join('')}</ul>`;
-}
 
 // Tips per frågetyp
 const HINT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>';
@@ -1473,15 +1513,6 @@ function hintsHTML(){
   return `<div class="hints">${list.map(([k,l]) =>
     `<button class="ghost" data-hint="${k}"${S.hintsUsed.has(k) ? ' disabled' : ''}>${HINT_ICON}${l}</button>`).join('')}</div>
     <div class="hint-out" id="hintOut" aria-live="polite">${S.hintOut}</div>`;
-}
-function bandsValid(bs){
-  const n = bs.length, k = nd(bs);
-  if (!BAND1.includes(bs[0])) return `${C[bs[0]].n} kan inte vara första siffran`;
-  for (let i = 1; i < k; i++) if (!DIG.includes(bs[i])) return `${C[bs[i]].n} är ingen siffra`;
-  if (C[bs[k]].m == null) return `${C[bs[k]].n} är ingen multiplikator`;
-  if (C[bs[k+1]].t == null) return `${C[bs[k+1]].n} är ingen tolerans`;
-  if (n === 6 && C[bs[5]].tc == null) return `${C[bs[5]].n} är ingen temperaturkoefficient`;
-  return null;
 }
 function neighbors(v, mants){
   const d0 = Math.pow(10, Math.floor(Math.log10(v)));
@@ -1691,22 +1722,14 @@ function meterFB(v, tol, note){
   return `<div class="meterfb"><p>${note || 'Så här kan en mätning se ut:'}</p>${meterLcd(mv)}
     <p class="gnote">Toleransen ${fmtTol(tol)} tillåter allt från ${fmtPrecise(v * (1 - tol / 100), v)} till ${fmtPrecise(v * (1 + tol / 100), v)}, så mätvärdet ligger sällan exakt på det märkta värdet.</p></div>`;
 }
-function srFeedback(ok){
-  const r = S.sr, tol = bandsTol(r.bands), ser = TOL_SER[tol];
-  const read = `Motståndet är ${colorNames(r.bands)}, alltså ${fmtVal(r.v)} ${fmtTol(tol)}${r.bands.length === 3 ? ' (tre band, inget toleransband)' : ''}.`;
-  const inAny = seriesOf(r.m3);
-  const why = r.answer === 'none'
+// E-serie: varför svaret blev som det blev
+function seriesWhy(){
+  const r = S.sr, tol = bandsTol(r.bands), ser = TOL_SER[tol], inAny = seriesOf(r.m3);
+  return r.answer === 'none'
     ? (inAny.length
       ? `${fmtTol(tol)} hör till ${ser}, men ${mantTxt(r.m3)} finns inte i ${ser} (det finns först i ${inAny[0]}). Med den här toleransen är värdet alltså inte standard.`
       : `${mantTxt(r.m3)} finns inte i någon standardserie, så värdet är inte standard.`)
     : `${fmtTol(tol)} hör till ${ser}, och ${mantTxt(r.m3)} finns i ${ser}.`;
-  document.getElementById('fb').innerHTML = `<div class="feedback ${fbClass(ok)}" role="status">
-    <h2>${fbHead(ok)}</h2>
-    <p>${read}</p><p>${why}</p>
-    ${meterFB(r.v, tol)}
-    <p class="dir">Toleransen avgör serien: ±20 % E6, ±10 % E12, ±5 % E24, ±2 % E48, ±1 % E96. Sedan kollar du om värdet finns i den serien.</p>
-    <button class="primary" id="next">Nästa fråga</button></div>`;
-  showFeedback();
 }
 let eSel = 'E24';
 try { const e = localStorage.getItem('fargkoden-eser'); if (e && ESER[e]) eSel = e; } catch(e) {}

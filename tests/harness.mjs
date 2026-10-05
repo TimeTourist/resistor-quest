@@ -1,7 +1,7 @@
 import { JSDOM } from 'jsdom';
 import { readFileSync } from 'node:fs';
 
-const html = readFileSync(new URL('../index2.html', import.meta.url), 'utf8');
+const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 // Laddar spelet i jsdom. storage fylls i localStorage innan scriptet körs.
 export function load({ storage = {}, url = 'http://localhost/' } = {}) {
