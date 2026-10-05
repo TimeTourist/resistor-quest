@@ -815,8 +815,10 @@ function next(){
   S.bflip = S.type === 'build' && S.plan.fmt === 'hard' && S.flipQ;
   const hf = hardFocus();
   if (hf && S.type === 'build') {
-    const k0 = nd(S.q), ask = hf === 'v' ? [...Array(k0 + 1).keys()] : hf === 't' ? [k0 + 1] : [5];
-    S.build = S.q.map((c, i) => ask.includes(i) ? null : c);
+    // ask är platser i motståndet. Sitter det vänt byggs det baklänges, så platserna speglas.
+    const k0 = nd(S.q), ask0 = hf === 'v' ? [...Array(k0 + 1).keys()] : hf === 't' ? [k0 + 1] : [5];
+    const ask = S.bflip ? ask0.map(a => n - 1 - a).sort((a, b) => a - b) : ask0;
+    S.build = S.build.map((_, i) => ask.includes(i) ? null : truthAt(i));
     S.slot = ask[0]; S.askSlots = ask;
   } else S.askSlots = null;
   if (S.type === 'dir') {
@@ -934,7 +936,7 @@ ${hintsHTML()}
       // Bredden och mellanrummet på de tomma banden visar alltid åt vilket håll det sitter.
       const read = readBuild(), st = {...stdStyle(n), flip: !!S.bflip};
       h += `<div class="res">${svg(read,{style: st, active: S.bflip ? n - 1 - S.slot : S.slot, label:'Ditt motstånd'})}</div>`;
-      const labels = S.level === 'ultra' ? Array.from({length:n}, (_, i) => 'Band ' + (i + 1)) : slotLabels(n);
+      const labels = S.level === 'ultra' || S.bflip ? Array.from({length:n}, (_, i) => 'Band ' + (i + 1)) : slotLabels(n);
       h += `<div class="slots">${labels.map((l,i) => {
         const k = S.build[i];
         const locked = S.askSlots && !S.askSlots.includes(i);

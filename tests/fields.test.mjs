@@ -79,3 +79,22 @@ for (const lv of ['medium', 'tc', 'hard']) {
     assert.deepEqual(t.errors.map(String), []);
   });
 }
+
+test('Mästare: vänt motstånd i delbygge, förifyllda band sitter där de syns och rätt bygge blir rätt', () => {
+  const t = atLevel('tc');
+  for (let r = 0; r < 5; r++) {
+    until(t, p => p.skill === 'v' && p.type === 'build' && t.g('S.bflip'));
+    const n = t.g('S.n');
+    // Bygget läst baklänges är motståndet, med de efterfrågade banden tomma
+    const shown = Array.from(t.g('readBuild()'));
+    const q = Array.from(t.g('S.q'));
+    shown.forEach((c, i) => { if (c) assert.equal(c, q[i], `band ${i}`); });
+    assert.equal(shown.filter(c => !c).length, t.g('nd(S.q)') + 1);
+    // Banden heter Band 1, 2, ... eftersom Band 1 är toleransänden
+    assert.match(t.$('[data-slot="0"]').textContent, /Band 1/);
+    answer(t, true);
+    assert.equal(t.g('S.ok'), true);
+    assert.equal(t.$$('.slot.bad').length, 0);
+    assert.equal(t.$$('.slot.ok').length, n - t.$$('.slot:not(.ok)').length);
+  }
+});
