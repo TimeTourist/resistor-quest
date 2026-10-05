@@ -81,6 +81,8 @@ html,body{overflow-x:clip}
 .calcrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin:14px 0 0;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.7rem;font-weight:600}
 .calcrow .zeros{color:var(--ok);margin-left:-8px}
 .calcrow .pre{color:var(--ok)}
+.calcrow .sep{margin-left:0}
+.ring.walk{stroke:var(--accent);opacity:0}
 .palstrip{display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin:14px 0 0;padding:8px 6px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .palstrip .sw{width:16px;height:16px}
 .palstrip .fake{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 8px 2px 4px;border-radius:999px;background:var(--bad);color:#fff;font-weight:700}
@@ -129,6 +131,8 @@ html,body{overflow-x:clip}
   .opt.picked.shake{animation:shake .5s ease-in-out}
   @keyframes shake{20%{transform:translateX(-8px) scale(1.06)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
   .mk{animation:ain .25s ease-out both}
+  .ring.walk{animation:ringwalk .45s ease-out both}
+  @keyframes ringwalk{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
   .sweep .draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .5s ease-out both}
   @keyframes draw{to{stroke-dashoffset:0}}
   .opt.land{animation:land .5s ease-out both}
@@ -728,7 +732,7 @@ function goTopic(lv){
   const g = S.pickGrade; S.pickGrade = null;
   if (lv !== 'ultra' && g != null && g !== S.grade[lv]) { S.grade[lv] = g; S.up = 0; S.down = 0; saveProgress(); S.plan = null; }
   if (lv === S.topic && S.plan && S.type !== 'exam') { render(); return; }
-  if (lv !== S.topic) { S.up = 0; S.down = 0; S.mix.streak = 0; S.exam = null; S.topic = lv; save('fargkoden2-topic', lv); }
+  if (lv !== S.topic) { S.up = 0; S.down = 0; S.mix.streak = 0; S.exam = null; S.lastMore = ''; S.topic = lv; save('fargkoden2-topic', lv); }
   S.moved = null;
   next();
 }
@@ -1049,6 +1053,8 @@ function showExamCard(){
 }
 function next(){
   stopTimer(); clearBar();
+  S.prevMore = !inExam() && S.lastMore ? S.lastMore.replace('<h2>Allt om motståndet</h2>', '<h2>Allt om förra motståndet</h2>') : '';
+  S.lastMore = '';
   S.view = null;
   document.getElementById('q').classList.remove('bosscard');
   if (S.topic === 'ultra' && (!S.exam || S.exam.done)) { S.answered = true; S.type = 'exam'; showExamCard(); return; }
@@ -1434,7 +1440,31 @@ const cueNote = (st, k) => st.cues.includes('wide') ? {i: st.wideIdx, text: 'bre
 // Peka på första bandet: ledtråden först, sedan glider pilen in och första bandet får en grön ring
 const POINT_T = {sweep: 1, ring: 1.6, total: 2.5};
 const qAnim = () => S.cq ? S.cq.anim : S.type === 'dir' ? {total: DIR_T.count + S.n * DIR_T.step + .6}
-  : S.type === 'point' && S.pointRole === 'first' ? POINT_T : null;
+  : S.type === 'point' && S.pointRole === 'first' ? POINT_T
+  : S.type === 'point' && S.pointSupport ? {total: WALK_T.start + S.pointAt * WALK_T.step + 1.3}
+  : hardV() && !inExam() ? hardAnim() : null;
+// Resistansens Gesäll vid fel: markeringen vandrar över banden i läsordning och landar på rätt band
+const WALK_T = {start: .3, step: .45};
+// Resistansens Stormästare: svår variant där frågan gäller resistansen
+const hardV = () => S.plan && S.plan.fmt === 'hard' && S.focus === 'v' && (S.type === 'read' || S.type === 'build');
+function hardAnim(){
+  const k = nd(S.q), eq = S.type === 'read' ? .3 + (k + 1) * .45 + .2 : .4;
+  return {start: .3, step: .45, eq, total: calcRowHTML(S.q, eq).end + .8};
+}
+// Talet byggs upp under motståndet: siffrorna, nollorna (eller ×0,1), ohm och prefix. at är när det börjar.
+function calcRowHTML(b, at){
+  const k = nd(b), base = digitStr(b), m = C[b[k]].m, v = valueOf(b);
+  const tok = (txt, t, cls = '') => `<span class="mk ${cls}" style="animation-delay:${t.toFixed(2)}s">${txt}</span>`;
+  const mi = m >= 1 ? Math.round(Math.log10(m)) : null;
+  let h = tok(base, at), t = at + .5;
+  if (mi) { h += tok('0'.repeat(mi), t, 'zeros'); t += .5; }
+  else if (mi === null) { h += tok(fmtMult(m), t, 'zeros sep'); t += .5; }
+  h += tok(`= ${ohmTxt(v)}`, t); t += .6;
+  if (v >= 1000) { h += tok(`= ${fmtVal(v)}`, t, 'pre'); t += .5; }
+  return {html: `<div class="calcrow" aria-hidden="true">${h}</div>`, end: t};
+}
+// Banden får sina värden: siffrorna, och × på multiplikatorn (hela multiplikatorn står i talet under, banden sitter tätt)
+const valueMarks = b => b.slice(0, nd(b)).map((c, j) => [j, String(C[c].d)]).concat([[nd(b), '×']]);
 // Ingen Nästa-knapp: rätt svar går vidare själv, efter fel trycker man var som helst på kortet
 const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p></div>`;
 function render(){
@@ -1461,8 +1491,10 @@ function render(){
   } else if (S.type === 'read') {
     const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
       d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?', all:'Vilket värde har motståndet?'}[S.focus];
-    h += `${topHTML(rq)}<div class="res">${svg(S.q,{style:S.style, mark:S.mark})}</div>`;
+    const wrongV = S.answered && !S.ok && !inExam() && hardV(), A = wrongV ? hardAnim() : null;
+    h += `${topHTML(rq)}<div class="res">${svg(S.q, {style: S.style, ...(wrongV ? {mark: valueMarks(S.q), markKind: 'ok', markAnim: A} : {})})}</div>`;
     h += S.plan.fmt !== 'hard' ? mcHTML() : fieldsHTML();
+    if (wrongV) h += calcRowHTML(S.q, A.eq).html;
   } else if (S.type === 'choice') {
     h += choiceHTML();
   } else if (S.type === 'point') {
@@ -1470,11 +1502,12 @@ function render(){
     const wrong = S.answered && !S.ok && !inExam(), first = S.pointRole === 'first', k = nd(S.q);
     const ring = !S.answered ? null : inExam() ? [[S.pickBand, 'accent']]
       : wrong && first ? [[S.pickBand, 'bad'], [S.pointAt, 'ok', POINT_T.ring]]
+      : wrong && S.pointSupport ? [[S.pickBand, 'bad'], ...[...Array(S.pointAt).keys()].map(i => [i, 'walk', WALK_T.start + i * WALK_T.step]), [S.pointAt, 'ok', WALK_T.start + S.pointAt * WALK_T.step]]
       : [[S.pointAt, 'ok']].concat(S.pickBand !== S.pointAt ? [[S.pickBand, 'bad']] : []);
     // Första bandet vid fel: ledtråden, sedan pilen och "1" på första bandet
     const why = wrong && first ? {mark: [[0, '1']], markKind: 'ok', markAnim: {start: POINT_T.ring, step: 0},
       notes: [cueNote(S.style, k)].filter(Boolean), sweep: {to: 0, at: POINT_T.sweep}}
-      : {mark: wrong ? S.q.map((_, i) => [i, roleLabel(S.n, i)]) : null};
+      : wrong && S.pointSupport ? {} : {mark: wrong ? S.q.map((_, i) => [i, roleLabel(S.n, i)]) : null};
     h += `${topHTML(`Peka på ${what}.`)}<div class="res">${svg(S.q, {style: S.style, tap: !S.answered, ring, bracket: S.pointSupport, cheatAt: cheat(true) ? S.pointAt : null, ...why})}</div>`;
   } else {
     const bq = {v:'Vilket motstånd har värdet', all:'Vilket motstånd har värdet', t:'Vilket toleransband ger', k:'Vilket sjätte band ger',
@@ -1505,12 +1538,16 @@ function render(){
       h += `<div class="palette">${keys.map(k =>
         `<button class="pc" data-color="${k}"${disAttr()}><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
       if (cheat(true)) h += `<p class="cheatline">Svar: ${(S.askSlots || [...Array(n).keys()]).map(i => C[truthAt(i)].n).join(', ')}</p>`;
+      if (S.answered && !S.ok && !inExam() && hardV()) h += calcRowHTML(S.q, hardAnim().eq).html;
     }
   }
   h += lessonHTML();
   q.innerHTML = h;
+  // Allt om motståndet efter svar. Vid nästa fråga ligger det kvar som Allt om förra motståndet tills man svarat.
   const more = document.getElementById('more');
-  more.innerHTML = moreHTML(); more.hidden = !more.innerHTML;
+  let mh = moreHTML();
+  if (S.answered) S.lastMore = mh; else mh = S.prevMore || '';
+  more.innerHTML = mh; more.hidden = !mh;
 }
 // Flervalsfrågor som beskriver sina alternativ själva. Hitta felet: de tre giltiga blir gröna och det felaktiga rött.
 const BALLOON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c-3.9 0-6.5 3-6.5 6.6 0 4 3.3 7.4 6.5 8.4 3.2-1 6.5-4.4 6.5-8.4 0-3.6-2.6-6.6-6.5-6.6z" fill="currentColor"/><path d="M11 17.6h2l-.6 1.4h-.8z" fill="currentColor"/><path d="M12 19c-.8 1.2.9 1.8 0 3" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M8.6 7.4a3.6 3.6 0 0 1 2.4-2.2" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".7"/></svg>';

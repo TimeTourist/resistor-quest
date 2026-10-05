@@ -601,6 +601,49 @@ test('Resistansen Mästare fel: banden får sina värden och talet byggs upp', (
   }
 });
 
+test('Resistansen Gesäll fel: markeringen vandrar i läsordning och landar på rätt band', () => {
+  const t = atGrade('ohm', 2);
+  for (let i = 0; i < 15; i++) {
+    t.g('S.grade.ohm = 2; next()');
+    const at = t.g('S.pointAt');
+    answer(t, false);
+    assert.equal(t.$$('#q .res .ring.walk').length, at, 'vandrar över banden före');
+    assert.ok(t.$('#q .res .ring.ok.mk'), 'landar med grön ring');
+    assert.equal(t.$$('#q .lesson').length, 0);
+    assert.ok(t.g('qAnim().total') >= 1.5);
+  }
+});
+
+test('Resistansen Stormästare fel: talet byggs upp, och vid avläsning får banden sina värden', () => {
+  const t = atGrade('ohm', 4);
+  const types = new Set();
+  for (let i = 0; i < 20; i++) {
+    t.g('S.grade.ohm = 4; next()');
+    types.add(t.g('S.type'));
+    answer(t, false);
+    const row = t.$('#q .calcrow').textContent.replace(/\s/g, '');
+    assert.ok(row.includes(t.g('fmtVal(valueOf(S.q))').replace(/\s/g, '')), row);
+    if (t.g('S.type') === 'read') assert.equal(t.$$('#q .res .mk.ok').length, t.g('nd(S.q)') + 1);
+    assert.equal(t.$$('#q .lesson').length, 0);
+  }
+  assert.deepEqual([...types].sort(), ['build', 'read']);
+});
+
+test('Allt om förra motståndet ligger kvar vid nästa fråga', () => {
+  const t = atGrade('ohm', 3);
+  t.g('S.grade.ohm = 3; next()'); answer(t, true);
+  const val = t.g('fmtVal(valueOf(S.q))');
+  assert.match(t.$('#more h2').textContent, /^Allt om motståndet$/);
+  cont(t);
+  assert.equal(t.$('#more').hidden, false, 'ligger kvar');
+  assert.match(t.$('#more h2').textContent, /förra motståndet/);
+  assert.ok(t.$('#more').textContent.includes(val));
+  answer(t, true);
+  assert.match(t.$('#more h2').textContent, /^Allt om motståndet$/, 'byts mot det nya efter svar');
+  t.g("goTopic('ultra')"); t.$('#examStart').click();
+  assert.equal(t.$('#more').hidden, true, 'inte i Eldprovet');
+});
+
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
   const t = atGrade('body', 0);
   t.g('S.instant = false');
