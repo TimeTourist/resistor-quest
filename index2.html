@@ -75,6 +75,7 @@ html,body{overflow-x:clip}
 .bracket.ok path{stroke:var(--ok)}.bracket.ok text{fill:var(--ok)}
 .bracket.bad path{stroke:var(--bad)}
 .note path{stroke:var(--ink)}
+.sweep path{stroke:var(--ok)}
 .note text{fill:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:700}
 .blab{fill:var(--muted)}
 .palstrip{display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin:14px 0 0;padding:8px 6px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
@@ -125,6 +126,14 @@ html,body{overflow-x:clip}
   .opt.picked.shake{animation:shake .5s ease-in-out}
   @keyframes shake{20%{transform:translateX(-8px) scale(1.06)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
   .mk{animation:ain .25s ease-out both}
+  .sweep .draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .5s ease-out both}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .opt.land{animation:land .5s ease-out both}
+  @keyframes land{50%{transform:scale(1.1);box-shadow:0 0 0 4px var(--ok-bg)}}
+  .scale span.walk{animation:walk .3s ease-out both}
+  @keyframes walk{40%{border-color:var(--accent);color:var(--ink);background:var(--bg)}}
+  .scale span.land{animation:landon .35s ease-out both}
+  @keyframes landon{from{border:1px solid var(--line);color:var(--muted);background:transparent;transform:scale(1)}60%{transform:scale(1.15)}}
   .badge{animation:badgein .3s ease-out both}
   @keyframes badgein{from{opacity:0;transform:scale(.4)}}
   .tapcue svg{animation:press 1.1s ease-in-out calc(var(--wait,0s) + .3s) infinite}
@@ -804,6 +813,8 @@ function svg(b, o = {}){
   const mk = o.active != null ? `<path d="M${ax-7},91 L${ax+7},91 L${ax},82 Z" style="fill:var(--accent)"/>` : '';
   // Markerade band (tipset "Förklara banden"): ram runt bandet och en etikett under
   const cxOf = i => st.flip ? 320 - st.xs[i] : st.xs[i];
+  // Fördröjning i sekunder för något som ska dyka upp senare i en animering
+  const delay = at => at != null ? ` style="animation-delay:${at.toFixed(2)}s"` : '';
   // markAnim: etiketterna dyker upp en i taget (banden räknas upp)
   const mcol = `var(--${o.markKind || 'accent'})`, ma = o.markAnim === true ? {start: 0, step: .18} : o.markAnim;
   const marks = (o.mark || []).map(([i, lab], j) => {
@@ -813,11 +824,11 @@ function svg(b, o = {}){
   }).join('');
   // Klammer över ohm-banden (band 0 till och med to). dim tonar ner banden efter, labels skrivs under banden.
   const brs = o.bracket || [];
-  const brackets = brs.map(({to = nd(b), kind = 'accent', labels}, j) => {
+  const brackets = brs.map(({to = nd(b), kind = 'accent', labels, at}, j) => {
     const xs = [...Array(to + 1).keys()].flatMap(i => [cxOf(i) - st.w[i]/2, cxOf(i) + st.w[i]/2]);
     const x1 = Math.min(...xs) - 2, x2 = Math.max(...xs) + 2, y = -4 - j * 0;
     const lab = (labels || []).map((l, i) => `<text x="${cxOf(i)}" y="103" text-anchor="middle" font-size="11" font-weight="600" class="blab">${l}</text>`).join('');
-    return `<g class="bracket ${kind}"><path d="M${x1} 6 V${y - 6} H${x2} V6" fill="none" stroke-width="2.5"${kind === 'ok' && brs.length > 1 ? ' stroke-dasharray="5 4"' : ''}/>` +
+    return `<g class="bracket ${kind}${at != null ? ' mk' : ''}"${delay(at)}><path d="M${x1} 6 V${y - 6} H${x2} V6" fill="none" stroke-width="2.5"${kind === 'ok' && brs.length > 1 ? ' stroke-dasharray="5 4"' : ''}/>` +
       (kind !== 'bad' ? `<text x="${(x1 + x2) / 2}" y="${y - 12}" text-anchor="middle" font-size="12" font-weight="700">Resistans</text>` : '') + `${lab}</g>`;
   }).join('');
   // Anteckningar ovanför banden: text över ett band, en dubbelpil över ett mellanrum eller en klammer över flera band
@@ -835,13 +846,23 @@ function svg(b, o = {}){
     }
     return `<g class="note mk" style="animation-delay:.2s">${g}</g>`;
   }).join('');
-  const dimTo = brs.find(x => x.dim) ? (brs[0].to ?? nd(b)) : null;
-  const dims = dimTo == null ? '' : b.map((k, i) => i > dimTo && k ? `<rect x="${st.xs[i] - st.w[i]/2 - 1}" y="8" width="${st.w[i] + 2}" height="76" style="fill:var(--surface)" opacity=".6"/>` : '').join('');
+  // Banden efter klammern tonas ner. Har klammern en fördröjning tonas de ner samtidigt som den dyker upp.
+  const dimBr = brs.find(x => x.dim), dimTo = dimBr ? (dimBr.to ?? nd(b)) : null;
+  const dims = dimTo == null ? '' : b.map((k, i) => i > dimTo && k ? `<rect${dimBr.at != null ? ' class="mk"' : ''}${delay(dimBr.at)} x="${st.xs[i] - st.w[i]/2 - 1}" y="8" width="${st.w[i] + 2}" height="76" style="fill:var(--surface)" opacity=".6"/>` : '').join('');
   // Ringar runt band: accent som markering i frågan, ok och bad i facit
-  const rings = (o.ring || []).filter(r => r && r[0] != null).map(([i, kind]) => {
+  // Ring nummer tre i listan är en fördröjning i sekunder: ringen dyker upp då
+  const rings = (o.ring || []).filter(r => r && r[0] != null).map(([i, kind, at]) => {
     const w = st.w[i], cx = st.flip ? 320 - st.xs[i] : st.xs[i];
-    return `<rect class="ring ${kind}" x="${cx - w/2 - 4}" y="3" width="${w + 8}" height="86" rx="4" fill="none" stroke-width="3"/>`;
+    return `<rect class="ring ${kind}${at != null ? ' mk' : ''}"${delay(at)} x="${cx - w/2 - 4}" y="3" width="${w + 8}" height="86" rx="4" fill="none" stroke-width="3"/>`;
   }).join('');
+  // Pilen som glider in längs tråden från änden där man börjar läsa och stannar vid bandet
+  let sweep = '';
+  if (o.sweep) {
+    const i = o.sweep.to, fromRight = st.flip, edge = cxOf(i) + (fromRight ? 1 : -1) * (st.w[i] / 2 + 3), x0 = fromRight ? 316 : 4;
+    const len = Math.abs(edge - x0), hd = fromRight ? 7 : -7;
+    sweep = `<g class="sweep"><path class="draw" d="M${x0} 46 H${edge}" stroke-width="3.5" stroke-linecap="round" style="--len:${len.toFixed(1)};animation-delay:${o.sweep.at.toFixed(2)}s"/>` +
+      `<path class="mk" d="M${edge + hd} 39 L${edge} 46 L${edge + hd} 53" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="animation-delay:${(o.sweep.at + .45).toFixed(2)}s"/></g>`;
+  }
   // Peka på band: varje band är en knapp. Etiketten räknar från vänster som spelaren ser det.
   const taps = o.tap ? b.map((_, i) => {
     const w = st.w[i], vis = st.flip ? b.length - 1 - i : i;
@@ -860,7 +881,7 @@ function svg(b, o = {}){
   return `<svg viewBox="0 ${top} 320 ${bottom - top}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}"><defs>${mdefs}
 <clipPath id="c${id}"><path d="${body}"/></clipPath>
 <linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
-${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}${rings}${brackets}${notes}</svg>`;
+${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}${rings}${brackets}${notes}${sweep}</svg>`;
 }
 const colorNames = b => b.map(k => C[k].n).join(', ');
 
@@ -1017,12 +1038,18 @@ function oddStyle(n){
   return {body:'var(--body)', shape:'bone', pal:0, xs: Array.from({length:n}, (_, i) => x0 + i * span), w: Array(n).fill(n > 6 ? 9 : 13), flip:false, cues:[]};
 }
 // Färgskalan som facit: rätt färg lyser
-function scaleHTML(kind, hi){
-  const list = kind === 'd' ? DIG : kind === 't' ? TOL : TCS;
+// anim: markeringen vandrar från början av skalan och landar på rätt färg
+function scaleHTML(kind, hi, anim){
+  const list = kind === 'd' ? DIG : kind === 't' ? TOL : TCS, hiAt = list.indexOf(hi);
   const val = c => kind === 'd' ? C[c].d : kind === 't' ? fmtTol(C[c].t) : C[c].tc;
-  return `<div class="scale" role="img" aria-label="Färgskalan">${list.map(c =>
-    `<span class="${c === hi ? 'on' : ''}"><i class="sw" style="${swStyle(c)}"></i>${val(c)}</span>`).join('')}</div>${kind === 'k' ? '<p class="gnote center">ppm/K</p>' : ''}`;
+  const cell = (c, j) => {
+    const cls = c === hi ? (anim ? 'on land' : 'on') : anim && j < hiAt ? 'walk' : '';
+    const st = anim && j <= hiAt ? ` style="animation-delay:${(anim.start + j * anim.step).toFixed(2)}s"` : '';
+    return `<span class="${cls}"${st}><i class="sw" style="${swStyle(c)}"></i>${val(c)}</span>`;
+  };
+  return `<div class="scale" role="img" aria-label="Färgskalan">${list.map(cell).join('')}</div>${kind === 'k' ? '<p class="gnote center">ppm/K</p>' : ''}`;
 }
+const scaleAnim = (list, c) => { const T = {start: .3, step: .22}; T.total = T.start + list.indexOf(c) * T.step + 1; return T; };
 // Fyra band med gott om plats mellan, för etiketterna under banden
 const spacedStyle = () => ({body:'var(--body)', shape:'bone', pal:0, xs:[90, 132, 174, 226], w:[13, 13, 13, 19.5], flip:false, cues:['gap','wide'], wideIdx:3});
 const roleLabel = (n, i) => { const r = roleOf(n, i); return r === 'digit' ? String(i + 1) : r === 'mult' ? '×' : r === 'tol' ? '±' : 'TK'; };
@@ -1089,9 +1116,10 @@ const GRADES = {
     () => choice(() => {
       const n = rnd([4, 5, 6]);
       S.n = n; S.q = genBands(n); S.style = variedStyle(S.q, false); S.moreOK = true;
-      const vals = [3, 4, 5, 6];
-      S.cq = {prompt:'Hur många färgband har motståndet?', layout:'mc', right: vals.indexOf(n),
-        res: () => svg(S.q, {style: S.style, mark: S.answered && !S.ok ? S.q.map((_, i) => [i, String(i + 1)]) : null}),
+      const vals = [3, 4, 5, 6], T = {start: .4, step: .35};
+      T.land = T.start + n * T.step + .1; T.total = T.land + .9;
+      S.cq = {prompt:'Hur många färgband har motståndet?', layout:'mc', right: vals.indexOf(n), anim: T,
+        res: () => svg(S.q, {style: S.style, mark: S.answered && !S.ok ? S.q.map((_, i) => [i, String(i + 1)]) : null, markKind: 'ok', markAnim: T}),
         opts: vals.map(v => ({html: `${v} band`})), wrong: `Räkna färgbanden: det är ${n}.`};
     }),
     // Mästare: läsriktningen
@@ -1099,7 +1127,9 @@ const GRADES = {
     // Stormästare: peka ut ett band, motståndet kan sitta vänt
     () => ({type:'point', fmt:'hard', setup(){
       const n = rnd([4, 5, 6]);
-      S.n = n; S.q = genBands(n); S.style = variedStyle(S.q, Math.random() < .5); S.moreOK = true;
+      S.n = n; S.q = genBands(n);
+      while (S.q.some(METAL)) S.q = genBands(n);
+      S.style = variedStyle(S.q, true); S.style.flip = Math.random() < .5; S.moreOK = true;
       S.pointRole = 'first'; S.pointAt = 0;
     }})
   ],
@@ -1111,11 +1141,14 @@ const GRADES = {
         const n = rnd([4, 5, 6]), k = n === 4 ? 2 : 3;
         return [n, i === right ? rnd([k - 1, k + 1]) : k];
       });
-      S.cq = {odd:true, brackets, right, layout:'r', prompt:'Klammern visar ohm-banden.',
+      const T = {fix: .6}; T.pop = T.fix + 1.5; T.green = T.pop + .5; T.total = T.green + .8;
+      const wrongNow = () => S.answered && !S.ok;
+      S.cq = {odd:true, anim: T, brackets, right, layout:'r', prompt:'Klammern visar ohm-banden.',
         opts: brackets.map(([n, to], i) => {
           const b = genBands(n), k = nd(b);
           return {draw: () => svg(b, {style: stdStyle(n), label: 'Motstånd med en klammer över några band',
-            bracket: i === right && S.answered && !S.ok ? [{to, kind:'bad'}, {to: k, kind:'ok'}] : [{to}]})};
+            bracket: i === right && wrongNow() ? [{to, kind:'bad'}, {to: k, kind:'ok', at: T.fix, dim: true}] : [{to}]}),
+            badge: () => wrongNow() && (i === right ? {text: '✗', kind: 'bad', at: T.fix} : {text: '✓', kind: 'ok', at: T.green})};
         }),
         wrong: 'Ohm-banden är alla band utom det sista. På sex band alla utom de två sista.'};
     }),
@@ -1124,13 +1157,13 @@ const GRADES = {
       if (Math.random() < .5) {
         S.n = 4; S.q = genBands(4); S.style = stdStyle(4); S.moreOK = true;
         const at = Math.floor(Math.random() * 2), c = S.q[at], d = C[c].d;
-        const vals = pick4(d, NEAR_DIGIT[d], [0,1,2,3,4,5,6,7,8,9]);
-        S.cq = {prompt:'Vilken siffra är det markerade bandet?', layout:'mc', right: vals.indexOf(d), res: ringed(at),
-          opts: vals.map(v => ({html: String(v)})), wrong: `${C[c].n} är ${d}.`, facit: () => scaleHTML('d', c)};
+        const vals = pick4(d, NEAR_DIGIT[d], [0,1,2,3,4,5,6,7,8,9]), T = scaleAnim(DIG, c);
+        S.cq = {prompt:'Vilken siffra är det markerade bandet?', layout:'mc', right: vals.indexOf(d), res: ringed(at), anim: T,
+          opts: vals.map(v => ({html: String(v)})), wrong: `${C[c].n} är ${d}.`, facit: () => scaleHTML('d', c, T)};
       } else {
-        const c = rnd(DIG), d = C[c].d, cs = pick4(c, LOOKALIKE[c].filter(x => DIG.includes(x)), DIG);
-        S.cq = {prompt:`Vilken färg betyder ${d}?`, layout:'sw', right: cs.indexOf(c),
-          opts: cs.map(x => swOpt(x, String(C[x].d))), wrong: `${d} är ${C[c].n.toLowerCase()}.`, facit: () => scaleHTML('d', c)};
+        const c = rnd(DIG), d = C[c].d, cs = pick4(c, LOOKALIKE[c].filter(x => DIG.includes(x)), DIG), T = scaleAnim(DIG, c);
+        S.cq = {prompt:`Vilken färg betyder ${d}?`, layout:'sw', right: cs.indexOf(c), anim: T,
+          opts: cs.map(x => swOpt(x, String(C[x].d))), wrong: `${d} är ${C[c].n.toLowerCase()}.`, facit: () => scaleHTML('d', c, T)};
       }
     }),
     // Gesäll: vad står siffrorna för? Ibland: peka på bandet som säger antalet nollor. Klammer med etiketter.
@@ -1300,7 +1333,14 @@ const submitHTML = () => S.answered || !needsSubmit() ? '' : `<button class="pri
 const truthAt = i => S.bflip ? S.q[S.n - 1 - i] : S.q[i];
 // Förklaringsanimeringen vid fel för aktuell fråga: tidslinje i sekunder, eller null om frågan bara har en rad
 const DIR_T = {count: .9, step: .35};
-const qAnim = () => S.cq ? S.cq.anim : S.type === 'dir' ? {total: DIR_T.count + S.n * DIR_T.step + .6} : null;
+// Det som visar läsriktningen: det breda bandet, mellanrummet eller banden samlade i ena änden
+const cueNote = (st, k) => st.cues.includes('wide') ? {i: st.wideIdx, text: 'brett'}
+  : st.cues.includes('gap') ? {i: k, j: k + 1, text: 'mellanrum'}
+  : st.cues.includes('group') ? {i: 0, j: k + 1, text: 'samlade', span: true} : null;
+// Peka på första bandet: ledtråden och ± först, sedan glider pilen in och första bandet får en grön ring
+const POINT_T = {sweep: 1, ring: 1.6, total: 2.5};
+const qAnim = () => S.cq ? S.cq.anim : S.type === 'dir' ? {total: DIR_T.count + S.n * DIR_T.step + .6}
+  : S.type === 'point' && S.pointRole === 'first' ? POINT_T : null;
 // Ingen Nästa-knapp: rätt svar går vidare själv, efter fel trycker man var som helst på kortet
 const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p></div>`;
 function render(){
@@ -1319,9 +1359,7 @@ function render(){
     // Vid fel: ledtråden visas, toleransen får ± och banden räknas från rätt ände
     const why = S.answered && !S.ok && !inExam(), k = nd(S.q), st = S.style;
     const lab = i => i <= k ? String(i + 1) : i === k + 1 ? '±' : 'TK';
-    const cue = st.cues.includes('wide') ? {i: st.wideIdx, text: 'brett'}
-      : st.cues.includes('gap') ? {i: k, j: k + 1, text: 'mellanrum'}
-      : st.cues.includes('group') ? {i: 0, j: k + 1, text: 'samlade', span: true} : null;
+    const cue = cueNote(st, k);
     h += `${topHTML('Från vilket håll ska motståndet läsas?')}<div class="res">${svg(S.q, {style: st,
       mark: why ? S.q.map((_, i) => [i, lab(i)]) : null, markKind: 'ok', markAnim: {start: DIR_T.count, step: DIR_T.step},
       notes: why && cue ? [cue] : null})}</div>
@@ -1335,10 +1373,15 @@ function render(){
     h += choiceHTML();
   } else if (S.type === 'point') {
     const what = {first:'första bandet', mult:'bandet som säger hur många nollor'}[S.pointRole];
+    const wrong = S.answered && !S.ok && !inExam(), first = S.pointRole === 'first', k = nd(S.q);
     const ring = !S.answered ? null : inExam() ? [[S.pickBand, 'accent']]
+      : wrong && first ? [[S.pickBand, 'bad'], [S.pointAt, 'ok', POINT_T.ring]]
       : [[S.pointAt, 'ok']].concat(S.pickBand !== S.pointAt ? [[S.pickBand, 'bad']] : []);
-    const mark = S.answered && !S.ok && !inExam() ? S.q.map((_, i) => [i, roleLabel(S.n, i)]) : null;
-    h += `${topHTML(`Peka på ${what}.`)}<div class="res">${svg(S.q, {style: S.style, tap: !S.answered, ring, mark, bracket: S.pointSupport})}</div>`;
+    // Första bandet vid fel: ledtråden och ± på toleransen, sedan pilen och "1" på första bandet
+    const why = wrong && first ? {mark: [[k + 1, '±'], [0, '1']], markKind: 'ok', markAnim: {start: .3, step: POINT_T.ring - .3},
+      notes: [cueNote(S.style, k)].filter(Boolean), sweep: {to: 0, at: POINT_T.sweep}}
+      : {mark: wrong ? S.q.map((_, i) => [i, roleLabel(S.n, i)]) : null};
+    h += `${topHTML(`Peka på ${what}.`)}<div class="res">${svg(S.q, {style: S.style, tap: !S.answered, ring, bracket: S.pointSupport, ...why})}</div>`;
   } else {
     const bq = {v:'Vilket motstånd har värdet', all:'Vilket motstånd har värdet', t:'Vilket toleransband ger', k:'Vilket sjätte band ger',
       d:'Vilka band ger siffrorna', x:'Vilket band ger multiplikatorn'}[S.focus];
@@ -1386,8 +1429,10 @@ function choiceHTML(){
     : i === Q.right ? ' gone' + (S.ok ? (jr ? ' popnow' : '') : ' reveal' + (jr ? ' popdelay' : ''))
     : ' ok' + (S.pickC === i ? ' picked' + (jr ? ' shake' : '') : '');
   const badge = o => { const b = done && o.badge && o.badge(); return b ? `<span class="badge ${b.kind}" style="animation-delay:${b.at.toFixed(2)}s">${b.text}</span>` : ''; };
-  const pd = i => Q.anim && done && !S.ok && i === Q.right ? ` style="--pd:${Q.anim.pop.toFixed(2)}s"` : '';
-  const opts = Q.opts.map((o, i) => `<button class="opt${cls}${mk(i)}" data-c="${i}"${pd(i)}${disAttr()}>${o.draw ? o.draw() : o.html}${badge(o)}${done && o.ann ? `<small class="ann">${o.ann}</small>` : ''}</button>`).join('');
+  // Vid fel: det udda kortet poppar vid anim.pop, och rätt svar studsar vid anim.land
+  const why = Q.anim && done && !S.ok && !inExam();
+  const pd = i => why && i === Q.right ? ` style="${Q.anim.pop != null ? `--pd:${Q.anim.pop.toFixed(2)}s;` : ''}${Q.anim.land != null ? `animation-delay:${Q.anim.land.toFixed(2)}s` : ''}"` : '';
+  const opts = Q.opts.map((o, i) => `<button class="opt${cls}${mk(i)}${why && Q.anim.land != null && i === Q.right ? ' land' : ''}" data-c="${i}"${pd(i)}${disAttr()}>${o.draw ? o.draw() : o.html}${badge(o)}${done && o.ann ? `<small class="ann">${o.ann}</small>` : ''}</button>`).join('');
   return `${Q.odd ? `<p class="oddhead">${BALLOON}Vilken ska bort?<span>Tre hör ihop, en ska bort.</span></p>` : ''}${topHTML(Q.prompt)}${Q.res ? `<div class="res">${Q.res()}</div>` : ''}
     <div class="${grid}">${opts}</div>${done && !S.ok && Q.facit ? Q.facit() : ''}`;
 }

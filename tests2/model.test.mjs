@@ -158,7 +158,7 @@ test('Peka på band: Motståndets Stormästare frågar efter första bandet, äv
 });
 
 test('Text: rätt svar ger ingen text, fel svar ger exakt en rad', () => {
-  for (const [topic, g] of [['ohm', 1], ['ohm', 3], ['tol', 3], ['e', 2]]) {
+  for (const [topic, g] of [['ohm', 3], ['tol', 3], ['e', 2]]) {
     const t = atGrade(topic, g);
     t.g('next()'); answer(t, true);
     assert.equal(t.$$('#q .lesson').length, 0, `${topic} ${g} rätt`);
@@ -195,7 +195,7 @@ test('Resistansen: klammern, fyra band till och med Mästare, fem band på Storm
 });
 
 test('Rätt svar: nästa fråga kommer av sig själv, fel svar väntar på Nästa', async () => {
-  const t = atGrade('ohm', 1, {}, );
+  const t = atGrade('ohm', 3, {}, );
   t.g('S.instant = false');
   t.g('next()');
   const before = t.g('S.cq.prompt + S.cq.right');
@@ -214,7 +214,7 @@ test('Rätt svar: nästa fråga kommer av sig själv, fel svar väntar på Näst
 });
 
 test('Hoppa över: Enter under spänningen visar utfallet direkt', () => {
-  const t = atGrade('ohm', 1);
+  const t = atGrade('ohm', 3);
   t.g('S.instant = false');
   t.g('next()');
   answer(t, false);
@@ -337,6 +337,61 @@ test('Motståndet Lärling fel: de 12 färgerna läggs ut, den falska får ✗ o
     assert.ok(strip.querySelector('.fake'), 'den falska färgen läggs bredvid');
     assert.equal(t.$$('#q .lesson').length, 0);
     assert.ok(t.g('qAnim().total') >= 3);
+  }
+});
+
+test('Motståndet Gesäll fel: banden räknas i grönt och rätt svar studsar', () => {
+  const t = atGrade('body', 2);
+  for (let i = 0; i < 10; i++) {
+    t.g('S.grade.body = 2; next()');
+    const n = t.g('S.n'), right = t.g('S.cq.right');
+    answer(t, false);
+    assert.equal(t.$$('#q .res .mk.ok').length, n);
+    assert.ok(t.$(`[data-c="${right}"]`).classList.contains('land'));
+    assert.equal(t.$$('#q .lesson').length, 0);
+    assert.ok(t.g('qAnim().total') >= 2);
+  }
+});
+
+test('Motståndet Stormästare fel: pilen glider in och första bandet får grön ring', () => {
+  const t = atGrade('body', 4);
+  for (let i = 0; i < 10; i++) {
+    t.g('S.grade.body = 4; next()');
+    answer(t, false);
+    assert.ok(t.$('#q .res .sweep'), 'pilen');
+    assert.ok(t.$('#q .res .ring.ok.mk'), 'grön ring som kommer efter pilen');
+    assert.ok(t.$('#q .res .ring.bad'), 'röd ring på valet');
+    assert.match(t.$('#q .res').textContent, /mellanrum|brett|samlade/);
+    assert.match(t.$('#q .res').textContent, /±/);
+    assert.equal(t.$$('#q .lesson').length, 0);
+  }
+});
+
+test('Resistansen Nykomling fel: grön klammer tonar in över rätt band, kortet poppar, de andra får ✓', () => {
+  const t = atGrade('ohm', 0);
+  for (let i = 0; i < 10; i++) {
+    t.g('S.grade.ohm = 0; next()');
+    const right = t.g('S.cq.right');
+    answer(t, false);
+    const odd = t.$(`[data-c="${right}"]`);
+    assert.ok(odd.querySelector('.bracket.bad'));
+    assert.ok(odd.querySelector('.bracket.ok.mk'), 'den gröna klammern kommer efter');
+    assert.ok(odd.querySelector('.badge.bad'));
+    t.$$('[data-c]').filter(b => b !== odd).forEach(b => assert.ok(b.querySelector('.badge.ok')));
+    assert.equal(t.$$('#q .lesson').length, 0);
+  }
+});
+
+test('Resistansen Lärling fel: markeringen vandrar längs färgskalan och landar på rätt siffra', () => {
+  const t = atGrade('ohm', 1);
+  for (let i = 0; i < 12; i++) {
+    t.g('S.grade.ohm = 1; next()');
+    answer(t, false);
+    const cells = t.$$('#q .scale span');
+    const land = cells.findIndex(c => c.classList.contains('land'));
+    assert.ok(land >= 0, 'landar');
+    assert.equal(t.$$('#q .scale .walk').length, land, 'vandrar över alla före');
+    assert.equal(t.$$('#q .lesson').length, 0);
   }
 });
 
