@@ -1002,12 +1002,14 @@ const fbClass = ok => !ok ? 'bad' : S.usedHint ? 'tip' : 'ok';
 const fbHead = ok => !ok ? 'Inte riktigt.' : S.usedHint ? 'Rätt, men med tips.' : 'Rätt!';
 // En rad om det frågan lär ut
 function lessonText(){
-  const b = S.q, k = nd(b), name = c => C[c].n.toLowerCase();
+  // Färgen som adjektiv till ett band (ett band är rött, gult ...)
+  const NEUTER = {black:'svart', brown:'brunt', red:'rött', orange:'orange', yellow:'gult', green:'grönt', blue:'blått', violet:'violett', grey:'grått', white:'vitt', gold:'guld', silver:'silver'};
+  const b = S.q, k = nd(b), name = c => NEUTER[c] || C[c].n.toLowerCase();
   if (S.type === 'dir') return directionText(b, S.style);
   if (S.type === 'series') return seriesWhy();
   const t = {
     v: () => `${digitStr(b)} ${fmtMult(C[b[k]].m)} = ${fmtVal(valueOf(b))}.`,
-    d: () => `Sifferbanden ${b.slice(0, k).map(name).join('–')} ger ${digitStr(b).split('').join(' ')}.`,
+    d: () => `Sifferbanden (${b.slice(0, k).map(c => C[c].n.toLowerCase()).join(', ')}) ger ${digitStr(b).split('').join(' ')}.`,
     x: () => `Multiplikatorbandet är ${name(b[k])}, alltså ${fmtMult(C[b[k]].m)}.`,
     t: () => `Toleransbandet är ${name(b[k+1])}, alltså ${fmtTol(tolOf(b))}.`,
     k: () => `Sjätte bandet är ${name(b[5])}, alltså ${fmtTc(tcOf(b))}.`,
@@ -1129,7 +1131,9 @@ const FIELD_FMT = {x:fmtMult, t:fmtTol, k:fmtTc};
 const entryFields = () => S.focus === 'all' ? ['v','x','t'].concat(S.n === 6 ? ['k'] : []) : S.focus === 'v' ? ['v','x'] : [S.focus];
 const digitsIn = () => parseFloat(S.entry.v.replace(',', '.'));
 const fieldFilled = f => f === 'v' ? !isNaN(digitsIn()) : S.entry[FIELD_PROP[f]] != null;
-const fieldTruth = f => f === 'v' ? digitStr(S.q) : f === 'x' ? fmtMult(C[S.q[nd(S.q)]].m) : f === 't' ? fmtTol(tolOf(S.q)) : fmtTc(tcOf(S.q));
+// Rätt multiplikator räknas mot siffrorna man skrev, om det går (47 ger ×100 för 4,7 kΩ)
+const multFor = () => { const m = valueOf(S.q) / digitsIn(); return MULTS.find(x => close(x, m)) ?? C[S.q[nd(S.q)]].m; };
+const fieldTruth = f => f === 'v' ? digitStr(S.q) : f === 'x' ? fmtMult(multFor()) : f === 't' ? fmtTol(tolOf(S.q)) : fmtTc(tcOf(S.q));
 function fieldsHTML(){
   const E = S.entry, fs = entryFields(), done = S.answered;
   if (!fs.includes(E.field)) E.field = fs[0];

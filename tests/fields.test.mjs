@@ -98,3 +98,15 @@ test('Mästare: vänt motstånd i delbygge, förifyllda band sitter där de syns
     assert.equal(t.$$('.slot.ok').length, n - t.$$('.slot:not(.ok)').length);
   }
 });
+
+test('Röd multiplikatorruta visar multiplikatorn som passar dina siffror', () => {
+  const t = atLevel('hard');
+  until(t, p => p.type === 'read');
+  // 4,7 kΩ på fem band: 470 × 10. Spelaren skriver 47 och väljer ×10, vilket ger 470 Ω.
+  t.g("S.q = ['yellow','violet','black','brown','brown']; S.n = 5; S.entry = {...S.entry, v:'47', mult:10, tol:1, tc:null}; render()");
+  t.$('#main').click();
+  const box = t.$('[data-field="x"]');
+  assert.ok(box.classList.contains('bad'));
+  assert.equal(box.querySelector('s').textContent, '×10');
+  assert.equal(box.querySelector('.right').textContent, '×100');
+});
