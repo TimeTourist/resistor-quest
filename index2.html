@@ -1369,7 +1369,7 @@ const DIR_T = {count: .9, step: .35};
 const cueNote = (st, k) => st.cues.includes('wide') ? {i: st.wideIdx, text: 'brett'}
   : st.cues.includes('gap') ? {i: k, j: k + 1, text: 'mellanrum'}
   : st.cues.includes('group') ? {i: 0, j: k + 1, text: 'samlade', span: true} : null;
-// Peka på första bandet: ledtråden och ± först, sedan glider pilen in och första bandet får en grön ring
+// Peka på första bandet: ledtråden först, sedan glider pilen in och första bandet får en grön ring
 const POINT_T = {sweep: 1, ring: 1.6, total: 2.5};
 const qAnim = () => S.cq ? S.cq.anim : S.type === 'dir' ? {total: DIR_T.count + S.n * DIR_T.step + .6}
   : S.type === 'point' && S.pointRole === 'first' ? POINT_T : null;
@@ -1388,9 +1388,9 @@ function render(){
   } else if (S.type === 'dir') {
     const right = S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
-    // Vid fel: ledtråden visas, toleransen får ± och banden räknas från rätt ände
+    // Vid fel: ledtråden visas och banden räknas 1, 2, 3 … från rätt ände
     const why = S.answered && !S.ok && !inExam(), k = nd(S.q), st = S.style;
-    const lab = i => i <= k ? String(i + 1) : i === k + 1 ? '±' : 'TK';
+    const lab = i => String(i + 1);
     const cue = cueNote(st, k);
     h += `${topHTML('Från vilket håll ska motståndet läsas?')}<div class="res">${svg(S.q, {style: st,
       mark: why ? S.q.map((_, i) => [i, lab(i)]) : null, markKind: 'ok', markAnim: {start: DIR_T.count, step: DIR_T.step},
@@ -1409,8 +1409,8 @@ function render(){
     const ring = !S.answered ? null : inExam() ? [[S.pickBand, 'accent']]
       : wrong && first ? [[S.pickBand, 'bad'], [S.pointAt, 'ok', POINT_T.ring]]
       : [[S.pointAt, 'ok']].concat(S.pickBand !== S.pointAt ? [[S.pickBand, 'bad']] : []);
-    // Första bandet vid fel: ledtråden och ± på toleransen, sedan pilen och "1" på första bandet
-    const why = wrong && first ? {mark: [[k + 1, '±'], [0, '1']], markKind: 'ok', markAnim: {start: .3, step: POINT_T.ring - .3},
+    // Första bandet vid fel: ledtråden, sedan pilen och "1" på första bandet
+    const why = wrong && first ? {mark: [[0, '1']], markKind: 'ok', markAnim: {start: POINT_T.ring, step: 0},
       notes: [cueNote(S.style, k)].filter(Boolean), sweep: {to: 0, at: POINT_T.sweep}}
       : {mark: wrong ? S.q.map((_, i) => [i, roleLabel(S.n, i)]) : null};
     h += `${topHTML(`Peka på ${what}.`)}<div class="res">${svg(S.q, {style: S.style, tap: !S.answered, ring, bracket: S.pointSupport, ...why})}</div>`;
@@ -1559,8 +1559,8 @@ function outcomeFX(kind, party){
     : kind === 'lost' ? '<s></s><s></s><s></s>' : '';
   d.innerHTML = `<i></i>${bits}`;
 }
-// Stapeln: hela skalan med ämnets fem grader, tre fack per grad. Klarade grader är fyllda, den aktuella visar rätt i rad
-// och sprickor för fel i rad. Syns bara i slutet av ett svar.
+// Stapeln: hela skalan med ämnets fem grader, tre fack per grad. Klarade grader är fyllda, den aktuella visar rätt i rad,
+// och graden under får en spricka för varje fel i rad. Syns bara i slutet av ett svar.
 // Rätt: dammet från explosionen sugs in och fyller nästa fack. Upp en grad: stapeln skakar våldsamt och graden byts.
 // Fel: stapeln skakar av sig dammet från facken och får en spricka. Ner en grad: våldsammare, och graden byts.
 const BAR_WRONG = 1.1, BAR_DOWN = 1.9;
@@ -1576,9 +1576,10 @@ function barDraw(st, topic, label){
   const b = document.getElementById('gbar');
   b.style.setProperty('--col', MAP_BANDS[topic][0]);
   // Under aktuell grad: fylld. Aktuell: rätt i rad. Över men klarad tidigare: blek. Annars tom.
+  // Sprickorna sitter på graden under, dit man halkar vid tre fel i rad. Nykomling har ingen grad under.
   const segs = GRADE_NAME.map((n, g) => {
     const cur = g === st.g, fill = i => g < st.g ? 'on' : cur ? (i < st.up ? 'on' : '') : g < (st.done || 0) ? 'was' : '';
-    const cracks = cur ? `<svg class="cracks" viewBox="0 0 120 20" preserveAspectRatio="none">${CRACKS.map((d, i) => `<path class="${i < st.down ? 'on' : ''}" d="${d}"/>`).join('')}</svg>` : '';
+    const cracks = g === st.g - 1 ? `<svg class="cracks" viewBox="0 0 120 20" preserveAspectRatio="none">${CRACKS.map((d, i) => `<path class="${i < st.down ? 'on' : ''}" d="${d}"/>`).join('')}</svg>` : '';
     return `<div class="gseg${cur ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(i => `<i class="${fill(i)}"></i>`).join('')}${cracks}</div><span>${cur && label ? label : n}</span></div>`;
   }).join('');
   b.innerHTML = `<div class="gname">${topicName(topic)}</div><div class="segs">${segs}</div>`;

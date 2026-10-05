@@ -304,7 +304,7 @@ test('Läsriktning fel: ingen vändning, banden räknas från rätt ände, toler
     assert.equal(marks.length, n);
     const x = lab => +marks.find(m => m.querySelector('text').textContent === lab).querySelector('text').getAttribute('x');
     assert.equal(x('1') < x('2'), !flip, 'räknar från början, i läsriktningen');
-    assert.ok(marks.some(m => m.querySelector('text').textContent === '±'), 'toleransen är markerad');
+    assert.deepEqual(marks.map(m => m.querySelector('text').textContent).sort((a, b) => a - b), Array.from({length: n}, (_, j) => String(j + 1)), 'bara siffror');
     assert.match(t.$('#q .res').textContent, /mellanrum|brett|samlade/, 'ledtråden visas');
     assert.equal(t.$$('#q .lesson').length, 0, 'ingen synlig rad');
     t.g('S.lockUntil = 0'); 
@@ -362,7 +362,7 @@ test('Motståndet Stormästare fel: pilen glider in och första bandet får grö
     assert.ok(t.$('#q .res .ring.ok.mk'), 'grön ring som kommer efter pilen');
     assert.ok(t.$('#q .res .ring.bad'), 'röd ring på valet');
     assert.match(t.$('#q .res').textContent, /mellanrum|brett|samlade/);
-    assert.match(t.$('#q .res').textContent, /±/);
+    assert.doesNotMatch(t.$('#q .res').textContent, /±/);
     assert.equal(t.$$('#q .lesson').length, 0);
   }
 });
@@ -433,13 +433,22 @@ test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort',
   const lock = t.g('S.lockUntil - S.revealAt');
   assert.ok(lock >= 1200, `låst i ${lock} ms`);
   await new Promise(r => setTimeout(r, lock - 200));
-  assert.equal(t.$('#gbar').querySelectorAll('.gseg.cur .cracks .on').length, 1, 'en spricka på aktuell grad');
+  assert.equal(t.$('#gbar').querySelectorAll('.gseg')[2].querySelectorAll('.cracks .on').length, 1, 'en spricka på graden under');
+  assert.equal(t.$('#gbar').querySelectorAll('.gseg.cur .cracks').length, 0, 'inga sprickor på aktuell grad');
   // Vid fel ligger stapeln kvar tills man trycker
   await new Promise(r => setTimeout(r, 900));
   assert.ok(t.$('#gbar').classList.contains('show'), 'stapeln ligger kvar efter fel');
   t.g('S.lockUntil = 0'); cont(t);
   assert.ok(!t.$('#gbar').classList.contains('show'), 'trycket tar bort stapeln');
   t.g('stopTimer(); clearBar()');
+});
+
+test('Stapeln: inga sprickor på Nykomling, där kan man inte åka ner', () => {
+  const t = load();
+  t.g("barDraw({g: 0, up: 0, down: 2, done: 0}, 'body')");
+  assert.equal(t.$$('#gbar .cracks').length, 0);
+  t.g("barDraw({g: 2, up: 0, down: 2, done: 2}, 'body')");
+  assert.equal(t.$$('#gbar .gseg')[1].querySelectorAll('.cracks .on').length, 2);
 });
 
 test('Stapeln visas inte i Eldprovet', () => {
