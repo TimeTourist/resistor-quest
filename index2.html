@@ -1122,8 +1122,9 @@ function scaleHTML(kind, hi, anim){
 const scaleAnim = (list, c) => { const T = {start: .3, step: .22}; T.total = T.start + list.indexOf(c) * T.step + 1; return T; };
 // Multiplikatorn som ett vanligt tal, ×1 000 i stället för ×1k
 const multPlain = m => '×' + m.toLocaleString('sv-SE');
-// Fyra band med gott om plats mellan, för etiketterna under banden
-const spacedStyle = () => ({body:'var(--body)', shape:'bone', pal:0, xs:[90, 132, 174, 226], w:[13, 13, 13, 19.5], flip:false, cues:['gap','wide'], wideIdx:3});
+// Band med gott om plats mellan, för etiketterna under banden (4, 5 eller 6 band)
+const SPACED = {4: [[90, 132, 174, 226], [13, 13, 13, 19.5]], 5: [[84, 122, 160, 198, 232], [11, 11, 11, 11, 16.5]], 6: [[82, 120, 158, 196, 225, 243], [10, 10, 10, 10, 14, 8]]};
+const spacedStyle = (n = 4) => ({body:'var(--body)', shape:'bone', pal:0, xs: SPACED[n][0].slice(), w: SPACED[n][1].slice(), flip:false, cues:['gap','wide'], wideIdx: tolIdx(n)});
 const roleLabel = (n, i) => { const r = roleOf(n, i); return r === 'digit' ? String(i + 1) : r === 'mult' ? '×' : r === 'tol' ? '±' : 'TK'; };
 const ringed = (at, cls = 'accent') => () => svg(S.q, {style: S.style, ring: [[at, cls]], label: 'Motstånd med ett markerat band'});
 // Vilken ska bort? med markerade band: tre har rätt band markerat, ett har fel
@@ -1238,21 +1239,30 @@ const GRADES = {
           opts: cs.map(x => swOpt(x, String(C[x].d))), wrong: `${d} är ${C[c].n.toLowerCase()}.`, facit: () => scaleHTML('d', c, T)};
       }
     }),
-    // Gesäll: peka på första siffran, andra siffran eller multiplikatorn. Klammern sitter ovanför
-    // och värdena står under banden (2 · 3 · ×10), så att man ser vad banden säger.
+    // Gesäll: peka på en siffra eller multiplikatorn, på 4, 5 eller 6 band. Klammern sitter ovanför
+    // och värdena står under banden (4 · 7 · 0 · ×10), så att man ser vad banden säger.
     () => ({type:'point', fmt:'mc', setup(){
-      // Multiplikatorn svart till orange och utskriven utan k (×1 000), eftersom k kommer först på Mästare
-      S.n = 4; S.q = genBands(4); S.q[2] = rnd(['black','brown','red','orange']); S.style = spacedStyle(); S.moreOK = true;
-      S.pointRole = rnd(['d1','d2','mult']); S.pointAt = {d1: 0, d2: 1, mult: 2}[S.pointRole];
-      S.pointSupport = [{labels: [String(C[S.q[0]].d), String(C[S.q[1]].d), multPlain(C[S.q[2]].m)], dim: true}];
+      // Multiplikatorn utskriven utan k (×1 000), eftersom k kommer först på Mästare. Lågt nog för att etiketten ska få plats.
+      const n = rnd([4, 5, 6]);
+      S.n = n; S.q = genBands(n);
+      const k = nd(S.q);
+      S.q[k] = rnd(n === 4 ? ['black','brown','red','orange'] : ['black','brown','red']);
+      S.style = spacedStyle(n); S.moreOK = true;
+      S.pointRole = rnd(k === 3 ? ['d1','d2','d3','mult'] : ['d1','d2','mult']);
+      S.pointAt = {d1: 0, d2: 1, d3: 2, mult: k}[S.pointRole];
+      S.pointSupport = [{labels: S.q.slice(0, k).map(c => String(C[c].d)).concat([multPlain(C[S.q[k]].m)]), dim: true}];
     }}),
-    // Mästare: siffror och nollor till ohm, med k och M. Fyra band, bara klammern som stöd.
+    // Mästare: siffror och nollor till ohm, med k och M, på 4, 5 eller 6 band. Bara klammern som stöd.
     () => choice(() => {
-      const base = rnd(E24), mi = Math.floor(Math.random() * 7);
-      S.n = 4; S.q = [DIG[Math.floor(base / 10)], DIG[base % 10], DIG[mi], rnd(['gold','silver','brown','red'])]; S.style = spacedStyle(); S.moreOK = true;
-      const v = base * 10 ** mi, sw = (base % 10) * 10 + Math.floor(base / 10);
+      const n = rnd([4, 5, 6]), three = n > 4;
+      const base = three ? rnd(E24.map(x => x * 10).concat(E96)) : rnd(E24), mi = Math.floor(Math.random() * (three ? 6 : 7));
+      const ds = String(base).split('').map(Number);
+      S.n = n; S.q = ds.map(d => DIG[d]).concat([DIG[mi], rnd(three ? ['brown','red','green','blue'] : ['gold','silver','brown','red'])]);
+      if (n === 6) S.q.push(rnd(GEN.tc));
+      S.style = spacedStyle(n); S.moreOK = true;
+      const v = base * 10 ** mi, sws = String(base)[1] + String(base)[0] + String(base).slice(2), sw = +sws;
       const vals = [v];
-      for (const x of shuffle([v * 10, v / 10, v * 100, sw >= 10 ? sw * 10 ** mi : v * 1000]).concat([v * 1000, v / 100]))
+      for (const x of shuffle([v * 10, v / 10, v * 100, sws[0] !== '0' && sw !== base ? sw * 10 ** mi : v * 1000]).concat([v * 1000, v / 100]))
         if (vals.length < 4 && x >= 10 && x < 1e9 && !vals.includes(x)) vals.push(x);
       shuffle(vals);
       const zeros = ['inga nollor', 'en nolla', 'två nollor', 'tre nollor', 'fyra nollor', 'fem nollor', 'sex nollor'][mi];
@@ -1434,7 +1444,7 @@ function render(){
   } else if (S.type === 'choice') {
     h += choiceHTML();
   } else if (S.type === 'point') {
-    const what = {first:'första bandet', d1:'första siffran', d2:'andra siffran', mult:'multiplikatorn'}[S.pointRole];
+    const what = {first:'första bandet', d1:'första siffran', d2:'andra siffran', d3:'tredje siffran', mult:'multiplikatorn'}[S.pointRole];
     const wrong = S.answered && !S.ok && !inExam(), first = S.pointRole === 'first', k = nd(S.q);
     const ring = !S.answered ? null : inExam() ? [[S.pickBand, 'accent']]
       : wrong && first ? [[S.pickBand, 'bad'], [S.pointAt, 'ok', POINT_T.ring]]
@@ -1821,7 +1831,7 @@ function lessonHTML(){
   return `${text}<button type="button" class="tapcue" id="cont" aria-label="Fortsätt" style="--wait:${Math.max(0, wait).toFixed(2)}s">${HAND}</button>`;
 }
 const pointWrong = () => S.pointRole === 'mult' ? 'Multiplikatorn är bandet efter siffrorna.'
-  : S.pointRole === 'd1' || S.pointRole === 'd2' ? 'Siffrorna är de första banden, i läsordning.'
+  : ['d1','d2','d3'].includes(S.pointRole) ? 'Siffrorna är de första banden, i läsordning.'
   : `Första bandet sitter i änden längst från det breda toleransbandet. Här läser man från ${S.style.flip ? 'höger' : 'vänster'}.`;
 // Allt om motståndet, under kortet
 function moreHTML(){

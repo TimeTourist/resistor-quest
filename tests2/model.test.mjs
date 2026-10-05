@@ -178,26 +178,29 @@ test('Resistansen: klammern, fyra band till och med Mästare, fem band på Storm
     });
   }
   for (const g of [2, 3]) {
-    const t = atGrade('ohm', g);
-    for (let i = 0; i < 30; i++) {
-      t.g('next()');
-      assert.equal(t.g('S.n'), 4, `grad ${g}`);
+    const t = atGrade('ohm', g), ns = new Set();
+    for (let i = 0; i < 40; i++) {
+      t.g(`S.grade.ohm = ${g}; next()`);
+      ns.add(t.g('S.n'));
       assert.ok(t.$('#q .res .bracket'), `grad ${g} har klammer`);
-      if (g === 3) assert.ok(!['gold', 'silver'].includes(t.g('S.q[2]')));
+      if (g === 3) assert.ok(!['gold', 'silver'].includes(t.g('S.q[nd(S.q)]')));
     }
+    assert.deepEqual([...ns].sort(), [4, 5, 6], `grad ${g} har 4, 5 och 6 band`);
   }
   const t2 = atGrade('ohm', 2);
   const roles = new Set();
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 60; i++) {
     t2.g('S.grade.ohm = 2; next()');
     roles.add(t2.g('S.pointRole'));
+    const k = t2.g('nd(S.q)');
     const labs = t2.$$('#q .res .blab').map(e => e.textContent);
-    const want = [t2.g('String(C[S.q[0]].d)'), t2.g('String(C[S.q[1]].d)'), t2.g('multPlain(C[S.q[2]].m)')];
+    const want = [...Array(k).keys()].map(j => t2.g(`String(C[S.q[${j}]].d)`)).concat([t2.g('multPlain(C[S.q[nd(S.q)]].m)')]);
     assert.deepEqual(labs, want, 'värdena står under banden');
-    assert.equal(t2.g('S.pointAt'), {d1: 0, d2: 1, mult: 2}[t2.g('S.pointRole')]);
+    assert.equal(t2.g('S.pointAt'), {d1: 0, d2: 1, d3: 2, mult: k}[t2.g('S.pointRole')]);
+    if (k === 2) assert.notEqual(t2.g('S.pointRole'), 'd3');
+    assert.match(t2.$('#q .prompt').textContent, /^Peka på (första|andra|tredje) siffran\.$|^Peka på multiplikatorn\.$/);
   }
-  assert.deepEqual([...roles].sort(), ['d1', 'd2', 'mult']);
-  assert.equal(t2.$('#q .res .blab').textContent.length > 0, true);
+  assert.deepEqual([...roles].sort(), ['d1', 'd2', 'd3', 'mult']);
   const t4 = atGrade('ohm', 4);
   for (let i = 0; i < 20; i++) { t4.g('next()'); assert.equal(t4.g('S.n'), 5); assert.equal(t4.$('#q .res .bracket'), null); }
 });
