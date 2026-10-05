@@ -187,9 +187,17 @@ test('Resistansen: klammern, fyra band till och med Mästare, fem band på Storm
     }
   }
   const t2 = atGrade('ohm', 2);
-  let labels = false;
-  for (let i = 0; i < 20; i++) { t2.g('next()'); if (/nollor/.test(t2.$('#q .res').textContent)) labels = true; }
-  assert.ok(labels, 'Gesäll har etiketterna siffra, siffra, nollor');
+  const roles = new Set();
+  for (let i = 0; i < 30; i++) {
+    t2.g('S.grade.ohm = 2; next()');
+    roles.add(t2.g('S.pointRole'));
+    const labs = t2.$$('#q .res .blab').map(e => e.textContent);
+    const want = [t2.g('String(C[S.q[0]].d)'), t2.g('String(C[S.q[1]].d)'), t2.g('multPlain(C[S.q[2]].m)')];
+    assert.deepEqual(labs, want, 'värdena står under banden');
+    assert.equal(t2.g('S.pointAt'), {d1: 0, d2: 1, mult: 2}[t2.g('S.pointRole')]);
+  }
+  assert.deepEqual([...roles].sort(), ['d1', 'd2', 'mult']);
+  assert.equal(t2.$('#q .res .blab').textContent.length > 0, true);
   const t4 = atGrade('ohm', 4);
   for (let i = 0; i < 20; i++) { t4.g('next()'); assert.equal(t4.g('S.n'), 5); assert.equal(t4.$('#q .res .bracket'), null); }
 });
@@ -602,7 +610,7 @@ test('Allt om motståndet finns kvar efter svar på en fråga med ett motstånd'
 test('Beroenderegeln: frågorna per ämne och grad använder rätt sorts frågor', () => {
   const kinds = {
     body: [['choice'], ['choice'], ['choice'], ['dir'], ['point']],
-    ohm: [['choice'], ['choice'], ['choice', 'point'], ['choice'], ['read', 'build']],
+    ohm: [['choice'], ['choice'], ['point'], ['choice'], ['read', 'build']],
     tol: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
     tc: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
     e: [['choice'], ['choice'], ['choice'], ['series'], ['series']]

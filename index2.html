@@ -559,7 +559,7 @@ const TOPIC_LINE = {
 // Vad varje grad övar, för raden när man byter grad
 const GRADE_LINE = {
   body:['vilket är inget motstånd?','vilken färg finns inte?','räkna banden','läsriktningen','peka ut banden'],
-  ohm:['färg och siffra','en färg i taget','siffror och nollor','hela värdet med k och M','knappa in och bygg själv'],
+  ohm:['ohm-banden','en färg i taget','siffrorna och multiplikatorn','hela värdet med k och M','knappa in och bygg själv'],
   tol:['hitta toleransbandet','guld och silver','alla toleransfärger','vad värdet får vara','hela motståndet själv'],
   tc:['hitta temperaturbandet','vilka motstånd har det?','färgernas ppm/K','vilket är stabilast?','hela motståndet själv'],
   e:['vilket värde finns inte?','vad namnet betyder','serie och tolerans','vilken serie, med värdet utskrivet','vilken serie, utan hjälp']
@@ -1120,6 +1120,8 @@ function scaleHTML(kind, hi, anim){
   return `<div class="scale" role="img" aria-label="Färgskalan">${list.map(cell).join('')}</div>${kind === 'k' ? '<p class="gnote center">ppm/K</p>' : ''}`;
 }
 const scaleAnim = (list, c) => { const T = {start: .3, step: .22}; T.total = T.start + list.indexOf(c) * T.step + 1; return T; };
+// Multiplikatorn som ett vanligt tal, ×1 000 i stället för ×1k
+const multPlain = m => '×' + m.toLocaleString('sv-SE');
 // Fyra band med gott om plats mellan, för etiketterna under banden
 const spacedStyle = () => ({body:'var(--body)', shape:'bone', pal:0, xs:[90, 132, 174, 226], w:[13, 13, 13, 19.5], flip:false, cues:['gap','wide'], wideIdx:3});
 const roleLabel = (n, i) => { const r = roleOf(n, i); return r === 'digit' ? String(i + 1) : r === 'mult' ? '×' : r === 'tol' ? '±' : 'TK'; };
@@ -1236,24 +1238,14 @@ const GRADES = {
           opts: cs.map(x => swOpt(x, String(C[x].d))), wrong: `${d} är ${C[c].n.toLowerCase()}.`, facit: () => scaleHTML('d', c, T)};
       }
     }),
-    // Gesäll: vad står siffrorna för? Ibland: peka på bandet som säger antalet nollor. Klammer med etiketter.
-    () => {
-      const support = [{labels:['siffra','siffra','nollor'], dim:true}];
-      if (Math.random() < .3) return {type:'point', fmt:'mc', setup(){
-        S.n = 4; S.q = genBands(4); S.style = spacedStyle(); S.moreOK = true;
-        S.pointRole = 'mult'; S.pointAt = 2; S.pointSupport = support;
-      }};
-      return choice(() => {
-        S.n = 4; S.q = genBands(4); S.style = spacedStyle(); S.moreOK = true;
-        const d = [C[S.q[0]].d, C[S.q[1]].d], right = `${d[0]}${d[1]}`;
-        const near = [`${d[1]}${d[0]}`, `${d[0]}${d[1]}${C[S.q[2]].d}`, `${rnd(NEAR_DIGIT[d[0]].filter(x => x))}${d[1]}`, `${d[0]}${rnd(NEAR_DIGIT[d[1]])}`];
-        const vals = pick4(right, near.filter(x => x !== right && x[0] !== '0'), []);
-        while (vals.length < 4) { const x = `${1 + Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 10)}`; if (!vals.includes(x)) vals.push(x); }
-        S.cq = {prompt:'Vad står siffrorna för?', layout:'mc', right: vals.indexOf(right),
-          res: () => svg(S.q, {style: S.style, bracket: support}),
-          opts: vals.map(v => ({html: v})), wrong: `Siffrorna är ${d[0]} och ${d[1]}: ${right}.`};
-      });
-    },
+    // Gesäll: peka på första siffran, andra siffran eller multiplikatorn. Klammern sitter ovanför
+    // och värdena står under banden (2 · 3 · ×10), så att man ser vad banden säger.
+    () => ({type:'point', fmt:'mc', setup(){
+      // Multiplikatorn svart till orange och utskriven utan k (×1 000), eftersom k kommer först på Mästare
+      S.n = 4; S.q = genBands(4); S.q[2] = rnd(['black','brown','red','orange']); S.style = spacedStyle(); S.moreOK = true;
+      S.pointRole = rnd(['d1','d2','mult']); S.pointAt = {d1: 0, d2: 1, mult: 2}[S.pointRole];
+      S.pointSupport = [{labels: [String(C[S.q[0]].d), String(C[S.q[1]].d), multPlain(C[S.q[2]].m)], dim: true}];
+    }}),
     // Mästare: siffror och nollor till ohm, med k och M. Fyra band, bara klammern som stöd.
     () => choice(() => {
       const base = rnd(E24), mi = Math.floor(Math.random() * 7);
@@ -1442,7 +1434,7 @@ function render(){
   } else if (S.type === 'choice') {
     h += choiceHTML();
   } else if (S.type === 'point') {
-    const what = {first:'första bandet', mult:'bandet som säger hur många nollor'}[S.pointRole];
+    const what = {first:'första bandet', d1:'första siffran', d2:'andra siffran', mult:'multiplikatorn'}[S.pointRole];
     const wrong = S.answered && !S.ok && !inExam(), first = S.pointRole === 'first', k = nd(S.q);
     const ring = !S.answered ? null : inExam() ? [[S.pickBand, 'accent']]
       : wrong && first ? [[S.pickBand, 'bad'], [S.pointAt, 'ok', POINT_T.ring]]
@@ -1828,7 +1820,8 @@ function lessonHTML(){
   const text = qAnim() ? `<p class="sr" role="status">${line}</p>` : `<p class="lesson bad" role="status">${line}</p>`;
   return `${text}<button type="button" class="tapcue" id="cont" aria-label="Fortsätt" style="--wait:${Math.max(0, wait).toFixed(2)}s">${HAND}</button>`;
 }
-const pointWrong = () => S.pointRole === 'mult' ? 'Bandet efter siffrorna säger hur många nollor.'
+const pointWrong = () => S.pointRole === 'mult' ? 'Multiplikatorn är bandet efter siffrorna.'
+  : S.pointRole === 'd1' || S.pointRole === 'd2' ? 'Siffrorna är de första banden, i läsordning.'
   : `Första bandet sitter i änden längst från det breda toleransbandet. Här läser man från ${S.style.flip ? 'höger' : 'vänster'}.`;
 // Allt om motståndet, under kortet
 function moreHTML(){
