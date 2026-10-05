@@ -540,6 +540,39 @@ test('Blandat: statusraden, kartan och kortet', () => {
   assert.equal(t.$$('[data-grade]').length, 0, 'inga gradval på ett gyllene ämne');
 });
 
+test('Resistansens Gesäll: ohm-talet står i klammern', () => {
+  const t = atGrade('ohm', 2);
+  for (let i = 0; i < 20; i++) {
+    t.g('S.grade.ohm = 2; next()');
+    assert.equal(t.$('#q .res .bracket text').textContent, `Resistans = ${t.g('fmtVal(valueOf(S.q))')}`);
+  }
+});
+
+test('Testläge: rätt svar har en grön pil, i vanligt läge syns ingen', () => {
+  const tt = load({ url: 'http://localhost/?test=true', storage: { 'fargkoden2-topic': 'body', 'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }) } });
+  const check = (topic, g, n = 15) => {
+    for (let i = 0; i < n; i++) {
+      tt.g(`S.topic = '${topic}'; S.grade['${topic}'] = ${g}; next()`);
+      const type = tt.g('S.type'), fmt = tt.g('S.plan.fmt');
+      if (type === 'choice') assert.ok(tt.$(`[data-c="${tt.g('S.cq.right')}"]`).classList.contains('cheat'), `${topic} ${g}`);
+      else if (type === 'point') assert.equal(tt.$('#q .cheatmark').dataset.at, String(tt.g('S.pointAt')));
+      else if (type === 'dir') assert.ok(tt.$(`[data-dir="${tt.g("S.style.flip ? 'right' : 'left'")}"]`).classList.contains('cheat'));
+      else if (type === 'series') assert.ok(tt.$(`[data-sr="${tt.g('S.sr.answer')}"]`).classList.contains('cheat'));
+      else if (fmt === 'hard') assert.match(tt.$('#q .cheatline').textContent, /Svar:/);
+      else assert.equal(tt.$$('#q .cheat').length, 1, `${topic} ${g} ${type}`);
+      assert.ok(tt.$('#q .cheat, #q .cheatmark, #q .cheatline'), `${topic} ${g} ${type} har en pil`);
+    }
+  };
+  for (const topic of ['body', 'ohm', 'tol', 'tc', 'e']) for (let g = 0; g < 5; g++) check(topic, g);
+  // Rätt svar enligt pilen ger rätt
+  tt.g("S.topic = 'ohm'; S.grade.ohm = 3; next()");
+  tt.$('#q .cheat').click();
+  assert.equal(tt.g('S.ok'), true);
+  const t = atGrade('ohm', 3);
+  t.g('next()');
+  assert.equal(t.$$('#q .cheat, #q .cheatmark, #q .cheatline').length, 0);
+});
+
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
   const t = atGrade('body', 0);
   t.g('S.instant = false');

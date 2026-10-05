@@ -190,6 +190,11 @@ html,body{overflow-x:clip}
   .cells i.heal{animation:heal .6s ease-out}
   @keyframes heal{0%{background:var(--bad);border-color:var(--bad)}50%{transform:scale(1.3);box-shadow:0 0 12px var(--fresh)}}
 }
+/* Testläge: grön pil på rätt svar */
+.cheat{position:relative;box-shadow:inset 0 0 0 3px var(--ok)}
+.cheat::after{content:'➜';position:absolute;left:6px;top:3px;color:var(--ok);font:700 1rem/1 system-ui,sans-serif}
+.cheatmark path{fill:var(--ok)}
+.cheatline{color:var(--ok);font-weight:700;font-size:.95rem;margin:10px 0 0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Nivåkortet: gradprickar och animering av ämnet */
 .grades{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
@@ -569,6 +574,10 @@ const UP_AT = 3, DOWN_AT = 3, UNLOCK_AT = 3, MAX = 4;
 const S = {topic:'body', grade:{}, done:{}, up:0, down:0, q:null, n:4, type:null, answered:false, build:null, slot:0, style:null};
 TOPICS.forEach(t => { S.grade[t] = 0; S.done[t] = 0; });
 const save = (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} };
+// Testläge: ?test=true i adressen, eller data-test="true" på html-elementet (så publiceras artifacten).
+// Visar testraden och en grön pil på rätt svar.
+const TEST_MODE = new URLSearchParams(location.search).get('test') === 'true' || document.documentElement.dataset.test === 'true';
+const cheat = right => TEST_MODE && !S.answered && right ? ' cheat' : '';
 try {
   const tp = localStorage.getItem('fargkoden2-topic');
   S.firstVisit = !tp;
@@ -890,12 +899,12 @@ function svg(b, o = {}){
   }).join('');
   // Klammer över ohm-banden (band 0 till och med to). dim tonar ner banden efter, labels skrivs under banden.
   const brs = o.bracket || [];
-  const brackets = brs.map(({to = nd(b), kind = 'accent', labels, at}, j) => {
+  const brackets = brs.map(({to = nd(b), kind = 'accent', labels, at, title = 'Resistans'}, j) => {
     const xs = [...Array(to + 1).keys()].flatMap(i => [cxOf(i) - st.w[i]/2, cxOf(i) + st.w[i]/2]);
     const x1 = Math.min(...xs) - 2, x2 = Math.max(...xs) + 2, y = -4 - j * 0;
     const lab = (labels || []).map((l, i) => `<text x="${cxOf(i)}" y="103" text-anchor="middle" font-size="11" font-weight="600" class="blab">${l}</text>`).join('');
     return `<g class="bracket ${kind}${at != null ? ' mk' : ''}"${delay(at)}><path d="M${x1} 6 V${y - 6} H${x2} V6" fill="none" stroke-width="2.5"${kind === 'ok' && brs.length > 1 ? ' stroke-dasharray="5 4"' : ''}/>` +
-      (kind !== 'bad' ? `<text x="${(x1 + x2) / 2}" y="${y - 12}" text-anchor="middle" font-size="12" font-weight="700">Resistans</text>` : '') + `${lab}</g>`;
+      (kind !== 'bad' ? `<text x="${(x1 + x2) / 2}" y="${y - 12}" text-anchor="middle" font-size="12" font-weight="700">${title}</text>` : '') + `${lab}</g>`;
   }).join('');
   // Anteckningar ovanför banden: text över ett band, en dubbelpil över ett mellanrum eller en klammer över flera band
   const notes = (o.notes || []).map(({i, j, text, span}) => {
@@ -921,6 +930,8 @@ function svg(b, o = {}){
     const w = st.w[i], cx = st.flip ? 320 - st.xs[i] : st.xs[i];
     return `<rect class="ring ${kind}${at != null ? ' mk' : ''}"${delay(at)} x="${cx - w/2 - 4}" y="3" width="${w + 8}" height="86" rx="4" fill="none" stroke-width="3"/>`;
   }).join('');
+  // Testläge: en grön pil ovanför bandet man ska peka på
+  const cheatMark = o.cheatAt != null ? `<g class="cheatmark" data-at="${o.cheatAt}"><path d="M${cxOf(o.cheatAt) - 7} -1 L${cxOf(o.cheatAt) + 7} -1 L${cxOf(o.cheatAt)} 8 Z"/></g>` : '';
   // Pilen som glider in längs tråden från änden där man börjar läsa och stannar vid bandet
   let sweep = '';
   if (o.sweep) {
@@ -947,7 +958,7 @@ function svg(b, o = {}){
   return `<svg viewBox="0 ${top} 320 ${bottom - top}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}"><defs>${mdefs}
 <clipPath id="c${id}"><path d="${body}"/></clipPath>
 <linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
-${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}${rings}${brackets}${notes}${sweep}</svg>`;
+${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}${rings}${brackets}${notes}${sweep}${cheatMark}</svg>`;
 }
 const colorNames = b => b.map(k => C[k].n).join(', ');
 
@@ -1250,7 +1261,7 @@ const GRADES = {
       S.style = spacedStyle(n); S.moreOK = true;
       S.pointRole = rnd(k === 3 ? ['d1','d2','d3','mult'] : ['d1','d2','mult']);
       S.pointAt = {d1: 0, d2: 1, d3: 2, mult: k}[S.pointRole];
-      S.pointSupport = [{labels: S.q.slice(0, k).map(c => String(C[c].d)).concat([multPlain(C[S.q[k]].m)]), dim: true}];
+      S.pointSupport = [{labels: S.q.slice(0, k).map(c => String(C[c].d)).concat([multPlain(C[S.q[k]].m)]), dim: true, title: `Resistans = ${fmtVal(valueOf(S.q))}`}];
     }}),
     // Mästare: siffror och nollor till ohm, med k och M, på 4, 5 eller 6 band. Bara klammern som stöd.
     () => choice(() => {
@@ -1424,10 +1435,10 @@ function render(){
     const full = S.plan.showVal ? `<p class="big">${fmtVal(S.sr.v)} ${fmtTol(bandsTol(S.sr.bands))}</p>` : '';
     h += `${topHTML('Vilken E-serie hör motståndet hemma i?')}${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
 
-      <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
+      <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}${cheat(k === S.sr.answer)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
     const right = S.style.flip ? 'right' : 'left';
-    const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
+    const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}${cheat(right === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
     // Vid fel: ledtråden visas och banden räknas 1, 2, 3 … från rätt ände
     const why = S.answered && !S.ok && !inExam(), k = nd(S.q), st = S.style;
     const lab = i => String(i + 1);
@@ -1453,7 +1464,7 @@ function render(){
     const why = wrong && first ? {mark: [[0, '1']], markKind: 'ok', markAnim: {start: POINT_T.ring, step: 0},
       notes: [cueNote(S.style, k)].filter(Boolean), sweep: {to: 0, at: POINT_T.sweep}}
       : {mark: wrong ? S.q.map((_, i) => [i, roleLabel(S.n, i)]) : null};
-    h += `${topHTML(`Peka på ${what}.`)}<div class="res">${svg(S.q, {style: S.style, tap: !S.answered, ring, bracket: S.pointSupport, ...why})}</div>`;
+    h += `${topHTML(`Peka på ${what}.`)}<div class="res">${svg(S.q, {style: S.style, tap: !S.answered, ring, bracket: S.pointSupport, cheatAt: cheat(true) ? S.pointAt : null, ...why})}</div>`;
   } else {
     const bq = {v:'Vilket motstånd har värdet', all:'Vilket motstånd har värdet', t:'Vilket toleransband ger', k:'Vilket sjätte band ger',
       d:'Vilka band ger siffrorna', x:'Vilket band ger multiplikatorn'}[S.focus];
@@ -1482,6 +1493,7 @@ function render(){
       const keys = S.palAll ||= shuffle(DIG.concat(['gold','silver']));
       h += `<div class="palette">${keys.map(k =>
         `<button class="pc" data-color="${k}"${disAttr()}><span class="sw" style="${swStyle(k)}"></span>${C[k].n}</button>`).join('')}</div>`;
+      if (cheat(true)) h += `<p class="cheatline">Svar: ${(S.askSlots || [...Array(n).keys()]).map(i => C[truthAt(i)].n).join(', ')}</p>`;
     }
   }
   h += lessonHTML();
@@ -1504,7 +1516,7 @@ function choiceHTML(){
   // Vid fel: det udda kortet poppar vid anim.pop, och rätt svar studsar vid anim.land
   const why = Q.anim && done && !S.ok && !inExam();
   const pd = i => why && i === Q.right ? ` style="${Q.anim.pop != null ? `--pd:${Q.anim.pop.toFixed(2)}s;` : ''}${Q.anim.land != null ? `animation-delay:${Q.anim.land.toFixed(2)}s` : ''}"` : '';
-  const opts = Q.opts.map((o, i) => `<button class="opt${cls}${mk(i)}${why && Q.anim.land != null && i === Q.right ? ' land' : ''}" data-c="${i}"${pd(i)}${disAttr()}>${o.draw ? o.draw() : o.html}${badge(o)}${done && o.ann ? `<small class="ann">${o.ann}</small>` : ''}</button>`).join('');
+  const opts = Q.opts.map((o, i) => `<button class="opt${cls}${mk(i)}${cheat(i === Q.right)}${why && Q.anim.land != null && i === Q.right ? ' land' : ''}" data-c="${i}"${pd(i)}${disAttr()}>${o.draw ? o.draw() : o.html}${badge(o)}${done && o.ann ? `<small class="ann">${o.ann}</small>` : ''}</button>`).join('');
   return `${Q.odd ? `<p class="oddhead">${BALLOON}Vilken ska bort?<span>Tre hör ihop, en ska bort.</span></p>` : ''}${topHTML(Q.prompt)}${Q.res ? `<div class="res">${Q.res()}</div>` : ''}
     <div class="${grid}">${opts}</div>${done && !S.ok && Q.facit ? Q.facit() : ''}`;
 }
@@ -1908,7 +1920,8 @@ function fieldsHTML(){
     panel = `<div class="chiprow" role="group" aria-label="${FIELD_LBL[f]}">${FIELD_VALS[f].map(x =>
       `<button class="chip" data-fval="${x}" aria-pressed="${E[p] === x}">${FIELD_FMT[f](x)}</button>`).join('')}</div>`;
   }
-  return `<div class="entry"><div class="eboxes">${boxes}</div>${pre}${panel}${submitHTML()}</div>`;
+  const cheatLine = cheat(true) ? `<p class="cheatline">Svar: ${fs.map(fieldTruth).join(' · ')}</p>` : '';
+  return `<div class="entry"><div class="eboxes">${boxes}</div>${pre}${panel}${submitHTML()}${cheatLine}</div>`;
 }
 function keyPress(k){
   if (S.answered) return;
@@ -2030,7 +2043,7 @@ mapEl.addEventListener('keydown', e => {
   if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); showLevelCard(g.dataset.level); }
 });
 // Testraden visas bara med ?test=true i adressen
-if (new URLSearchParams(location.search).get('test') === 'true') document.querySelector('.testbar').hidden = false;
+if (TEST_MODE) document.querySelector('.testbar').hidden = false;
 document.getElementById('tGive').addEventListener('click', () => {
   const lv = TOPICS.find(l => !unlocked(l));
   if (lv) { const p = TOPICS[TOPICS.indexOf(lv) - 1]; S.done[p] = Math.max(S.done[p], UNLOCK_AT); S.grade[p] = Math.max(S.grade[p], UNLOCK_AT); saveProgress(); }
@@ -2147,7 +2160,7 @@ function mcHTML(){
   if (!S.mc) { S.mc = buildMC(); S.pick = {v:null, t:null, k:null, d:null, x:null}; }
   const g = S.focus, right = S.mc[g].findIndex(x => mcEq(x, mcTruth(g)));
   return `<div class="mcgroup"><div class="opts mc">${S.mc[g].map((x,i) =>
-    `<button class="opt${markCls(i === right, S.pick[g] === i)}" data-pick="${g}:${i}"${disAttr()}>${mcFmt(g, x)}${S.answered ? mcAnn(g, x) : ''}</button>`).join('')}</div></div>`;
+    `<button class="opt${markCls(i === right, S.pick[g] === i)}${cheat(i === right)}" data-pick="${g}:${i}"${disAttr()}>${mcFmt(g, x)}${S.answered ? mcAnn(g, x) : ''}</button>`).join('')}</div></div>`;
 }
 function mcTruth(g){ return g === 'v' ? valueOf(S.q) : g === 't' ? tolOf(S.q) : g === 'd' ? digitStr(S.q) : g === 'x' ? C[S.q[nd(S.q)]].m : tcOf(S.q); }
 function answerMC(){
@@ -2184,9 +2197,9 @@ function bmcHTML(){
       : S.focus === 'x' ? {x: multChoices(S.q)} : {t: tolChoices()};
   }
   const right = bmcRight(), st = {...stdStyle(S.n), flip: S.flipQ};
-  const imgBtn = (o, i, lab, ann) => `<button class="opt r${markCls(i === right, S.bpick === i)}" data-vpick="${i}"${disAttr()}>${svg(o, {style: st, label: lab})}${S.answered ? `<small class="ann">${ann}</small>` : ''}</button>`;
+  const imgBtn = (o, i, lab, ann) => `<button class="opt r${markCls(i === right, S.bpick === i)}${cheat(i === right)}" data-vpick="${i}"${disAttr()}>${svg(o, {style: st, label: lab})}${S.answered ? `<small class="ann">${ann}</small>` : ''}</button>`;
   const role = S.focus === 'x' ? 'mult' : S.focus === 'k' ? 'tc' : 'tol';
-  const colBtn = (c, attr) => `<button class="opt bc${markCls(c === right, S.bpick === c)}" data-${attr}="${c}"${disAttr()}><span class="sw" style="${swStyle(c)}"></span>${C[c].n}${S.answered ? `<small class="ann">${bandDetail(c, role)}</small>` : ''}</button>`;
+  const colBtn = (c, attr) => `<button class="opt bc${markCls(c === right, S.bpick === c)}${cheat(c === right)}" data-${attr}="${c}"${disAttr()}><span class="sw" style="${swStyle(c)}"></span>${C[c].n}${S.answered ? `<small class="ann">${bandDetail(c, role)}</small>` : ''}</button>`;
   const blank = n => Array(n).fill(null);
   const target = (b, label) => `<div class="res">${svg(b, {style: st, label, mark: S.mark})}</div>`;
   if (S.focus === 'd') return target(blank(k).concat(S.q.slice(k)), 'Motståndet med sifferbanden tomma')
