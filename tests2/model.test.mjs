@@ -322,6 +322,24 @@ test('Resistansens Gesäll: etiketterna under banden har plats och går inte i v
   }
 });
 
+test('Motståndet Lärling fel: de 12 färgerna läggs ut, den falska får ✗ och poppar, de andra får ✓', () => {
+  const t = atGrade('body', 1);
+  for (let i = 0; i < 15; i++) {
+    t.g('S.grade.body = 1; next()');
+    const right = t.g('S.cq.right'), fake = t.g('S.cq.fake'), name = t.g(`C['${fake}'].n`);
+    answer(t, false);
+    const odd = t.$(`[data-c="${right}"]`);
+    assert.ok(odd.classList.contains('gone'));
+    assert.match(odd.querySelector('.badge.bad').textContent, new RegExp(`${name}.*✗`));
+    t.$$('[data-c]').filter(b => b !== odd).forEach(b => assert.match(b.querySelector('.badge.ok').textContent, /✓/));
+    const strip = t.$('#q .palstrip');
+    assert.equal(strip.querySelectorAll('.real').length, 12, 'de tolv riktiga färgerna');
+    assert.ok(strip.querySelector('.fake'), 'den falska färgen läggs bredvid');
+    assert.equal(t.$$('#q .lesson').length, 0);
+    assert.ok(t.g('qAnim().total') >= 3);
+  }
+});
+
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
   const t = atGrade('body', 0);
   t.g('S.instant = false');

@@ -77,6 +77,9 @@ html,body{overflow-x:clip}
 .note path{stroke:var(--ink)}
 .note text{fill:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;font-weight:700}
 .blab{fill:var(--muted)}
+.palstrip{display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin:14px 0 0;padding:8px 6px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.palstrip .sw{width:16px;height:16px}
+.palstrip .fake{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 8px 2px 4px;border-radius:999px;background:var(--bad);color:#fff;font-weight:700}
 /* Vilken ska bort?: det som ska bort är borta, platsen står kvar */
 .opt.gone{visibility:hidden}
 .opt.picked{box-shadow:inset 0 0 0 3px var(--bad)}
@@ -1062,16 +1065,24 @@ const GRADES = {
         wrong: `Ett motstånd har 3 till 6 färgband, oftast 4, 5 eller 6. Det här hade ${odd}.`};
     }),
     // Lärling: vilken färg finns inte?
+    // Vid fel: ringen runt den falska färgen blir röd, de tolv riktiga färgerna läggs ut och den falska hamnar bredvid med ✗.
+    // Sedan poppar kortet och de andra får ✓.
     () => choice(() => {
-      const right = rnd4(), fake = rnd(FAKE);
+      const right = rnd4(), fake = rnd(FAKE), REAL = DIG.concat(['gold','silver']);
+      const T = {strip: .6, step: .08};
+      T.fake = T.strip + REAL.length * T.step + .25; T.pop = T.fake + 1; T.green = T.pop + .5; T.total = T.green + .8;
+      const wrongNow = () => S.answered && !S.ok;
       const opts = [0,1,2,3].map(i => {
         const n = rnd([4, 5, 6]), b = genBands(n);
-        if (i !== right) return {html: svg(b, {style: stdStyle(n)})};
+        if (i !== right) return {html: svg(b, {style: stdStyle(n)}), badge: () => wrongNow() && {text: '✓', kind: 'ok', at: T.green}};
         const at = Math.floor(Math.random() * nd(b));
         b[at] = fake;
-        return {draw: () => svg(b, {style: stdStyle(n), ring: S.answered && !S.ok ? [[at, 'bad']] : null})};
+        return {draw: () => svg(b, {style: stdStyle(n), ring: wrongNow() ? [[at, 'bad']] : null}),
+          badge: () => wrongNow() && {text: `${C[fake].n} ✗`, kind: 'bad', at: T.fake}};
       });
-      S.cq = {odd:true, fake, right, layout:'r', prompt:'Ett av dem har en färg som inte finns på motstånd.', opts,
+      S.cq = {odd:true, anim: T, fake, right, layout:'r', prompt:'Ett av dem har en färg som inte finns på motstånd.', opts,
+        facit: () => `<div class="palstrip" aria-hidden="true">${REAL.map((c, j) =>
+          `<span class="real sw mk" style="${swStyle(c)};animation-delay:${(T.strip + j * T.step).toFixed(2)}s"></span>`).join('')}<span class="fake mk" style="animation-delay:${T.fake.toFixed(2)}s"><span class="sw" style="background:${C[fake].hex}"></span>✗</span></div>`,
         wrong: `Färgerna är svart, brun, röd, orange, gul, grön, blå, violett, grå, vit, guld och silver. ${C[fake].n} finns inte.`};
     }),
     // Gesäll: räkna banden
