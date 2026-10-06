@@ -583,6 +583,7 @@ th{color:var(--muted);font-weight:500}
     <span>Test</span>
     <button id="tGive">Lås upp nästa ämne</button>
     <button id="tReset">Börja om</button>
+    <button id="tCheat">Dölj rätt svar</button>
   </div>
 </main>
 <div class="gbar" id="gbar" aria-hidden="true"></div>
@@ -656,11 +657,14 @@ const GRADE_LINE = {
 const UP_AT = 3, DOWN_AT = 3, UNLOCK_AT = 3, MAX = 4;
 const S = {topic:'body', grade:{}, done:{}, up:0, down:0, q:null, n:4, type:null, answered:false, build:null, slot:0, style:null};
 TOPICS.forEach(t => { S.grade[t] = 0; S.done[t] = 0; });
-const save = (k, v) => { if (S.pin && k !== 'fargkoden2-sound') return; try { localStorage.setItem(k, v); } catch(e) {} };
+const save = (k, v) => { if (S.pin && k !== 'fargkoden2-sound' && k !== 'fargkoden2-cheat') return; try { localStorage.setItem(k, v); } catch(e) {} };
 // Testläge: ?test=true i adressen, eller data-test="true" på html-elementet (så publiceras artifacten).
 // Visar testraden och en grön pil på rätt svar.
 const TEST_MODE = new URLSearchParams(location.search).get('test') === 'true' || document.documentElement.dataset.test === 'true';
-const cheat = right => TEST_MODE && !S.answered && right ? ' cheat' : '';
+// Pilarna på rätt svar går att dölja med knappen i testraden. Valet sparas.
+S.cheatOn = (() => { try { return localStorage.getItem('fargkoden2-cheat') !== 'off'; } catch(e) { return true; } })();
+const showCheat = () => TEST_MODE && S.cheatOn;
+const cheat = right => showCheat() && !S.answered && right ? ' cheat' : '';
 try {
   const tp = localStorage.getItem('fargkoden2-topic');
   S.firstVisit = !tp;
@@ -914,7 +918,7 @@ function kickHTML(lv){
   }
   const k = S.kick;
   return `<div class="kick"><p class="kickq">${KICK[lv].q}</p><div class="kickopts">${k.opts.map((o, i) =>
-    `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${TEST_MODE && i === k.right ? ' cheat' : ''}" data-kick="${i}"${o.label ? ` aria-label="${o.label}"` : ''}${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o.html}</button>`).join('')}</div></div>`;
+    `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${showCheat() && i === k.right ? ' cheat' : ''}" data-kick="${i}"${o.label ? ` aria-label="${o.label}"` : ''}${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o.html}</button>`).join('')}</div></div>`;
 }
 const centerOf = el => { const r = el.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
 function kickPick(btn){
@@ -2440,7 +2444,7 @@ function syncChips(){
     const gone = !!o.placed[k] || o.away.has(k);
     c.classList.toggle('gone', gone); c.disabled = !!o.placed[k] || S.answered;
     c.classList.toggle('hint', o.hint === k);
-    c.classList.toggle('cheat', TEST_MODE && !S.answered && k === want);
+    c.classList.toggle('cheat', showCheat() && !S.answered && k === want);
   });
 }
 function orderPick(btn){
@@ -2582,6 +2586,15 @@ mapEl.addEventListener('keydown', e => {
 });
 // Testraden visas bara med ?test=true i adressen
 if (TEST_MODE) document.querySelector('.testbar').hidden = false;
+const cheatBtn = document.getElementById('tCheat');
+const syncCheatBtn = () => { cheatBtn.textContent = S.cheatOn ? 'Dölj rätt svar' : 'Visa rätt svar'; cheatBtn.setAttribute('aria-pressed', !S.cheatOn); };
+syncCheatBtn();
+cheatBtn.addEventListener('click', () => {
+  S.cheatOn = !S.cheatOn; save('fargkoden2-cheat', S.cheatOn ? 'on' : 'off'); syncCheatBtn();
+  // Rita om det som visas: kortet eller frågan
+  if (S.view) drawCard(S.view, S.fresh);
+  else if (S.plan && S.type !== 'exam') render();
+});
 document.getElementById('tGive').addEventListener('click', () => {
   const lv = TOPICS.find(l => !unlocked(l));
   if (lv) { const p = TOPICS[TOPICS.indexOf(lv) - 1]; S.done[p] = Math.max(S.done[p], UNLOCK_AT); S.grade[p] = Math.max(S.grade[p], UNLOCK_AT); saveProgress(); }

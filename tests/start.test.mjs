@@ -220,3 +220,23 @@ test('Förhandsvisningen från dev.html hoppar över startkortet', () => {
   assert.equal(t.g('S.view'), null);
   assert.ok(['point', 'order'].includes(t.g('S.type')));
 });
+
+test('Testraden: Dölj rätt svar tar bort pilarna, Visa rätt svar tar tillbaka dem, och valet sparas', () => {
+  const t = load({ url: 'http://localhost/index.html?test=true&topic=tol&grade=3' });
+  const btn = t.$('#tCheat');
+  assert.ok(btn, 'knappen finns');
+  assert.equal(btn.textContent, 'Dölj rätt svar');
+  assert.ok(t.$('#q .cheat'), 'pilen syns från början');
+  btn.click();
+  assert.equal(t.$('#q .cheat'), null);
+  assert.equal(btn.textContent, 'Visa rätt svar');
+  t.g('next()');
+  assert.equal(t.$('#q .cheat'), null, 'gäller nästa fråga också');
+  t.g("showLevelCard('tol')");
+  assert.equal(t.$('#q .cheat'), null, 'och startfrågan');
+  btn.click();
+  assert.ok(t.$('#q .cheat'));
+  const u = load({ url: 'http://localhost/index.html?test=true', storage: { 'fargkoden2-cheat': 'off' } });
+  assert.equal(u.$('#tCheat').textContent, 'Visa rätt svar');
+  assert.equal(u.$('#q .cheat'), null);
+});
