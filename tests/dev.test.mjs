@@ -112,3 +112,15 @@ test('dev.html: ta bort en rad fungerar utan dialogruta', () => {
   del().click();
   assert.equal(d.$('tr[data-id="ohm-peka"]'), null);
 });
+
+test('dev.html: Visa öppnar spelet i en panel på sidan, och Stäng tar bort den', () => {
+  const d = dev();
+  d.$('[data-tab="ohm"]').click();
+  d.$('tr[data-id="ohm-peka"] a.show').click();
+  const frame = d.$('#viewer iframe');
+  assert.ok(frame, 'panelen med spelet');
+  assert.match(frame.getAttribute('src'), /index\.html\?test=true&topic=ohm&grade=2$/);
+  assert.ok(!d.$('#viewer').hidden);
+  d.$('#viewer .vclose').click();
+  assert.ok(d.$('#viewer').hidden);
+});

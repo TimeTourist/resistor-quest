@@ -60,6 +60,14 @@ td.acts a,td.acts button{padding:2px 6px;font-size:12px}
 #prompt{width:100%;min-height:260px;font:12px/1.5 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--card);color:var(--ink)}
 .outbar{display:flex;gap:8px;align-items:center;margin-bottom:6px}
 .outbar span{color:var(--muted)}
+/* Spelet i en panel till höger, i mobilbredd. På smala skärmar täcker den hela sidan. */
+#viewer{position:fixed;top:0;right:0;bottom:0;width:min(410px,100vw);z-index:20;display:flex;flex-direction:column;background:var(--card);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.18)}
+#viewer[hidden]{display:none}
+.vbar{display:flex;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line)}
+.vtitle{margin-right:auto;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#viewer iframe{flex:1;border:0;width:100%;background:var(--bg)}
+body.viewing main,body.viewing header{margin-right:410px}
+@media (max-width:900px){body.viewing main,body.viewing header{margin-right:auto}}
 </style>
 </head>
 <body>
@@ -78,6 +86,10 @@ td.acts a,td.acts button{padding:2px 6px;font-size:12px}
     </table>
   </div>
   <div class="foot"><button id="add">+ Ny frågetyp</button></div>
+  <aside id="viewer" hidden aria-label="Spelet">
+    <div class="vbar"><span class="vtitle"></span><button class="vreload" title="Ladda om">↻</button><button class="vclose">Stäng</button></div>
+    <iframe title="Färgkoden"></iframe>
+  </aside>
   <section id="out" hidden>
     <div class="outbar"><button id="copy">Kopiera</button><span id="copied"></span></div>
     <textarea id="prompt" readonly></textarea>
@@ -229,7 +241,7 @@ function render(){
       <td>${ta('right', x.right)}</td><td>${ta('wrong', x.wrong)}</td>
       <td><select data-f="status" aria-label="Status">${STATUS.concat(STATUS.includes(x.status) ? [] : [x.status]).map(s => `<option${s === x.status ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select></td>
       <td>${ta('comment', x.comment)}</td>
-      <td class="acts">${g === IDEA ? '' : `<a class="btn show" target="fargkoden" href="index.html?test=true&topic=${tab}${tab === 'ultra' ? '' : `&grade=${g}`}" title="Öppna spelet här">Visa</a>`}<button class="del" title="Ta bort">✕</button></td>
+      <td class="acts">${g === IDEA ? '' : `<a class="btn show" href="index.html?test=true&topic=${tab}${tab === 'ultra' ? '' : `&grade=${g}`}" title="Visa spelet i en panel">Visa</a>`}<button class="del" title="Ta bort">✕</button></td>
     </tr>`).join('');
   }).join('');
 }
@@ -307,6 +319,19 @@ function armed(btn, label, ask = 'Säker? Tryck igen'){
   setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = label; } }, 3000);
   return false;
 }
+// Visa: spelet öppnas i panelen. En ny flik fungerar inte i en artifact, där filerna bara får visas inuti sidan.
+const viewer = document.getElementById('viewer'), vframe = viewer.querySelector('iframe');
+rowsEl.addEventListener('click', e => {
+  const a = e.target.closest('a.show');
+  if (!a || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  e.preventDefault();
+  const tr = a.closest('tr'), row = state.rows[state.tab].find(x => x.id === tr.dataset.id);
+  viewer.querySelector('.vtitle').textContent = `${TABS.find(t => t.id === state.tab).name} · ${groupName(state.tab, row.g)} · ${row.name}`;
+  vframe.setAttribute('src', a.getAttribute('href'));
+  viewer.hidden = false; document.body.classList.add('viewing');
+});
+viewer.querySelector('.vclose').addEventListener('click', () => { viewer.hidden = true; document.body.classList.remove('viewing'); vframe.removeAttribute('src'); });
+viewer.querySelector('.vreload').addEventListener('click', () => { const src = vframe.getAttribute('src'); vframe.setAttribute('src', 'about:blank'); setTimeout(() => vframe.setAttribute('src', src), 30); });
 rowsEl.addEventListener('click', e => {
   const del = e.target.closest('.del');
   if (!del) return;
