@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 export function until(t, pred, max = 800) {
   for (let i = 0; i < max; i++) {
     t.g('next()');
-    if (pred(t.g('({...S.plan, n: S.n})'))) return;
+    if (pred(t.g('({...S.plan, n: S.n, set: S.ord && S.ord.set})'))) return;
   }
   throw new Error('hittade ingen sådan fråga');
 }
@@ -32,6 +32,12 @@ export function answer(t, correct = true) {
   }
   if (type === 'dir') return pickBy('[data-dir]', 'dir', g("S.style.flip ? 'right' : 'left'"));
   if (type === 'series') return pickBy('[data-sr]', 'sr', g('S.sr.answer'));
+  if (type === 'order') {
+    // Rätt: i ordning. Fel: andra färgen först, sedan resten i ordning.
+    const keys = Array.from(g('S.ord.keys')), seq = correct ? keys : [keys[1], keys[0], ...keys.slice(2)];
+    for (const k of seq) t.$(`[data-ord="${k}"]`).click();
+    return;
+  }
   if (fmt === 'mc' && type === 'read')
     return pickBy('[data-pick]', 'pick', g("S.focus + ':' + S.mc[S.focus].findIndex(x => mcEq(x, mcTruth(S.focus)))"));
   if (fmt === 'mc' && type === 'build') {

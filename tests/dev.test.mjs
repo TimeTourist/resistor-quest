@@ -18,7 +18,7 @@ test('Förhandsvisning: ?test=true&topic=ohm&grade=2 öppnar Resistansens Gesäl
   const t = load({ url: 'http://localhost/index.html?test=true&topic=ohm&grade=2' });
   assert.equal(t.g('S.topic'), 'ohm');
   assert.equal(t.g('S.grade.ohm'), 2);
-  assert.equal(t.g('S.type'), 'point');
+  assert.ok(['point', 'order'].includes(t.g('S.type')));
   for (let i = 0; i < 4; i++) { answer(t, true); cont(t); }
   assert.equal(t.g('S.grade.ohm'), 2, 'graden ändras inte i förhandsvisningen');
   assert.equal(t.g("localStorage.getItem('fargkoden2-grade')"), null, 'förhandsvisningen sparar inget');
@@ -62,7 +62,7 @@ test('dev.html: ändrad text, kommentar och ny rad hamnar i prompten och sparas'
   d.$('#gen').click();
   const p = d.$('#prompt').value;
   assert.match(p, /## Resistansen/);
-  assert.match(p, /Gesäll · Peka på siffra/);
+  assert.match(p, /Gesäll · Peka på multiplikatorn/);
   assert.match(p, /Felanimering: ".*" → "Ny felanimering"/);
   assert.match(p, /Kommentar: "Tydligare pil"/);
   assert.match(p, /Ny frågetyp under Idéer: "Min idé"/);
@@ -78,7 +78,7 @@ test('dev.html: flytt till en annan grad och ny ordning syns i prompten', () => 
   d.$('#gen').click();
   const p = d.$('#prompt').value;
   assert.match(p, /flyttad från Mästare till Gesäll/);
-  assert.match(p, /Ny ordning på Gesäll: .*Siffror och nollor.*Peka på siffra/);
+  assert.match(p, /Ny ordning på Gesäll: .*Siffror och nollor.*Peka på multiplikatorn/);
 });
 
 test('dev.html: Visa-länken öppnar spelet på rätt ämne och grad', () => {

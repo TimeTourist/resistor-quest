@@ -218,5 +218,5 @@ test('Sidan öppnar på Eldprovets kort om man var där', () => {
 test('Förhandsvisningen från dev.html hoppar över startkortet', () => {
   const t = load({ start: true, url: 'http://localhost/index.html?test=true&topic=ohm&grade=2' });
   assert.equal(t.g('S.view'), null);
-  assert.equal(t.g('S.type'), 'point');
+  assert.ok(['point', 'order'].includes(t.g('S.type')));
 });

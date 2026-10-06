@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { readFileSync } from 'node:fs';
 import { atGrade } from './harness.mjs';
+import { until } from './answer.mjs';
 
 test('Motståndet: Räkna banden är Nykomling, med valen 4, 5 och 6', () => {
   const t = atGrade('body', 0);
@@ -32,6 +33,8 @@ test('Kortet har en egen färg och en rad om vad man ska göra, per typ av svar'
   const cases = [['body', 1, 'odd', /Vilken ska bort/], ['ohm', 2, 'point', /Peka/], ['ohm', 3, 'mc', /Välj/], ['tol', 3, 'mc', /Välj/]];
   for (const [topic, g, kind, tag] of cases) {
     const t = atGrade(topic, g);
+    // Gesäll i Resistansen blandar peka och ordna
+    until(t, p => kind !== 'point' || p.type === 'point');
     assert.ok(t.$('#q').classList.contains('kind-' + kind), `${topic} ${g}: ${t.$('#q').className}`);
     assert.match(t.$('#q .kindtag, #q .oddhead').textContent, tag);
     assert.equal(t.$$('#q [class*="kind-"]').length, 0);

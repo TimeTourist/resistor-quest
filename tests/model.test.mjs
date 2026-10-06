@@ -183,16 +183,19 @@ test('Resistansen: klammern, fyra band till och med Mästare, fem band på Storm
     const t = atGrade('ohm', g), ns = new Set();
     for (let i = 0; i < 40; i++) {
       t.g(`S.grade.ohm = ${g}; next()`);
+      if (t.g('S.type') === 'order') continue;
       ns.add(t.g('S.n'));
       assert.ok(t.$('#q .res .bracket'), `grad ${g} har klammer`);
       if (g === 3) assert.ok(!['gold', 'silver'].includes(t.g('S.q[nd(S.q)]')));
     }
     assert.deepEqual([...ns].sort(), [4, 5, 6], `grad ${g} har 4, 5 och 6 band`);
   }
+  // Peka: siffrorna på Lärling, multiplikatorn på Gesäll
   const t2 = atGrade('ohm', 2);
   const roles = new Set();
-  for (let i = 0; i < 60; i++) {
-    t2.g('S.grade.ohm = 2; next()');
+  for (let i = 0; i < 240; i++) {
+    t2.g(`S.grade.ohm = ${1 + i % 2}; next()`);
+    if (t2.g('S.type') !== 'point') continue;
     roles.add(t2.g('S.pointRole'));
     const k = t2.g('nd(S.q)');
     const labs = t2.$$('#q .res .blab').map(e => e.textContent);
@@ -397,8 +400,9 @@ test('Resistansen Nykomling fel: grön klammer tonar in över rätt band, kortet
 
 test('Resistansen Lärling fel: markeringen vandrar längs färgskalan och landar på rätt siffra', () => {
   const t = atGrade('ohm', 1);
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 40; i++) {
     t.g('S.grade.ohm = 1; next()');
+    if (t.g('S.type') !== 'choice') continue;
     answer(t, false);
     const cells = t.$$('#q .scale span');
     const land = cells.findIndex(c => c.classList.contains('land'));
@@ -459,7 +463,8 @@ test('Stapeln visas i slutet av svaret, med fack och sprickor, och glider bort',
 
 test('Stapeln: tredje rätt mörknar facken under skakningen', async () => {
   const t = atGrade('ohm', 2);
-  t.g('S.instant = false; S.grade.ohm = 2; S.up = 2; S.down = 0; next()');
+  until(t, p => p.type === 'point');
+  t.g('S.instant = false; S.up = 2; S.down = 0');
   answer(t, true); t.g('reveal()');
   await new Promise(r => setTimeout(r, 1250));
   const b = t.$('#gbar');
@@ -482,7 +487,8 @@ test('Stapeln: graden under blir röd från höger, Nykomling har inga röda', (
 
 test('Stapeln: rätt efter fel läker de röda facken', async () => {
   const t = atGrade('ohm', 2);
-  t.g('S.instant = false; S.grade.ohm = 2; S.up = 0; S.down = 2; next()');
+  until(t, p => p.type === 'point');
+  t.g('S.instant = false; S.up = 0; S.down = 2');
   answer(t, true); t.g('reveal()');
   await new Promise(r => setTimeout(r, 1100));
   const low = t.$$('#gbar .gseg')[1];
@@ -547,6 +553,7 @@ test('Resistansens Gesäll: ohm-talet står i klammern', () => {
   const t = atGrade('ohm', 2);
   for (let i = 0; i < 20; i++) {
     t.g('S.grade.ohm = 2; next()');
+    if (t.g('S.type') !== 'point') continue;
     assert.equal(t.$('#q .res .bracket text').textContent, `Resistans = ${t.g('fmtVal(valueOf(S.q))')}`);
   }
 });
@@ -555,6 +562,7 @@ test('Resistansens Gesäll: guld och silver förekommer som multiplikator, med �
   const t = atGrade('ohm', 2), seen = new Set();
   for (let i = 0; i < 200; i++) {
     t.g('S.grade.ohm = 2; next()');
+    if (t.g('S.type') !== 'point') continue;
     const m = t.g('S.q[nd(S.q)]');
     seen.add(m);
     if (m === 'gold') assert.equal(t.$$('#q .res .blab').at(-1).textContent, '×0,1');
@@ -607,7 +615,8 @@ test('Resistansen Mästare fel: banden får sina värden och talet byggs upp', (
 test('Resistansen Gesäll fel: markeringen vandrar i läsordning och landar på rätt band', () => {
   const t = atGrade('ohm', 2);
   for (let i = 0; i < 15; i++) {
-    t.g('S.grade.ohm = 2; next()');
+    t.g(`S.grade.ohm = ${1 + i % 2}; next()`);
+    if (t.g('S.type') !== 'point') continue;
     const at = t.g('S.pointAt');
     answer(t, false);
     assert.equal(t.$$('#q .res .ring.walk').length, at, 'vandrar över banden före');
@@ -727,7 +736,7 @@ test('Allt om motståndet finns kvar efter svar på en fråga med ett motstånd'
 test('Beroenderegeln: frågorna per ämne och grad använder rätt sorts frågor', () => {
   const kinds = {
     body: [['choice'], ['choice'], ['choice'], ['dir'], ['point']],
-    ohm: [['choice'], ['choice'], ['point'], ['choice'], ['read', 'build']],
+    ohm: [['choice'], ['choice', 'order', 'point'], ['point', 'order'], ['choice'], ['read', 'build']],
     tol: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
     tc: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
     e: [['choice'], ['choice'], ['choice'], ['series'], ['series']]

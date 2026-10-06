@@ -12,18 +12,18 @@
 :root{
   --bg:#e8edf0;--grid:rgba(31,111,178,.08);--surface:#fff;--ink:#1d2730;--muted:#566673;--line:#c8d1d8;
   --accent:#1f6fb2;--accent-ink:#fff;--ok:#24803a;--ok-bg:#e3f3e6;--bad:#b83227;--bad-bg:#f8e4e1;--tip-bg:#fbefcf;
-  --body:#dcc596;--lead:#98a1a8;--start-a:#e3f0fc;--start-b:#c4ddf5;--start-line:#1f6fb2;--k-odd:#f4edfc;--k-odd-line:#8a5cc7;--k-point:#fdf3e0;--k-point-line:#c98a12;--k-entry:#e4f4f1;--k-entry-line:#1f8a78;
+  --body:#dcc596;--lead:#98a1a8;--start-a:#e3f0fc;--start-b:#c4ddf5;--start-line:#1f6fb2;--k-odd:#f4edfc;--k-odd-line:#8a5cc7;--k-point:#fdf3e0;--k-point-line:#c98a12;--k-entry:#e4f4f1;--k-entry-line:#1f8a78;--k-order:#fdeef2;--k-order-line:#c94f6d;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
-    --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;--k-odd:#262038;--k-odd-line:#b38ff0;--k-point:#2e2717;--k-point-line:#e3b04a;--k-entry:#15302b;--k-entry-line:#5cc8b4;
+    --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;--k-odd:#262038;--k-odd-line:#b38ff0;--k-point:#2e2717;--k-point-line:#e3b04a;--k-entry:#15302b;--k-entry-line:#5cc8b4;--k-order:#36202a;--k-order-line:#f08aa2;
   }
 }
 :root[data-theme="dark"]{
   --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
-  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;--k-odd:#262038;--k-odd-line:#b38ff0;--k-point:#2e2717;--k-point-line:#e3b04a;--k-entry:#15302b;--k-entry-line:#5cc8b4;
+  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;--k-odd:#262038;--k-odd-line:#b38ff0;--k-point:#2e2717;--k-point-line:#e3b04a;--k-entry:#15302b;--k-entry-line:#5cc8b4;--k-order:#36202a;--k-order-line:#f08aa2;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -65,6 +65,26 @@ html,body{overflow-x:clip}
 .card.kind-odd{background:var(--k-odd);border-color:var(--k-odd-line)}
 .card.kind-point{background:var(--k-point);border-color:var(--k-point-line)}
 .card.kind-entry{background:var(--k-entry);border-color:var(--k-entry-line)}
+.card.kind-order{background:var(--k-order);border-color:var(--k-order-line)}
+.kind-order .kindtag{background:var(--k-order-line);color:var(--surface)}
+.ordrow{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:4px;margin:14px 0 18px}
+.oslot{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.oslot span{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.05rem;line-height:1;white-space:nowrap}
+.ord-m .oslot span{font-size:.78rem}
+.obox{display:block;width:100%;aspect-ratio:3/4;max-width:34px;border:2px dashed var(--line);border-radius:6px;background:var(--surface);position:relative}
+.obox.ok{border:2px solid var(--ok);box-shadow:0 0 0 2px var(--ok-bg)}
+.obox.bad{border:2px solid var(--bad);box-shadow:0 0 0 2px var(--bad-bg)}
+.osw{position:absolute;inset:3px;border-radius:3px;display:block;z-index:5}
+.obox.fly{border-style:solid;border-color:var(--muted)}
+@media (prefers-reduced-motion: no-preference){
+  .obox.ok .osw{animation:oland .35s ease-out}
+  .obox.bad{animation:shake .4s ease-in-out}
+  @keyframes oland{40%{transform:scale(1.25)}}
+}
+.opool{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.ochip{width:46px;height:46px;border-radius:10px;border:2px solid var(--line);cursor:pointer;padding:0;position:relative}
+.ochip.gone{visibility:hidden}
+.ochip.cheat::after{left:2px;top:1px}
 .kindtag{display:inline-block;margin:0 0 8px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--bg);color:var(--muted)}
 .kind-point .kindtag{background:var(--k-point-line);color:var(--surface)}
 .kind-entry .kindtag{background:var(--k-entry-line);color:var(--surface)}
@@ -1328,7 +1348,7 @@ function next(){
   S.type = S.plan.type; S.focus = S.plan.focus || null;
   const n = S.plan.n || rnd([4, 5, 6]);
   S.n = n; S.q = genBands(n);
-  S.answered = false; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.bflip = false; S.style = null;
+  S.answered = false; S.ord = null; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.bflip = false; S.style = null;
   S.bpick = null; S.pickDir = null; S.pickSr = null; S.pickC = null; S.pickBand = null; S.ok = null; S.cq = null; S.pointSupport = null;
   S.palAll = null; S.entry = newEntry(); S.fieldOk = null;
   S.moreOK = ['read','build','dir','series','point'].includes(S.type);
@@ -1423,6 +1443,44 @@ const ringOdd = (target, nOf, prompt, wrong) => () => choice(() => {
 const ohmTxt = x => x.toLocaleString('sv-SE') + ' Ω';
 const SER_TOL = {E6:20, E12:10, E24:5, E48:2, E96:1};
 
+// Resistansens Lärling: en färg i taget, åt båda hållen
+const colorDigit = () => choice(() => {
+      if (Math.random() < .5) {
+        S.n = 4; S.q = genBands(4); S.style = stdStyle(4); S.moreOK = true;
+        const at = Math.floor(Math.random() * 2), c = S.q[at], d = C[c].d;
+        const vals = pick4(d, NEAR_DIGIT[d], [0,1,2,3,4,5,6,7,8,9]), T = scaleAnim(DIG, c);
+        S.cq = {prompt:'Vilken siffra är det markerade bandet?', layout:'mc', right: vals.indexOf(d), res: ringed(at), anim: T,
+          opts: vals.map(v => ({html: String(v)})), wrong: `${C[c].n} är ${d}.`, facit: () => scaleHTML('d', c, T)};
+      } else {
+        const c = rnd(DIG), d = C[c].d, cs = pick4(c, LOOKALIKE[c].filter(x => DIG.includes(x)), DIG), T = scaleAnim(DIG, c);
+        S.cq = {prompt:`Vilken färg betyder ${d}?`, layout:'sw', right: cs.indexOf(c), anim: T,
+          opts: cs.map(x => swOpt(x, String(C[x].d))), wrong: `${d} är ${C[c].n.toLowerCase()}.`, facit: () => scaleHTML('d', c, T)};
+      }
+    });
+// Peka på ett band i ett motstånd med 4, 5 eller 6 band. Klammern sitter ovanför och värdena står under banden
+// (4 · 7 · 0 · ×10), så att man ser vad banden säger. roles(k) ger vilka band man kan få peka på, k är antalet siffror.
+const pointPlan = roles => () => ({type:'point', fmt:'mc', setup(){
+      // Multiplikatorn utskriven utan k (×1 000), eftersom k kommer först på Mästare. Lågt nog för att etiketten ska få plats.
+      // Guld och silver (×0,1 och ×0,01) får plats och är med.
+      const n = rnd([4, 5, 6]);
+      S.n = n; S.q = genBands(n);
+      const k = nd(S.q);
+      S.q[k] = rnd(n === 4 ? ['gold','silver','black','brown','red','orange'] : ['gold','silver','black','brown','red']);
+      S.style = spacedStyle(n); S.moreOK = true;
+      S.pointRole = rnd(roles(k));
+      S.pointAt = {d1: 0, d2: 1, d3: 2, mult: k}[S.pointRole];
+      S.pointSupport = [{labels: S.q.slice(0, k).map(c => String(C[c].d)).concat([multPlain(C[S.q[k]].m)]), dim: true, title: `Resistans = ${fmtVal(valueOf(S.q))}`}];
+    }});
+// Ordna: alla färger som knappar, i blandad ordning. Den man klickar på flyger till sin låda,
+// grön om den kom i tur och ordning, annars röd. Rätt om alla blir gröna.
+const ORDER_SETS = {
+  d: {keys: DIG, lab: c => String(C[c].d), prompt: 'Klicka på färgerna i nummerordning.',
+    wrong: 'Svart 0, brun 1, röd 2, orange 3, gul 4, grön 5, blå 6, violett 7, grå 8, vit 9.'},
+  m: {keys: ['silver','gold','black','brown','red','orange','yellow','green','blue'], lab: c => fmtMult(C[c].m), prompt: 'Klicka på multiplikatorerna från minst till störst.',
+    wrong: 'Silver ×0,01, guld ×0,1, svart ×1, brun ×10, röd ×100, orange ×1k, gul ×10k, grön ×100k, blå ×1M.'}
+};
+const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ S.ord = {set, keys: ORDER_SETS[set].keys, pool: shuffle(ORDER_SETS[set].keys.slice()), placed: {}}; }});
+
 const GRADES = {
   body: [
     // Nykomling: räkna banden. Svaret är alltid 4, 5 eller 6, de vanliga antalen.
@@ -1507,34 +1565,10 @@ const GRADES = {
         }),
         wrong: 'Ohm-banden är alla band utom det sista. På sex band alla utom de två sista.'};
     }),
-    // Lärling: en färg i taget, åt båda hållen
-    () => choice(() => {
-      if (Math.random() < .5) {
-        S.n = 4; S.q = genBands(4); S.style = stdStyle(4); S.moreOK = true;
-        const at = Math.floor(Math.random() * 2), c = S.q[at], d = C[c].d;
-        const vals = pick4(d, NEAR_DIGIT[d], [0,1,2,3,4,5,6,7,8,9]), T = scaleAnim(DIG, c);
-        S.cq = {prompt:'Vilken siffra är det markerade bandet?', layout:'mc', right: vals.indexOf(d), res: ringed(at), anim: T,
-          opts: vals.map(v => ({html: String(v)})), wrong: `${C[c].n} är ${d}.`, facit: () => scaleHTML('d', c, T)};
-      } else {
-        const c = rnd(DIG), d = C[c].d, cs = pick4(c, LOOKALIKE[c].filter(x => DIG.includes(x)), DIG), T = scaleAnim(DIG, c);
-        S.cq = {prompt:`Vilken färg betyder ${d}?`, layout:'sw', right: cs.indexOf(c), anim: T,
-          opts: cs.map(x => swOpt(x, String(C[x].d))), wrong: `${d} är ${C[c].n.toLowerCase()}.`, facit: () => scaleHTML('d', c, T)};
-      }
-    }),
-    // Gesäll: peka på en siffra eller multiplikatorn, på 4, 5 eller 6 band. Klammern sitter ovanför
-    // och värdena står under banden (4 · 7 · 0 · ×10), så att man ser vad banden säger.
-    () => ({type:'point', fmt:'mc', setup(){
-      // Multiplikatorn utskriven utan k (×1 000), eftersom k kommer först på Mästare. Lågt nog för att etiketten ska få plats.
-      // Guld och silver (×0,1 och ×0,01) får plats och är med.
-      const n = rnd([4, 5, 6]);
-      S.n = n; S.q = genBands(n);
-      const k = nd(S.q);
-      S.q[k] = rnd(n === 4 ? ['gold','silver','black','brown','red','orange'] : ['gold','silver','black','brown','red']);
-      S.style = spacedStyle(n); S.moreOK = true;
-      S.pointRole = rnd(k === 3 ? ['d1','d2','d3','mult'] : ['d1','d2','mult']);
-      S.pointAt = {d1: 0, d2: 1, d3: 2, mult: k}[S.pointRole];
-      S.pointSupport = [{labels: S.q.slice(0, k).map(c => String(C[c].d)).concat([multPlain(C[S.q[k]].m)]), dim: true, title: `Resistans = ${fmtVal(valueOf(S.q))}`}];
-    }}),
+    // Lärling: färg ↔ siffra, ordna siffrorna eller peka på en siffra
+    () => rnd([colorDigit, orderPlan('d'), pointPlan(k => k === 3 ? ['d1','d2','d3'] : ['d1','d2'])])(),
+    // Gesäll: peka på multiplikatorn eller ordna multiplikatorerna
+    () => rnd([pointPlan(() => ['mult']), orderPlan('m')])(),
     // Mästare: siffror och nollor till ohm, med k och M, på 4, 5 eller 6 band. Bara klammern som stöd.
     () => choice(() => {
       const n = rnd([4, 5, 6]), three = n > 4;
@@ -1728,7 +1762,7 @@ function calcRowHTML(b, at){
 // Banden får sina värden: siffrorna under och multiplikatorn ovanför, så att etiketterna inte krockar när banden sitter tätt
 const valueMarks = b => b.slice(0, nd(b)).map((c, j) => [j, String(C[c].d)]).concat([[nd(b), fmtMult(C[b[nd(b)]].m), 'top']]);
 // Ingen Nästa-knapp: rätt svar går vidare själv, efter fel trycker man var som helst på kortet
-const KINDS = ['kind-odd', 'kind-point', 'kind-entry', 'kind-mc'];
+const KINDS = ['kind-odd', 'kind-point', 'kind-entry', 'kind-mc', 'kind-order'];
 const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p></div>`;
 function render(){
   updateScore();
@@ -1740,6 +1774,11 @@ function render(){
     h += `${topHTML('Vilken E-serie hör motståndet hemma i?')}${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
 
       <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}${cheat(k === S.sr.answer)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
+  } else if (S.type === 'order') {
+    const O = ORDER_SETS[S.ord.set], P = S.ord.placed, want = S.ord.keys.find(k => !P[k]);
+    h += `${topHTML(O.prompt)}<div class="ordrow ord-${S.ord.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
+      `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${k === S.ord.flying ? ' fly' : P[k] ? ' ' + P[k] : ''}" data-oslot="${k}">${P[k] ? `<b class="osw" style="${swStyle(k)}"></b>` : ''}</i></div>`).join('')}</div>
+      <div class="opool">${S.ord.pool.map(k => `<button class="ochip${P[k] ? ' gone' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${C[k].n}" style="${swStyle(k)}"${P[k] || S.answered ? ' disabled' : ''}></button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
     const right = S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}${cheat(right === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
@@ -1806,9 +1845,9 @@ function render(){
   }
   h += lessonHTML();
   // Kortets färg och en rad om vad man ska göra, efter typ av svar
-  const kind = S.cq && S.cq.odd ? 'odd' : S.type === 'point' ? 'point' : S.plan && S.plan.fmt === 'hard' ? 'entry' : 'mc';
+  const kind = S.cq && S.cq.odd ? 'odd' : S.type === 'point' ? 'point' : S.type === 'order' ? 'order' : S.plan && S.plan.fmt === 'hard' ? 'entry' : 'mc';
   q.classList.remove(...KINDS); q.classList.add('kind-' + kind);
-  const tag = {odd: '', point: 'Peka på bandet', entry: S.type === 'read' ? 'Knappa in svaret' : 'Bygg med färgerna', mc: 'Välj rätt svar'}[kind];
+  const tag = {odd: '', point: 'Peka på bandet', entry: S.type === 'read' ? 'Knappa in svaret' : 'Bygg med färgerna', mc: 'Välj rätt svar', order: 'Klicka i ordning'}[kind];
   if (tag) h = `<p class="kindtag">${tag}</p>` + h;
   q.innerHTML = h;
   // Allt om motståndet efter svar. Vid nästa fråga ligger det kvar som Allt om förra motståndet tills man svarat.
@@ -2132,6 +2171,12 @@ const sfx = (() => {
       tone(a, 70, {f2: 38, d: .35, type: 'triangle', v: .32, at: .003});
       for (let i = 0; i < 18; i++) tone(a, 2400 + Math.random() * 4800, {t0: .02 + Math.random() * .7, d: .07 + Math.random() * .25, v: .025 + Math.random() * .04, at: .002});
     },
+    // Ordna: en kort ton som stiger för varje färg i rad
+    blip(i){ const a = ctx(); if (!a) return; tone(a, 523 * Math.pow(2, (i - 1) / 6), {d: .16, type: 'triangle', v: .16, at: .005}); },
+    // Ordna: färgen flyger, ett kort svep
+    whoosh(){ const a = ctx(); if (!a) return; noise(a, .35, {hp: 900, v: .12}); tone(a, 260, {f2: 720, d: .3, v: .04, at: .08}); },
+    // Ordna: fel ordning, ett kort dovt ljud
+    thud(){ const a = ctx(); if (!a) return; tone(a, 150, {f2: 85, d: .22, type: 'square', v: .07, at: .005}); },
     // Eldprovet: svaret är registrerat
     tick(){ const a = ctx(); if (!a) return; tone(a, 660, {d: .09, type: 'square', v: .06, at: .005}); tone(a, 990, {t0: .07, d: .12, type: 'square', v: .05, at: .005}); }
   };
@@ -2177,7 +2222,7 @@ function lessonHTML(){
     return `<p class="examsign" role="status">${S.exam.i} av ${EXAM_N} besvarade · ${T.ok} poäng</p>`;
   }
   if (S.ok) return '';
-  const line = S.cq ? S.cq.wrong : S.type === 'point' ? pointWrong() : lessonText();
+  const line = S.cq ? S.cq.wrong : S.type === 'point' ? pointWrong() : S.type === 'order' ? ORDER_SETS[S.ord.set].wrong : lessonText();
   // Rutan är som en dialogruta i ett spel: pilen ▼ studsar när förklaringen är klar, och ett tryck fortsätter.
   // De tre första gångerna visar en hand var man trycker.
   // Frågor med en egen förklaringsanimering visar inte raden, den läses bara upp för skärmläsare.
@@ -2297,6 +2342,8 @@ document.getElementById('q').addEventListener('click', e => {
   S.lastTap = btn;
   if (btn.dataset.kick != null) {
     kickPick(btn);
+  } else if (btn.dataset.ord) {
+    orderPick(btn);
   } else if (btn.id === 'dare') {
     dareClick(btn);
   } else if (btn.id === 'examStart') {
@@ -2357,6 +2404,47 @@ document.getElementById('q').addEventListener('click', e => {
   }
 });
 
+// Färgen flyger från knappen upp till sin låda. Flygturen är spänning: rätt eller fel syns och hörs först när den landar.
+// Var femte rätt val låtsas först flyga mot en annan tom låda, vänder och sätter sig rätt.
+const FLY_MS = 650, FAKE_MS = 1150;
+function orderPick(btn){
+  const o = S.ord;
+  if (S.answered || S.busy || !o || o.flying) return;
+  const k = btn.dataset.ord, want = o.keys.find(x => !o.placed[x]);
+  if (o.placed[k]) return;
+  const ok = k === want;
+  o.placed[k] = ok ? 'ok' : 'bad';
+  const empty = o.keys.filter(x => !o.placed[x]);
+  o.decoy = ok && empty.length && Math.random() < (o.fakeRate ?? .2) ? rnd(empty) : null;
+  const from = btn.getBoundingClientRect(), calm = S.instant || reduceMotion();
+  o.flying = calm ? null : k;
+  render();
+  const box = () => document.querySelector(`#q [data-oslot="${k}"]`);
+  const land = () => {
+    if (S.ord !== o) return;
+    o.flying = null;
+    const b = box();
+    if (b) { b.classList.remove('fly'); b.classList.add(o.placed[k]); }
+    ok ? sfx.blip(Object.values(o.placed).filter(v => v === 'ok').length) : sfx.thud();
+    if (o.keys.every(x => o.placed[x])) { S.lastTap = b; finish(Object.values(o.placed).every(v => v === 'ok')); }
+  };
+  if (calm) { land(); return; }
+  sfx.whoosh();
+  const sw = box()?.querySelector('.osw'), dur = o.decoy ? FAKE_MS : FLY_MS;
+  if (sw && sw.animate) {
+    const to = sw.getBoundingClientRect();
+    if (to.width) {
+      const start = `translate(${from.left - to.left}px,${from.top - to.top}px) scale(${from.width / to.width})`;
+      const d = o.decoy && document.querySelector(`#q [data-oslot="${o.decoy}"]`)?.getBoundingClientRect();
+      // Mot den falska lådan och nästan ner i den, sedan en sväng till rätt låda
+      const frames = d ? [{transform: start}, {transform: `translate(${d.left - to.left}px,${d.top - to.top + 10}px)`, offset: .55, easing: 'ease-in-out'},
+          {transform: `translate(${d.left - to.left}px,${d.top - to.top - 26}px)`, offset: .72}, {transform: 'none'}]
+        : [{transform: start}, {transform: `translate(${(from.left - to.left) / 2}px,${(from.top - to.top) / 2 - 40}px)`, offset: .5}, {transform: 'none'}];
+      sw.animate(frames, {duration: dur, easing: 'cubic-bezier(.35,.1,.4,1)'});
+    }
+  }
+  setTimeout(land, dur);
+}
 function pickBand(i){
   if (S.answered || S.type !== 'point') return;
   S.pickBand = i; finish(i === S.pointAt);
