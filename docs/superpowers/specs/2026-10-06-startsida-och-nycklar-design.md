@@ -67,8 +67,8 @@ Kortet har fyra lägen, och ett femte för Eldprovet:
 
 | Läge | Utseende | Foten | Ett tryck |
 |---|---|---|---|
-| **Låst** | Vit bakgrund, dimma som driver, två kedjor i kryss och ett hänglås med nyckelhål i mitten. Namn och rad syns svagt. | "Låst · nyckeln finns på Mästare i Resistansen" | Kortet skakar och foten säger en stund "Klara Mästare i Resistansen först, så får du nyckeln." |
-| **Nyckel i låset** | Som låst, men nyckeln sitter i nyckelhålet och skakar till med jämna mellanrum. Nyckelhålet och ramen lyser i ämnets färg. | "Tryck för att låsa upp" | Nyckeln vrids om och låset öppnas (se D). |
+| **Låst** | Vit bakgrund, dimma som driver, två kedjor i kryss och ett hänglås med nyckelhål i mitten. Bara ikonen och namnet syns, tydligt ovanför dimman. Raden om ämnet visas inte, den kommer på omslaget. Läget står på en etikett längst ner. | "Låst · nyckeln finns på Mästare i Resistansen" | Kortet skakar och foten säger en stund "Klara Mästare i Resistansen först, så får du nyckeln." |
+| **Nyckel i låset** | Som låst, men nyckeln sitter i nyckelhålet och skakar till med jämna mellanrum. Nyckelhålet, ramen och etiketten lyser i ämnets färg. | "Tryck för att låsa upp" | Nyckeln vrids om och låset öppnas (se D). |
 | **Öppet** | Ämnets färger fullt ut. Stapeln i miniformat: fem grader, tre fack var, aktuell grad inramad. | "Gesäll · 1 av 3 rätt i rad · fortsätt", eller "Nytt · börja med en snabbkoll" innan man gjort snabbkollen | Zoomar till spelkortet: omslaget första gången, annars spelsidan. |
 | **Klart** | Guld med ett glanssvep som går över kortet. | "Klart ✓ · rekord 7 i rad" och etiketten "Spela blandat" | Zoomar till spelkortet i blandat läge. |
 | **Eldprovet** | Glödande bakgrund (som i dag) och en eld som flämtar. | Etiketten "Alltid öppet", eller "Pågår · fråga 7 av 20" | Zoomar till Eldprovets kort. |
@@ -79,6 +79,7 @@ Ett nyss upplåst kort tänds med en kort glöd och får etiketten "Nytt!" tills
 
 ### Zooma in och minimera
 
+- Spelkortet och omslaget räknar storlekar efter kortets bredd, inte skärmens, och får aldrig ge sidoscroll. Långa namn och svarsalternativ bryts i stället för att sticka ut.
 - Ett tryck på ett minikort gör att kortet växer från sin ruta till att täcka hela rutnätet (cirka 0,45 s). Innehållet tonar in.
 - Knappen **Byt ämne** uppe till höger (ikon: sex små rutor, som rutnätet), eller Escape, krymper kortet tillbaka till sin ruta.
 - På datorn täcker spelkortet rutnätets yta, men innehållet är som mest 720 px brett och centrerat.
@@ -144,7 +145,7 @@ Första gången man öppnar ett ämne visas ett omslag i stället för spelsidan
 
 ### När man trycker på kortet
 
-1. Nyckeln vrids om (cirka 0,4 s) och det klickar.
+1. Nyckeln glider in i nyckelhålet (cirka 0,3 s), stannar ett ögonblick och vrids om (cirka 0,35 s), och det klickar.
 2. Bygeln lyfter, hänglåset och kedjorna faller, dimman lättar (cirka 1 s), och man hör kedjorna.
 3. Kortet tänds i sina färger och får etiketten "Nytt!".
 4. Efter 0,7 s zoomar kortet upp till omslaget. Från nyckeln till snabbkollen behövs bara ett tryck.

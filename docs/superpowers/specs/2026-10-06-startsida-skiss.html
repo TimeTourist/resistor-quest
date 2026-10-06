@@ -96,7 +96,11 @@ button{font:inherit;color:inherit}
 /* Låst: dimma, kedjor och ett hänglås med nyckelhål */
 .tile.locked{border-color:var(--line);background:var(--surface)}
 .locked .ticon{background:var(--line);color:var(--muted)}
-.locked .thead,.locked .tline{opacity:.5}
+/* Låst: ikonen och namnet syns tydligt ovanför dimman, läget står på en etikett längst ner */
+.locked .thead,.locked .tfoot{position:relative;z-index:4}
+.locked .tstate{justify-self:start;padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.tile.haskey .tstate{background:var(--c);color:var(--ci);border-color:var(--c)}
+.locked .tstate.why{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
 .fog{position:absolute;inset:-30%;pointer-events:none;
   background:radial-gradient(closest-side at 30% 35%,var(--fog),transparent),radial-gradient(closest-side at 70% 65%,var(--fog),transparent),radial-gradient(closest-side at 50% 50%,var(--fog),transparent 120%);
   opacity:.8;transition:opacity 1s ease}
@@ -106,7 +110,6 @@ button{font:inherit;color:inherit}
 .m2 .padlock{width:48px;margin:-28px 0 0 -24px}
 .padlock .shackle{transition:transform .35s ease .1s}
 .tstate.why{color:var(--bad)}
-.locked .tstate{opacity:.75}
 @media (prefers-reduced-motion:no-preference){
   .tile.nope{animation:nope .4s ease-in-out}
   @keyframes nope{25%{transform:translateX(-7px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
@@ -155,21 +158,20 @@ button{font:inherit;color:inherit}
 @media (prefers-reduced-motion:no-preference){
   .inkey{animation:rattle 1.6s ease-in-out infinite}
   @keyframes rattle{0%,55%,100%{transform:none}60%{transform:rotate(-8deg)}65%{transform:rotate(7deg)}70%{transform:rotate(-5deg)}75%{transform:rotate(4deg)}80%{transform:rotate(-2deg)}}
-  .tile.turning .inkey{animation:turnkey .4s ease-in forwards}
-  @keyframes turnkey{to{transform:rotateX(80deg)}}
+  .tile.turning .inkey{animation:pushturn .75s ease-in forwards}
+  @keyframes pushturn{0%{transform:none}40%,55%{transform:translateX(12px) scale(.92)}100%{transform:translateX(12px) scale(.92) rotateX(80deg)}}
 }
 .tile.haskey{box-shadow:0 0 0 3px var(--c),0 0 26px color-mix(in srgb,var(--c) 60%,transparent)}
 .tile.haskey .kh{fill:var(--c)}
-.tile.haskey .tstate{opacity:1;color:var(--ink)}
 .tile.opening .inkey{opacity:0;transition:opacity .3s .3s}
 
 /* Spelkortet: ämnet förstorat */
-.play{position:absolute;z-index:20;display:flex;flex-direction:column;overflow:hidden;border:3px solid var(--c);border-radius:18px;
+.play{container-type:inline-size;position:absolute;z-index:20;display:flex;flex-direction:column;overflow:hidden;border:3px solid var(--c);border-radius:18px;
   background:color-mix(in srgb,var(--c) 9%,var(--surface));box-shadow:0 20px 50px rgba(0,0,0,.25)}
 .play .tpat{opacity:1}
 .phead{position:relative;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--c);color:var(--ci)}
 .phead .ticon{background:rgba(0,0,0,.18);color:var(--ci)}
-.pname{font-family:var(--display);font-weight:700;font-size:1.8rem;line-height:1}
+.pname{font-family:var(--display);font-weight:700;font-size:clamp(1.3rem,6cqi,1.8rem);line-height:1;min-width:0;overflow-wrap:anywhere}
 .pmode{font-family:var(--display);font-weight:600;font-size:1.2rem;opacity:.85}
 .min{margin-left:auto;display:flex;align-items:center;gap:6px;border:2px solid currentColor;background:transparent;color:inherit;border-radius:999px;padding:5px 12px 5px 8px;cursor:pointer;font-weight:600;font-size:.88rem}
 .min svg{width:20px;height:20px}
@@ -182,8 +184,8 @@ button{font:inherit;color:inherit}
 .pbody .line{margin:0 0 16px;color:var(--muted);max-width:52ch}
 .q{font-weight:700;font-size:1.12rem;margin:4px 0 10px}
 .res svg{display:block;width:100%;max-width:420px;height:auto;margin:0 auto}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.opt{min-height:60px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;font-family:var(--display);font-size:1.45rem;padding:8px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.opt{min-width:0;overflow-wrap:anywhere;hyphens:auto;min-height:60px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;font-family:var(--display);font-size:1.45rem;padding:8px}
 .opt:hover{border-color:var(--c)}
 .opt.ok{border-color:var(--ok);background:var(--ok-bg)}
 .opt.bad{border-color:var(--bad);background:var(--bad-bg)}
@@ -210,12 +212,12 @@ button{font:inherit;color:inherit}
 
 /* Omslaget: första gången man öppnar ett ämne. Visas en gång, sedan aldrig mer. */
 .play.cover{border-width:6px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
-.coverwrap{position:relative;display:flex;flex-direction:column;height:100%;overflow:auto;padding:22px 24px}
+.coverwrap{position:relative;display:flex;flex-direction:column;height:100%;overflow-y:auto;overflow-x:hidden;padding:22px 24px}
 .eyebrow{font-family:var(--display);font-weight:700;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .cover .anim{display:block;width:100%;max-width:440px;height:auto;margin:10px auto 4px;color:var(--muted)}
 .anim text{font-family:var(--text);font-size:13px;fill:var(--muted)}
 .anim text.big{font-family:var(--display);font-size:20px;font-weight:700;fill:var(--ink)}
-.cname{font-family:var(--display);font-weight:700;font-size:clamp(2.8rem,8vw,4.2rem);line-height:.95;margin:8px 0 6px;display:flex;align-items:center;gap:12px}
+.cname{font-family:var(--display);font-weight:700;font-size:clamp(2rem,10cqi,3.8rem);line-height:.95;margin:8px 0 6px;display:flex;align-items:center;gap:12px;min-width:0;overflow-wrap:anywhere}
 .cname .ticon{width:52px;height:52px;border-radius:13px}.cname .ticon svg{width:36px;height:36px}
 .cline{margin:0;color:var(--muted);font-size:1.05rem;max-width:46ch}
 .unlock{margin-top:auto;padding-top:18px}
@@ -223,8 +225,13 @@ button{font:inherit;color:inherit}
 .ulab{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase}
 .ulab svg{width:20px;height:20px;color:var(--c)}
 .unlock .q{margin:6px 0 0}
-.cover .opts{grid-template-columns:repeat(4,1fr)}
-.m2 .cover .opts,.m1 .cover .opts{grid-template-columns:1fr 1fr}
+.cover .opts{grid-template-columns:repeat(4,minmax(0,1fr))}
+.cover .opt{font-size:1.2rem;line-height:1.15}
+@container (max-width:560px){
+  .cover .opts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .coverwrap{padding:18px 16px}
+  .cname .ticon{width:40px;height:40px}.cname .ticon svg{width:28px;height:28px}
+}
 .opt[disabled]{cursor:default}
 .xbtn{position:absolute;top:12px;right:12px;z-index:2;width:40px;height:40px;border-radius:50%;border:2px solid var(--c);background:var(--surface);display:grid;place-items:center;cursor:pointer;padding:0}
 .xbtn svg{width:20px;height:20px}
@@ -234,7 +241,6 @@ button{font:inherit;color:inherit}
   .anim .swing circle{animation:swing 2.4s ease-in-out 1.6s infinite}
   @keyframes swing{0%,100%{transform:translateX(0)}25%{transform:translateX(-55px)}75%{transform:translateX(55px)}}
 }
-@media (max-width:600px){.cover .opts{grid-template-columns:1fr 1fr}.coverwrap{padding:18px 16px}}
 .notes{max-width:1000px;margin:0 auto 32px;color:var(--muted);font-size:.92rem}
 .notes ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
 @media (max-width:600px){
@@ -389,7 +395,9 @@ function tileHTML(id){
     const why = st.why ? ' why' : '';
     const key = S.keys.includes(id);
     const txt = st.why || (key ? 'Tryck för att låsa upp' : `Låst · nyckeln finns på Mästare i ${TT[prevOf(id)].name}`);
-    return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${id}" style="${vars(id)}"${key ? ` aria-label="${t.name}: tryck för att vrida om nyckeln"` : ''}>${head}
+    // Bara ikonen och namnet: beskrivningen visas på omslaget när ämnet är upplåst
+    return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${id}" style="${vars(id)}"${key ? ` aria-label="${t.name}: tryck för att vrida om nyckeln"` : ''}>
+      <span class="thead"><span class="ticon">${icon(id)}</span><span class="tname">${t.name}</span></span>
       <span class="tfoot"><span class="tstate${why}">${txt}</span></span>
       <span class="fog"></span>${chains()}${PADLOCK}${key ? `<span class="inkey${S.arriving === id ? ' arriving' : ''}">${KEY(t.c)}</span>` : ''}</button>`;
   }
@@ -571,15 +579,15 @@ function flyKey(fromId, toId){
     g.animate([a, mid, b], {duration: 1100, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards'}).onfinish = () => { g.remove(); land(); };
   }, 250);
 }
-// Ett tryck på kortet vrider om nyckeln: låset öppnas, kedjorna faller, dimman lättar, och omslaget öppnas direkt
+// Ett tryck på kortet: nyckeln glider in i nyckelhålet och vrids om, låset öppnas, kedjorna faller, dimman lättar, och omslaget öppnas direkt
 function unlockTile(tile){
   const id = tile.dataset.id;
   if (tile.classList.contains('turning')) return;
   tile.classList.add('turning');
   const open = () => { S[id] = {s: 'open', g: 0, up: 0}; S.keys = S.keys.filter(x => x !== id); S.fresh = id; renderGrid(); setTimeout(() => { if (!ov) openPlay(id); }, reduce() ? 0 : 700); };
   if (reduce()) { open(); return; }
-  setTimeout(() => tile.classList.add('opening'), 380);
-  setTimeout(open, 1500);
+  setTimeout(() => tile.classList.add('opening'), 760);
+  setTimeout(open, 1850);
 }
 
 // Klick på startsidan och i spelkortet

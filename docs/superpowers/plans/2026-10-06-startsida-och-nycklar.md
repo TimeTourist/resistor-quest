@@ -275,6 +275,8 @@ test('Minikorten: namn, rad om ämnet och läget i foten', () => {
   assert.match(tile('tol').textContent, /Låst · nyckeln finns på Mästare i Resistansen/);
   assert.ok(tile('tol').querySelector('.padlock .kh'), 'hänglås med nyckelhål');
   assert.ok(tile('tol').querySelector('.fog') && tile('tol').querySelector('.chains'));
+  assert.match(tile('tol').querySelector('.tname').textContent, /Toleransen/);
+  assert.equal(tile('tol').querySelector('.tline'), null, 'ingen beskrivning bakom låset');
   assert.match(tile('ultra').textContent, /Alltid öppet/);
   assert.ok(tile('ultra').querySelector('svg.fire'));
 });
@@ -643,7 +645,7 @@ Ersätt allt från `<header class="top">` till och med `<section class="more" id
    - Byt `.fire{position:absolute;...}` mot `.tile .fire{position:absolute;...}`. Kopiera inte `.fire .f1/.f2/.f3`, de finns redan.
    - Ta bort alla regler som börjar med `.m1 `. Samla alla regler som börjar med `.m2 ` i ett block `@media (max-width:719px){...}` där `.m2 ` är borttaget, plus `.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}`.
    - Lägg till `.gb .gs{display:block}` och `.gb .cells{display:grid}`, eftersom minikortet är en knapp och delarna är `span`.
-6. Kopiera blocket `/* Spelkortet: ämnet förstorat */` (`.play` till `.min svg`) och gör tre ändringar: `.play{position:absolute;...}` blir `.play{position:relative;margin-top:4px;...}`, `.min` blir `.closebtn`, och `.min svg` blir `.closebtn svg`. Lägg till:
+6. Kopiera blocket `/* Spelkortet: ämnet förstorat */` (`.play` till `.min svg`) och gör tre ändringar: i `.play{container-type:inline-size;position:absolute;...}` byts `position:absolute;z-index:20;` mot `position:relative;margin-top:4px;` (behåll `container-type:inline-size`, omslagets storlekar räknas efter kortet), `.min` blir `.closebtn`, och `.min svg` blir `.closebtn svg`. Lägg till:
 
 ```css
 .play .pbody{position:relative;max-width:720px;margin:0 auto;padding:12px 16px 20px}
@@ -736,11 +738,12 @@ function tileHTML(t){
   if (state === 'open') return `<button class="tile open${fresh}" data-id="${t}" style="${lookVars(t)}">${head}
     <span class="tfoot">${miniBar(t)}<span class="tstate">${S.seen.includes(t) ? `${GRADE_NAME[S.grade[t]]} · ${tileUp(t)} av 3 rätt i rad · fortsätt` : 'Nytt · börja med en snabbkoll'}</span></span>
     ${fresh ? '<span class="newflag">Nytt!</span>' : ''}</button>`;
-  // Låst, med eller utan nyckel i låset
+  // Låst, med eller utan nyckel i låset. Bara ikonen och namnet: raden om ämnet visas på omslaget när det är upplåst.
   const key = state === 'key', prev = TOPICS[TOPICS.indexOf(t) - 1], why = S.why && S.why.t === t ? S.why.txt : null;
   const foot = why || (key ? 'Tryck för att låsa upp' : `Låst · nyckeln finns på Mästare i ${topicName(prev)}`);
   const flying = S.flying.includes(t) || S.arriving.includes(t);
-  return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${t}" style="${lookVars(t)}" aria-label="${topicName(t)}: ${key ? 'tryck för att vrida om nyckeln' : 'låst'}">${head}
+  return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${t}" style="${lookVars(t)}" aria-label="${topicName(t)}: ${key ? 'tryck för att vrida om nyckeln' : 'låst'}">
+    <span class="thead"><span class="ticon">${topicIcon(t)}</span><span class="tname">${topicName(t)}</span></span>
     <span class="tfoot"><span class="tstate${why ? ' why' : ''}">${foot}</span></span>
     <span class="fog"></span>${chainsSVG()}${PADLOCK_SVG}${key ? `<span class="inkey${flying ? ' arriving' : ''}">${keySVG(TOPIC_LOOK[t].c)}</span>` : ''}</button>`;
 }
@@ -1166,18 +1169,17 @@ I `cheatBtn`-lyssnaren blir raden `if (S.cover) drawCover(S.cover); else if (S.p
 
 Kopiera blocket `/* Omslaget: första gången ... */` från skissen, från `.play.cover` till och med `@media (max-width:600px){...}`. Gör sedan de här ändringarna:
 - Ta bort `.coverwrap` (innehållet ligger direkt i `#q`).
-- Byt `.cover .opts` mot `.cover .kickopts`.
-- Byt `.m2 .cover .opts,.m1 .cover .opts` mot `@media (max-width:719px){.cover .kickopts{grid-template-columns:1fr 1fr}}`.
+- Byt `.cover .opts` mot `.cover .kickopts` och `.cover .opt` mot `.cover .kopt`, även inne i `@container (max-width:560px){...}`. Ta bort `.coverwrap` ur det blocket.
 - Byt `.unlock .q` mot `.unlock .kickq`.
-- Ta bort den sista `@media (max-width:600px)`-regeln.
+- `.cname` ska ha `font-size:clamp(2rem,10cqi,3.8rem)`, `min-width:0` och `overflow-wrap:anywhere` som i skissen. Storlekar i `vw` ger sidoscroll på mobil.
 
 Lägg till:
 
 ```css
 .play.cover #q{position:relative;background:transparent;border:0;padding:6px 4px 4px}
 .kickq{font-weight:700;font-size:1.15rem;margin:6px 0 10px}
-.kickopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.kopt{font:inherit;font-size:1rem;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:12px 10px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-align:center}
+.kickopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kopt{min-width:0;overflow-wrap:anywhere;hyphens:auto;font:inherit;font-size:1rem;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:12px 10px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-align:center}
 .kopt:hover{border-color:var(--c)}
 .kopt svg.pic{width:58px;height:58px;max-width:none}
 .kopt svg{width:100%;max-width:150px;height:auto}
@@ -1187,6 +1189,14 @@ Lägg till:
 ```
 
 Raderna för `.kopt` och `.kickq` är samma som de som togs bort i uppgift 2, nu med ämnets färg vid hover.
+
+- [ ] **Steg 4b: Titta på omslaget på mobilbredd**
+
+Kör `python3 -m http.server`. Öppna sidan i webbläsarens mobilvy på 360 och 390 px och öppna alla fem omslagen, Motståndet med bilderna och Temperaturen med det längsta namnet. Kontrollera:
+- att ingenting ger sidoscroll, varken i kortet eller på sidan,
+- att svaren bryts på två rader i stället för att sticka ut.
+
+`document.documentElement.scrollWidth === document.documentElement.clientWidth` i konsolen ska ge `true`.
 
 - [ ] **Steg 5: Lägg tillbaka typfärgstestet för omslaget**
 
@@ -1372,7 +1382,7 @@ function flyOne(t, from){
     {left: to.left + 'px', top: to.top + 'px', transform: 'scale(1) rotate(360deg)'}
   ], {duration: 1100, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards'}).onfinish = () => { g.remove(); land(); };
 }
-// Ett tryck på ett kort med nyckel: nyckeln vrids om, låset och kedjorna faller, dimman lättar, och omslaget öppnas
+// Ett tryck på ett kort med nyckel: nyckeln glider in i nyckelhålet och vrids om, låset och kedjorna faller, dimman lättar, och omslaget öppnas
 function unlockTile(tile){
   const t = tile.dataset.id;
   if (tile.classList.contains('turning') || !S.keys.includes(t)) return;
@@ -1385,8 +1395,9 @@ function unlockTile(tile){
     setTimeout(() => { if (S.screen === 'grid') openTopic(t); }, 700);
   };
   if (S.instant || reduceMotion()) { sfx.chains(); open(); return; }
-  setTimeout(() => { tile.classList.add('opening'); sfx.chains(); }, 380);
-  setTimeout(open, 1500);
+  // Nyckeln glider in i nyckelhålet och vrids om (CSS-animeringen pushturn, 0,75 s), sedan öppnas låset
+  setTimeout(() => { tile.classList.add('opening'); sfx.chains(); }, 760);
+  setTimeout(open, 1850);
 }
 ```
 
