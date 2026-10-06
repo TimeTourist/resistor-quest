@@ -67,3 +67,16 @@ export function answer(t, correct = true) {
   }
   throw new Error(`answer: ${type}/${fmt} stöds inte`);
 }
+
+// Startfrågan på ett ämneskort: svarar rätt (eller fel) om kortet har en
+export function kick(t, correct = true) {
+  const right = t.g('S.kick ? S.kick.right : null');
+  if (right == null) return false;
+  const btn = t.$$('[data-kick]').find(b => (+b.dataset.kick === right) === correct);
+  btn.click();
+  return true;
+}
+// Eldprovets kort: tre tryck och provet börjar
+export function dare(t) {
+  for (let i = 0; i < 3; i++) t.$('#dare').click();
+}

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { load, atGrade, ALL_OPEN, golden } from './harness.mjs';
-import { answer, until, tap, cont } from './answer.mjs';
+import { answer, until, tap, cont, kick, dare } from './answer.mjs';
 
 const TOPICS = ['body', 'ohm', 'tol', 'tc', 'e'];
 const st = (t, topic) => JSON.parse(t.g(`JSON.stringify({g: S.grade['${topic}'], done: S.done['${topic}']})`));
@@ -43,7 +43,7 @@ test('Upplåsning: Mästare nådd öppnar nästa ämne, Stormästare klar ger �
 
 test('Spela: 3 rätt höjer graden och statusraden säger det', () => {
   const t = load({ storage: { 'fargkoden2-topic': 'body' } });
-  t.$('#play')?.click();
+  kick(t);
   for (let i = 0; i < 3; i++) { answer(t, true); if (i < 2) cont(t); }
   assert.deepEqual(st(t, 'body'), {g: 1, done: 1});
   assert.match(t.$('#score').textContent, /Upp till Lärling/);
@@ -51,7 +51,7 @@ test('Spela: 3 rätt höjer graden och statusraden säger det', () => {
 
 test('Från Gesäll till Mästare låser upp nästa ämne och visar dess kort', () => {
   const t = load({ storage: { 'fargkoden2-grade': JSON.stringify({ body: 2 }), 'fargkoden2-done': JSON.stringify({ body: 2 }) } });
-  t.$('#play')?.click();
+  kick(t);
   for (let i = 0; i < 3; i++) { answer(t, true); cont(t); }
   assert.equal(t.g("unlocked('ohm')"), true);
   assert.equal(t.g('S.view'), 'ohm');
@@ -68,7 +68,7 @@ test('Sparad progress: gamla nycklar läses inte', () => {
 
 test('Progress sparas under fargkoden2-', () => {
   const t = load({ storage: { 'fargkoden2-topic': 'body' } });
-  t.$('#play')?.click();
+  kick(t);
   for (let i = 0; i < 3; i++) { answer(t, true); cont(t); }
   assert.equal(JSON.parse(t.w.localStorage.getItem('fargkoden2-done')).body, 1);
   assert.equal(JSON.parse(t.w.localStorage.getItem('fargkoden2-grade')).body, 1);
@@ -262,7 +262,7 @@ test('Ljud: knappen sparar läget, och med ljudet av spelas inget', () => {
 
 test('Eldprovet: nästa fråga kommer av sig själv även vid fel', async () => {
   const t = load({ storage: ALL_OPEN });
-  t.g("goTopic('ultra')"); t.$('#examStart').click();
+  t.g("goTopic('ultra')"); dare(t);
   t.g('S.instant = false');
   answer(t, false);
   await new Promise(r => setTimeout(r, 2600));
@@ -492,7 +492,7 @@ test('Stapeln: rätt efter fel läker de röda facken', async () => {
 
 test('Stapeln visas inte i Eldprovet', () => {
   const t = load({ storage: ALL_OPEN });
-  t.g("goTopic('ultra')"); t.$('#examStart').click();
+  t.g("goTopic('ultra')"); dare(t);
   answer(t, true);
   assert.equal(t.g('S.barPlan'), null);
 });
@@ -506,7 +506,8 @@ test('Gyllene: tre rätt på Stormästare gör ämnet klart, och sedan visas äm
   cont(t);
   assert.equal(t.g('S.view'), 'body', 'ämnets kort');
   assert.match(t.$('#q').textContent, /klart/i);
-  assert.match(t.$('#play').textContent, /blandat/i);
+  assert.match(t.$('#q').textContent, /blandat/i);
+  assert.ok(t.g('S.kick'), 'startfråga på det gyllene kortet');
 });
 
 test('Blandat: ett gyllene ämne ger frågor från alla grader, utan trappa, med rekordsvit', () => {
@@ -647,7 +648,7 @@ test('Allt om förra motståndet ligger kvar vid nästa fråga', () => {
   assert.ok(t.$('#more').textContent.includes(val));
   answer(t, true);
   assert.match(t.$('#more h2').textContent, /^Allt om motståndet$/, 'byts mot det nya efter svar');
-  t.g("goTopic('ultra')"); t.$('#examStart').click();
+  t.g("goTopic('ultra')"); dare(t);
   assert.equal(t.$('#more').hidden, true, 'inte i Eldprovet');
 });
 
@@ -758,7 +759,7 @@ for (const topic of TOPICS) for (let g = 0; g < 5; g++) {
 test('Eldprovet: 4 frågor per ämne', () => {
   const t = load({ storage: ALL_OPEN });
   t.g("goTopic('ultra')");
-  t.$('#examStart').click();
+  dare(t);
   const q = t.g('S.exam.queue.map(x => x.topic)');
   for (const topic of TOPICS) assert.equal(q.filter(x => x === topic).length, 4, topic);
   assert.equal(q.length, 20);
@@ -766,7 +767,7 @@ test('Eldprovet: 4 frågor per ämne', () => {
 
 test('Eldprovet: inget rätt/fel och ingen text under provet', () => {
   const t = load({ storage: ALL_OPEN });
-  t.g("goTopic('ultra')"); t.$('#examStart').click();
+  t.g("goTopic('ultra')"); dare(t);
   for (let i = 0; i < 20; i++) {
     answer(t, i % 2 === 0);
     assert.equal(t.$$('#q .ok, #q .bad').length, 0, t.g('S.type'));
@@ -810,7 +811,7 @@ test('Nivåkortet: fem gradprickar, nådda går att välja och ger den graden', 
   assert.equal(dots.length, 5);
   assert.deepEqual(dots.map(d => d.disabled), [false, false, false, true, true]);
   dots[0].click();
-  t.$('#play').click();
+  kick(t);
   assert.equal(t.g('S.topic'), 'ohm');
   assert.equal(t.g('S.grade.ohm'), 0);
   assert.equal(t.g('S.done.ohm'), 2);

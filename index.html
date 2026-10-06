@@ -198,6 +198,41 @@ html,body{overflow-x:clip}
   @keyframes heal{0%{background:var(--bad);border-color:var(--bad)}50%{transform:scale(1.3);box-shadow:0 0 12px var(--fresh)}}
 }
 /* Testläge: grön pil på rätt svar */
+.kick{margin-top:6px}
+.kickq{font-weight:700;font-size:1.15rem;margin:0 0 10px}
+.kickopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kopt{font:inherit;font-size:1rem;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:12px 10px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-align:center}
+.kopt:hover{border-color:var(--accent)}
+.kopt .emo{font-size:2.4rem;line-height:1}
+.kopt svg{width:100%;max-width:150px;height:auto}
+.kopt.bad{border-color:var(--bad);background:var(--bad-bg);cursor:default;opacity:.75}
+.kopt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.kickmsg{min-height:1.4em;margin:10px 0 0;font-weight:600}
+.kickmsg:empty{min-height:0;margin:0}
+.kicklabel{color:var(--muted);font-size:.9rem;margin:8px 0 0}
+.bosscard .kicklabel,.firecard .rule{color:#ffd6b0}
+.firecard{text-align:center}
+.dare{position:relative;display:block;width:100%;border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:6px 0 10px;border-radius:14px}
+.dare .fire{width:150px;height:auto;display:block;margin:0 auto;filter:drop-shadow(0 0 18px rgba(255,170,60,.7))}
+.daretxt{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:clamp(1.9rem,8vw,2.8rem);line-height:1.05;letter-spacing:.02em;margin-top:8px;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.dare .cracks{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.cracks path{fill:none;stroke:#fff6e8;stroke-width:2;stroke-linejoin:round;filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
+.firecard .rule{font-size:.85rem;margin:6px 0 0}
+.shatter{position:fixed;z-index:60;pointer-events:none}
+.shatter>.card{position:absolute;inset:0;margin:0;width:100%;height:100%;box-sizing:border-box;overflow:hidden}
+.shatter>svg{position:absolute;inset:0;width:100%;height:100%;z-index:2;overflow:visible}
+.shatter>svg path{fill:none;stroke:rgba(255,255,255,.9);stroke-width:1.5;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}
+@media (prefers-reduced-motion: no-preference){
+  .kick.shake .kickopts{animation:shake .45s ease-in-out}
+  .dare.quake{animation:quake .5s cubic-bezier(.36,.07,.19,.97)}
+  @keyframes quake{10%,90%{transform:translate(-2px,1px) rotate(-.5deg)}20%,80%{transform:translate(4px,-2px) rotate(1deg)}30%,50%,70%{transform:translate(-7px,2px) rotate(-1.5deg)}40%,60%{transform:translate(7px,-1px) rotate(1.5deg)}}
+  .fire .f1{transform-origin:60px 136px;animation:flick 1.6s ease-in-out infinite alternate}
+  .fire .f2{transform-origin:60px 136px;animation:flick 1.1s ease-in-out infinite alternate-reverse}
+  .fire .f3{transform-origin:60px 134px;animation:flick .8s ease-in-out infinite alternate}
+  @keyframes flick{0%{transform:scale(1,1) skewX(0)}35%{transform:scale(.97,1.05) skewX(2deg)}70%{transform:scale(1.03,.97) skewX(-2deg)}100%{transform:scale(.98,1.04) skewX(1deg)}}
+  .cracks path{stroke-dasharray:1;stroke-dashoffset:1;animation:crackdraw .22s ease-out forwards}
+  @keyframes crackdraw{to{stroke-dashoffset:0}}
+}
 .cheat{position:relative;box-shadow:inset 0 0 0 3px var(--ok)}
 .cheat::after{content:'➜';position:absolute;left:6px;top:3px;color:var(--ok);font:700 1rem/1 system-ui,sans-serif}
 .cheatmark path{fill:var(--ok)}
@@ -699,10 +734,12 @@ function animHTML(lv){
 function levelCardHTML(lv, fresh){
   if (lv === 'ultra') {
     const going = S.topic === 'ultra' && S.exam && !S.exam.done;
-    return `<div class="lvcard"><h2>Eldprovet</h2>
-      <p>20 frågor, fyra från varje ämne, i svåraste varianten. Under provet ser du bara poängen.</p>
-      <p>Provet kan bara höja: 3 av 4 rätt i ett ämne ger Mästare och låser upp nästa ämne, 4 av 4 klarar ämnet. Eldprovet är alltid öppet.</p>
-      <div class="lvbtns">${going ? '<button class="primary" id="play" data-go="ultra">Fortsätt eldprovet</button>' : '<button class="primary" id="examStart">Starta eldprovet</button>'}</div></div>`;
+    if (going) return `<div class="lvcard"><h2>Eldprovet</h2><p>Provet pågår. Under provet ser du bara poängen.</p>
+      <div class="lvbtns"><button class="primary" id="play" data-go="ultra">Fortsätt eldprovet</button></div></div>`;
+    // Tre tryck: det knakar, spricker och till sist rasar kortet och provet börjar
+    S.dare = 0;
+    return `<div class="lvcard firecard"><button class="dare" id="dare" aria-label="Starta eldprovet: ${DARE[0]}">${FIRE_SVG}<svg class="cracks" aria-hidden="true"></svg><span class="daretxt">${DARE[0]}</span></button>
+      <p class="rule">20 frågor, fyra från varje ämne, i svåraste varianten. 3 av 4 i ett ämne ger Mästare, 4 av 4 klarar ämnet. Provet kan bara höja.</p></div>`;
   }
   const i = TOPICS.indexOf(lv), prev = TOPICS[i - 1], nx = TOPICS[i + 1], open = unlocked(lv);
   if (cleared(lv)) {
@@ -710,8 +747,8 @@ function levelCardHTML(lv, fresh){
     const on = nx && unlocked(nx) ? nx : 'ultra';
     return `<div class="lvcard goldcard">${fresh ? '<span class="fresh gold">Ämnet är klart!</span>' : ''}<h2>${topicName(lv)} <span class="goldmark">✓</span></h2><p>${TOPIC_LINE[lv]}</p>
       <p class="state done">Klart! Nu blandas frågor från alla grader. <b>Rekordsvit: ${S.mix.best[lv] || 0}</b></p>
-      <div class="lvbtns"><button class="primary" id="play" data-go="${lv}">Spela blandat</button>
-      ${fresh ? `<button class="ghost go" data-go="${on}">${on === 'ultra' ? 'Till Eldprovet' : `Till ${topicName(on)}`}</button>` : ''}</div></div>`;
+      ${kickHTML(lv, 'Svara rätt så börjar blandat.')}
+      ${fresh ? `<div class="lvbtns"><button class="ghost go" data-go="${on}">${on === 'ultra' ? 'Till Eldprovet' : `Till ${topicName(on)}`}</button></div>` : ''}</div>`;
   }
   const top = Math.min(S.done[lv], MAX), pick = S.pickGrade ?? S.grade[lv];
   const dots = GRADE_NAME.map((n, g) => `<button class="gdot${g < S.done[lv] ? ' did' : ''}" data-grade="${g}" aria-pressed="${open && g === pick}"${!open || g > top ? ' disabled' : ''}><b aria-hidden="true"></b>${n}</button>`).join('');
@@ -720,8 +757,8 @@ function levelCardHTML(lv, fresh){
     : `3 rätt i rad tar dig upp en grad.${nx && S.done[lv] < UNLOCK_AT ? ` Mästare låser upp ${topicName(nx)}.` : ''}`;
   return `<div class="lvcard">${fresh ? '<span class="fresh">Nytt ämne upplåst!</span>' : ''}<h2>${topicName(lv)}</h2><p>${TOPIC_LINE[lv]}</p>${animHTML(lv)}
     <div class="grades" role="group" aria-label="Grad">${dots}</div><p class="state${cleared(lv) ? ' done' : ''}">${state}</p>
-    <div class="lvbtns"><button class="primary" id="play" data-go="${lv}"${open ? '' : ' disabled'}>${open ? `Spela som ${GRADE_NAME[pick]}` : 'Låst'}</button>
-    ${fresh ? `<button class="ghost" id="stay">Stanna på ${topicName(S.topic)}</button>` : ''}</div></div>`;
+    ${open ? kickHTML(lv, `Svara rätt så börjar du som ${GRADE_NAME[pick]}.`) : '<div class="lvbtns"><button class="primary" disabled>Låst</button></div>'}
+    ${fresh ? `<div class="lvbtns"><button class="ghost" id="stay">Stanna på ${topicName(S.topic)}</button></div>` : ''}</div>`;
 }
 function drawCard(lv, fresh){
   const q = document.getElementById('q');
@@ -732,10 +769,135 @@ function drawCard(lv, fresh){
 }
 function showLevelCard(lv, fresh = false){
   stopTimer(); clearBar(); S.busy = false;
-  S.view = lv; S.pickGrade = null; S.fresh = fresh;
+  S.view = lv; S.pickGrade = null; S.fresh = fresh; S.kick = null;
   drawCard(lv, fresh);
-  (document.getElementById('play') || document.getElementById('examStart'))?.focus({preventScroll:true});
+  document.querySelector('#q [data-kick], #dare, #play, #examStart')?.focus({preventScroll:true});
 }
+// Startfrågan på ämneskortet: en lätt, riktig fråga i stället för en Spela-knapp.
+// Rätt svar krossar kortet och ämnet börjar. Fel svar säger varför, och man får försöka igen. Trappan påverkas inte.
+// Första valet är det rätta. why är raden vid fel (per val, annars frågans).
+const emo = (e, t) => `<span class="emo" aria-hidden="true">${e}</span><span>${t}</span>`;
+const KICK = {
+  body: {q: 'Välj motståndet', opts: [
+    {html: () => svg(genBands(4), {style: stdStyle(4), label: 'Motstånd'})},
+    {html: emo('🐔', 'Kyckling'), why: 'Det där är en kyckling 🐔'},
+    {html: emo('🚗', 'Bil'), why: 'Det där är en bil 🚗'},
+    {html: emo('⚓', 'Ankare'), why: 'Det där är ett ankare ⚓'}]},
+  ohm: {q: 'Vilken enhet har resistans?', why: 'Resistans mäts i ohm, Ω.',
+    opts: [{html: '<b>Ω</b> ohm'}, {html: 'kg'}, {html: '°C'}, {html: 'km/h'}]},
+  tol: {q: 'Ett motstånd på 100 Ω ±10 %. Vilket mätvärde är okej?', why: '10 % av 100 Ω är 10 Ω, så allt mellan 90 och 110 Ω är okej.',
+    opts: [{html: '104 Ω'}, {html: '150 Ω'}, {html: '200 Ω'}, {html: '3 Ω'}]},
+  tc: {q: 'Vad händer med resistansen när motståndet blir varmt?', why: 'Den ändras lite. Hur mycket står i temperaturbandet.',
+    opts: [{html: 'Den ändras lite'}, {html: 'Den blir noll'}, {html: 'Motståndet byter färg'}, {html: 'Den blir tusen gånger större'}]},
+  e: {q: 'Motstånd säljs i standardvärden. Vilket kan du köpa?', why: 'Standardvärden har få siffror, som 4,7 kΩ.',
+    opts: [{html: '4,7 kΩ'}, {html: '4,713 kΩ'}, {html: '4,6982 kΩ'}, {html: '4,70015 kΩ'}]}
+};
+function kickHTML(lv, label){
+  if (!S.kick || S.kick.lv !== lv) {
+    const K = KICK[lv], order = shuffle([0, 1, 2, 3]);
+    S.kick = {lv, right: order.indexOf(0), bad: [], msg: '',
+      opts: order.map(i => { const o = K.opts[i]; return {html: typeof o.html === 'function' ? o.html() : o.html, why: o.why || K.why}; })};
+  }
+  const k = S.kick;
+  return `<div class="kick"><p class="kickq">${KICK[lv].q}</p><div class="kickopts">${k.opts.map((o, i) =>
+    `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${TEST_MODE && i === k.right ? ' cheat' : ''}" data-kick="${i}"${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o.html}</button>`).join('')}</div>
+    <p class="kickmsg" aria-live="polite">${k.msg}</p><p class="kicklabel">${label}</p></div>`;
+}
+const centerOf = el => { const r = el.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+function kickPick(btn){
+  const k = S.kick, i = +btn.dataset.kick;
+  if (!k || k.busy || k.bad.includes(i)) return;
+  if (i !== k.right) {
+    k.bad.push(i); k.msg = k.opts[i].why;
+    btn.classList.add('bad'); btn.setAttribute('aria-disabled', 'true');
+    document.querySelector('#q .kickmsg').textContent = k.msg;
+    const box = document.querySelector('#q .kick');
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    sfx.wrong();
+    return;
+  }
+  k.busy = true; btn.classList.add('ok');
+  const lv = k.lv, at = centerOf(btn);
+  const go = () => { sfx.glass(); shatter(() => { S.kick = null; goTopic(lv); }, at); };
+  if (S.instant || reduceMotion()) { go(); return; }
+  sfx.spark(); sparkFX(); setTimeout(go, SPARK_MS);
+}
+
+// Eldprovets kort: en eld och tre tryck. Det knakar och spricker, texten byts, och tredje trycket krossar kortet.
+const DARE = ['VÅGAR DU???', 'KAN DU TILLRÄCKLIGT?', '20 FRÅGOR. INGEN HJÄLP. INGEN NÅD.'];
+const FIRE_SVG = `<svg class="fire" viewBox="0 0 120 140" aria-hidden="true"><defs>
+  <linearGradient id="fireo" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d1a"/><stop offset=".6" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ffb347"/></linearGradient>
+  <linearGradient id="firem" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff9a1f"/><stop offset="1" stop-color="#ffd23f"/></linearGradient></defs>
+  <path class="f1" fill="url(#fireo)" d="M60 136C30 136 14 114 16 90C18 70 30 60 34 42C36 54 42 60 48 60C44 40 52 18 66 4C66 24 78 34 88 48C96 60 104 74 104 92C104 116 88 136 60 136Z"/>
+  <path class="f2" fill="url(#firem)" d="M60 134C42 134 32 120 34 104C36 90 46 82 48 70C52 80 58 82 62 80C60 68 66 56 74 48C74 62 84 72 86 88C88 112 78 134 60 134Z"/>
+  <path class="f3" fill="#fff3b0" d="M60 132C50 132 44 124 45 114C46 104 54 98 56 90C60 98 66 100 68 108C72 116 70 132 60 132Z"/></svg>`;
+// Taggiga sprickor från en punkt (i pixlar)
+function crackPaths(cx, cy, n, len){
+  let d = '';
+  for (let j = 0; j < n; j++) {
+    let a = Math.random() * Math.PI * 2, x = cx, y = cy;
+    d += `<path pathLength="1" d="M${x.toFixed(1)} ${y.toFixed(1)}`;
+    const steps = 3 + Math.floor(Math.random() * 3), step = len * (.7 + Math.random() * .6) / steps;
+    for (let k = 0; k < steps; k++) { a += (Math.random() - .5) * .9; x += Math.cos(a) * step; y += Math.sin(a) * step; d += ` L${x.toFixed(1)} ${y.toFixed(1)}`; }
+    d += '"/>';
+  }
+  return d;
+}
+function beginExam(){
+  if (S.topic !== 'ultra') { S.up = 0; S.down = 0; S.topic = 'ultra'; save('fargkoden2-topic', 'ultra'); }
+  startExam();
+}
+function dareClick(btn){
+  S.dare = (S.dare || 0) + 1;
+  const at = centerOf(btn);
+  if (S.dare >= DARE.length) { sfx.glass(); shatter(beginExam, at); return; }
+  sfx.crack();
+  btn.querySelector('.daretxt').textContent = DARE[S.dare];
+  btn.setAttribute('aria-label', 'Starta eldprovet: ' + DARE[S.dare]);
+  // Båda omgångarna spricker från samma punkt
+  const box = btn.getBoundingClientRect(), w = box.width || 300, h = box.height || 300, cr = btn.querySelector('.cracks');
+  if (S.dare === 1) S.dareAt = [w * (.35 + Math.random() * .3), h * (.3 + Math.random() * .25)];
+  const [cx, cy] = S.dareAt;
+  cr.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  cr.insertAdjacentHTML('beforeend', crackPaths(cx, cy, S.dare === 1 ? 4 : 7, Math.min(w, h) * (S.dare === 1 ? .25 : .5)));
+  btn.classList.remove('quake'); void btn.offsetWidth; btn.classList.add('quake');
+}
+// Kortet spricker i skärvor som faller och avslöjar det som renderas under (fn)
+function shatter(fn, at){
+  const q = document.getElementById('q');
+  if (S.instant || reduceMotion() || !q.animate) { fn(); return; }
+  const r = q.getBoundingClientRect(), ghost = q.cloneNode(true);
+  ghost.removeAttribute('id'); ghost.removeAttribute('aria-live');
+  ghost.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+  fn();
+  const box = document.createElement('div');
+  box.className = 'shatter'; box.setAttribute('aria-hidden', 'true');
+  box.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
+  const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const cx = cl(((at ? at.x : r.left + r.width / 2) - r.left) / r.width * 100, 10, 90);
+  const cy = cl(((at ? at.y : r.top + r.height / 2) - r.top) / r.height * 100, 10, 90);
+  // Punkter runt kanten (hörnen med), i ordning medurs. Varje skärva är en triangel från träffpunkten.
+  const ps = [0, 1, 2, 3].concat(Array.from({length: 12}, () => Math.random() * 4)).sort((a, b) => a - b);
+  const pt = p => p < 1 ? [p * 100, 0] : p < 2 ? [100, (p - 1) * 100] : p < 3 ? [(3 - p) * 100, 100] : [0, (4 - p) * 100];
+  const rim = ps.map(pt);
+  box.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none">${rim.map(([x, y]) => `<path vector-effect="non-scaling-stroke" d="M${cx} ${cy} L${x} ${y}"/>`).join('')}</svg>`;
+  rim.forEach((a, i) => {
+    const b = rim[(i + 1) % rim.length];
+    if (Math.abs(a[0] - b[0]) < .01 && Math.abs(a[1] - b[1]) < .01) return;
+    const sh = ghost.cloneNode(true);
+    sh.style.clipPath = `polygon(${cx}% ${cy}%, ${a[0]}% ${a[1]}%, ${b[0]}% ${b[1]}%)`;
+    box.appendChild(sh);
+    const mx = (cx + a[0] + b[0]) / 3 - cx, my = (cy + a[1] + b[1]) / 3 - cy, len = Math.hypot(mx, my) || 1;
+    const dx = mx / len * (40 + Math.random() * 80), dy = 260 + Math.random() * 260, rot = (Math.random() - .5) * 70;
+    sh.animate([{transform: 'none', opacity: 1}, {transform: `translate(${dx * .5}px,${-20 - Math.random() * 30}px) rotate(${rot * .3}deg)`, opacity: 1, offset: .25},
+      {transform: `translate(${dx}px,${dy}px) rotate(${rot}deg)`, opacity: 0}],
+      {duration: 900 + Math.random() * 400, delay: 120 + Math.random() * 80, easing: 'cubic-bezier(.4,0,.9,.5)', fill: 'both'});
+  });
+  box.querySelector('svg').animate([{opacity: 1}, {opacity: 0}], {duration: 200, delay: 100, fill: 'forwards'});
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 1700);
+}
+
 // Spela på ett nivåkort. Samma ämne och grad: fortsätt där man var.
 function goTopic(lv){
   S.view = null;
@@ -1811,6 +1973,15 @@ const sfx = (() => {
     g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + at); g.gain.exponentialRampToValueAtTime(.0001, t + d);
     o.connect(g).connect(a.destination); o.start(t); o.stop(t + d + .05);
   };
+  // Brus som klingar av snabbt, genom ett högpassfilter
+  const noise = (a, d, {hp = 1000, v = .3, t0 = 0} = {}) => {
+    const n = a.createBufferSource(), buf = a.createBuffer(1, Math.ceil(a.sampleRate * d), a.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / ch.length, 3);
+    n.buffer = buf;
+    const f = a.createBiquadFilter(), g = a.createGain(), t = a.currentTime + t0;
+    f.type = 'highpass'; f.frequency.value = hp; g.gain.value = v;
+    n.connect(f).connect(g).connect(a.destination); n.start(t);
+  };
   return {
     // kaaaah: ett stigande svep med brus
     spark(){
@@ -1848,6 +2019,20 @@ const sfx = (() => {
       [523, 659, 784, 1047, 1319].forEach((f, i) => tone(a, f, {t0: i * .1, d: .18, type: 'square', v: .06, at: .01}));
       [1047, 1319, 1568, 2093].forEach(f => tone(a, f, {t0: .55, d: 1.6, type: 'triangle', v: .09, at: .02}));
       for (let i = 0; i < 8; i++) tone(a, 2637 + i * 220, {t0: .6 + i * .12, d: .3, v: .03, at: .005});
+    },
+    // Knak: en spricka i glas
+    crack(){
+      const a = ctx(); if (!a) return;
+      noise(a, .14, {hp: 2200, v: .35});
+      tone(a, 95, {f2: 45, d: .18, type: 'triangle', v: .28, at: .003});
+      tone(a, 3400, {f2: 1600, d: .07, type: 'square', v: .04, at: .002});
+    },
+    // Krossat glas: ett brak och många små klingande skärvor
+    glass(){
+      const a = ctx(); if (!a) return;
+      noise(a, .9, {hp: 1600, v: .4});
+      tone(a, 70, {f2: 38, d: .35, type: 'triangle', v: .32, at: .003});
+      for (let i = 0; i < 18; i++) tone(a, 2400 + Math.random() * 4800, {t0: .02 + Math.random() * .7, d: .07 + Math.random() * .25, v: .025 + Math.random() * .04, at: .002});
     },
     // Eldprovet: svaret är registrerat
     tick(){ const a = ctx(); if (!a) return; tone(a, 660, {d: .09, type: 'square', v: .06, at: .005}); tone(a, 990, {t0: .07, d: .12, type: 'square', v: .05, at: .005}); }
@@ -2012,9 +2197,12 @@ document.getElementById('q').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn || btn.disabled) return;
   S.lastTap = btn;
-  if (btn.id === 'examStart') {
-    if (S.topic !== 'ultra') { S.up = 0; S.down = 0; S.topic = 'ultra'; save('fargkoden2-topic', 'ultra'); }
-    startExam();
+  if (btn.dataset.kick != null) {
+    kickPick(btn);
+  } else if (btn.id === 'dare') {
+    dareClick(btn);
+  } else if (btn.id === 'examStart') {
+    beginExam();
   } else if (btn.id === 'play' || btn.classList.contains('go')) {
     goTopic(btn.dataset.go);
   } else if (btn.dataset.grade != null) {
