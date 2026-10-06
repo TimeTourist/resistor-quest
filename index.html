@@ -553,6 +553,37 @@ th{color:var(--muted);font-weight:500}
   .padlock{width:48px;margin:-28px 0 0 -24px}
   .tile .fire{width:64px}
 }
+/* Omslaget: första gången man öppnar ett ämne. Visas en gång, sedan aldrig mer. */
+.play.cover{border-width:6px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.play.cover #q{position:relative;background:transparent;border:0;padding:6px 4px 4px}
+.eyebrow{font-family:var(--display);font-weight:700;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cover .anim{display:block;width:100%;max-width:440px;height:auto;margin:10px auto 4px;color:var(--muted)}
+.cname{font-family:var(--display);font-weight:700;font-size:clamp(2rem,10cqi,3.8rem);line-height:.95;margin:8px 0 6px;display:flex;align-items:center;gap:12px;min-width:0;overflow-wrap:anywhere}
+.cname .ticon{width:52px;height:52px;border-radius:13px}.cname .ticon svg{width:36px;height:36px}
+.cline{margin:0;color:var(--muted);font-size:1.05rem;max-width:46ch}
+.unlock{margin-top:auto;padding-top:18px}
+.unlock .rule{height:0;border-top:2px dashed var(--c);margin-bottom:14px}
+.ulab{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase}
+.ulab svg{width:20px;height:20px;color:var(--c)}
+.unlock .kickq{margin:6px 0 10px}
+.cover .kickopts{grid-template-columns:repeat(4,minmax(0,1fr))}
+.cover .kopt{font-size:1.2rem;line-height:1.15}
+@container (max-width:560px){
+  .cover .kickopts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cname .ticon{width:40px;height:40px}.cname .ticon svg{width:28px;height:28px}
+}
+.xbtn{position:absolute;top:4px;right:4px;z-index:2;width:40px;height:40px;border-radius:50%;border:2px solid var(--c);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.xbtn svg{width:20px;height:20px}
+/* Snabbkollens val */
+.kickq{font-weight:700;font-size:1.15rem;margin:6px 0 10px}
+.kickopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kopt{min-width:0;overflow-wrap:anywhere;hyphens:auto;font:inherit;font-size:1rem;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:12px 10px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-align:center}
+.kopt:hover{border-color:var(--c)}
+.kopt svg.pic{width:58px;height:58px;max-width:none}
+.kopt svg{width:100%;max-width:150px;height:auto}
+.kopt.bad{border-color:var(--bad);background:var(--bad-bg);cursor:default;opacity:.75}
+.kopt.ok{border-color:var(--ok);background:var(--ok-bg)}
+@media (prefers-reduced-motion:no-preference){.kickopts.shake{animation:shake .45s ease-in-out}}
 </style>
 </head>
 <body>
@@ -1123,13 +1154,14 @@ function updateHead(){
     <button class="closebtn" id="closeBtn" aria-label="Byt ämne">${CLOSE_ICON}<span>Byt ämne</span></button>`;
 }
 document.getElementById('phead').addEventListener('click', e => { if (e.target.closest('#closeBtn')) closePlay(); });
-// Kortet växer från minikortets ruta till sin plats
+// Kortet växer från minikortets ruta till sin plats. Omslaget vänds fram samtidigt.
 function zoomIn(from){
   const el = document.getElementById('spel'), to = el.getBoundingClientRect();
   if (S.instant || reduceMotion() || !el.animate || !to.width) return;
   sfx.whoosh();
-  el.animate([{transformOrigin: '0 0', transform: `translate(${from.left - to.left}px,${from.top - to.top}px) scale(${from.width / to.width},${from.height / to.height})`},
-    {transformOrigin: '0 0', transform: 'none'}], {duration: 450, easing: 'cubic-bezier(.2,.8,.2,1)'});
+  const turn = S.cover ? ' perspective(1400px) rotateY(-90deg)' : '';
+  el.animate([{transformOrigin: '0 0', transform: `translate(${from.left - to.left}px,${from.top - to.top}px) scale(${from.width / to.width},${from.height / to.height})${turn}`},
+    {transformOrigin: '0 0', transform: 'none'}], {duration: S.cover ? 700 : 450, easing: 'cubic-bezier(.2,.8,.2,1)'});
   [...el.children].forEach(c => c.animate([{opacity: 0}, {opacity: 1}], {duration: 300, delay: 180, fill: 'backwards'}));
 }
 function openTopic(lv){
@@ -1137,10 +1169,63 @@ function openTopic(lv){
   const tile = S.screen === 'grid' && document.querySelector(`#grid [data-id="${lv}"]`), from = tile ? tile.getBoundingClientRect() : null;
   if (S.fresh === lv) S.fresh = null;
   S.screen = 'play'; S.open = lv; S.keyWin = null;
+  S.cover = lv !== 'ultra' && !cleared(lv) && !S.seen.includes(lv) ? lv : null;
   showScreen(); updateHead();
-  goTopic(lv);
+  if (S.cover) drawCover(lv); else goTopic(lv);
   if (from) zoomIn(from);
   document.getElementById('closeBtn')?.focus({preventScroll: true});
+}
+// Omslaget: första gången man öppnar ett ämne. Ämnets animering, namnet, vad man lär sig och en snabbkoll.
+// Rätt svar vänder kortet till spelsidan, och omslaget kommer aldrig tillbaka för det ämnet.
+const SPARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4z" fill="currentColor"/></svg>';
+function drawCover(lv){
+  if (!S.kick || S.kick.lv !== lv) {
+    const K = KICK[lv], order = shuffle([0, 1, 2, 3]);
+    S.kick = {lv, right: order.indexOf(0), bad: [], opts: order.map(i => { const o = K.opts[i]; return {html: typeof o.html === 'function' ? o.html() : o.html, label: o.label}; })};
+  }
+  const q = document.getElementById('q');
+  q.classList.remove(...KINDS, 'bosscard');
+  q.innerHTML = coverHTML(lv);
+  document.getElementById('more').hidden = true;
+}
+function coverHTML(lv){
+  const k = S.kick;
+  return `<button class="xbtn" id="coverClose" aria-label="Byt ämne">${CLOSE_ICON}</button>
+    <span class="eyebrow">Ämne ${TOPICS.indexOf(lv) + 1} av 5</span>${animHTML(lv)}
+    <h2 class="cname"><span class="ticon">${topicIcon(lv)}</span>${topicName(lv)}</h2>
+    <p class="cline">${TOPIC_LINE[lv]}</p>
+    <div class="unlock"><div class="rule"></div><span class="ulab">${SPARK_ICON}Snabbkoll</span>
+      <p class="kickq">${KICK[lv].q}</p>
+      <div class="kickopts">${k.opts.map((o, i) => `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${showCheat() && i === k.right ? ' cheat' : ''}" data-kick="${i}"${o.label ? ` aria-label="${o.label}"` : ''}${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o.html}</button>`).join('')}</div></div>`;
+}
+function flipCard(fn){
+  const el = document.getElementById('spel');
+  if (S.instant || reduceMotion() || !el.animate) { fn(); return; }
+  el.animate([{transform: 'perspective(1400px) rotateY(0)'}, {transform: 'perspective(1400px) rotateY(90deg)'}], {duration: 230, easing: 'ease-in'}).onfinish = () => {
+    fn();
+    el.animate([{transform: 'perspective(1400px) rotateY(-90deg)'}, {transform: 'perspective(1400px) rotateY(0)'}], {duration: 260, easing: 'ease-out'});
+  };
+}
+function kickPick(btn){
+  const k = S.kick, i = +btn.dataset.kick, lv = S.cover;
+  if (!k || !lv || k.busy || k.bad.includes(i)) return;
+  if (i !== k.right) {
+    k.bad.push(i);
+    drawCover(lv);
+    const box = document.querySelector('#q .kickopts');
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    sfx.wrong();
+    return;
+  }
+  k.busy = true; btn.classList.add('ok'); sfx.right();
+  const go = () => {
+    if (S.cover !== lv) return;
+    S.seen.push(lv); saveKeys();
+    S.kick = null; S.cover = null;
+    showScreen(); updateHead(); goTopic(lv);
+  };
+  if (S.instant || reduceMotion()) { go(); return; }
+  setTimeout(() => flipCard(go), 550);
 }
 // Byt ämne: kortet krymper tillbaka till sin ruta. Ett besvarat svar räknas som klart, så nästa gång kommer en ny fråga.
 // Eldprovets frågor räknas redan när man svarar, så provet fortsätter på nästa fråga.
@@ -2569,7 +2654,11 @@ document.getElementById('q').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn || btn.disabled) return;
   S.lastTap = btn;
-  if (btn.dataset.ord) {
+  if (btn.id === 'coverClose') {
+    closePlay();
+  } else if (btn.dataset.kick != null) {
+    kickPick(btn);
+  } else if (btn.dataset.ord) {
     orderPick(btn);
   } else if (btn.id === 'dare') {
     dareClick(btn);
@@ -2795,8 +2884,8 @@ const syncCheatBtn = () => { cheatBtn.textContent = S.cheatOn ? 'Dölj rätt sva
 syncCheatBtn();
 cheatBtn.addEventListener('click', () => {
   S.cheatOn = !S.cheatOn; save('fargkoden2-cheat', S.cheatOn ? 'on' : 'off'); syncCheatBtn();
-  // Rita om frågan
-  if (S.plan && S.type !== 'exam') render();
+  // Rita om det som visas: omslaget eller frågan
+  if (S.cover) drawCover(S.cover); else if (S.plan && S.type !== 'exam') render();
 });
 document.getElementById('tGive').addEventListener('click', () => {
   const lv = TOPICS.find(l => !unlocked(l));
