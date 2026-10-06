@@ -72,6 +72,17 @@ html,body{overflow-x:clip}
 .oslot span{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.05rem;line-height:1;white-space:nowrap}
 .ord-m .oslot span{font-size:.78rem}
 .bracket text .hl{fill:var(--ink);font-weight:800;font-size:16px;text-decoration:underline}
+.bslot{cursor:pointer}
+.bslot rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.bslot text{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:15px;fill:var(--ink)}
+.bslot.sel rect{stroke:var(--accent);stroke-width:2.5}
+.bslot.ok rect{stroke:var(--ok);fill:var(--ok-bg)}
+.bslot.bad rect{stroke:var(--bad);fill:var(--bad-bg)}
+.bsel{stroke:var(--accent)}
+.betabs{display:flex;gap:6px;margin-bottom:10px}
+.betabs button{flex:1;font:inherit;font-weight:700;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:6px 10px;cursor:pointer}
+.betabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.bemults{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .obox{display:block;width:100%;aspect-ratio:3/4;max-width:34px;border:2px dashed var(--line);border-radius:6px;background:var(--surface);position:relative}
 .obox.ok{border:2px solid var(--ok);box-shadow:0 0 0 2px var(--ok-bg)}
 .obox.bad{border:2px solid var(--bad);box-shadow:0 0 0 2px var(--bad-bg)}
@@ -1267,11 +1278,21 @@ function svg(b, o = {}){
 <path d="${body}" ${fill}/>
 <g clip-path="url(#c${id})">${bands}${dims}${st.chip != null ? `<rect x="${st.xs[st.chip] - st.w[st.chip]/2 - 0.5}" y="38" width="${st.w[st.chip] + 1}" height="9" ${fill}/>` : ''}${st.tint ? `<rect x="60" y="10" width="200" height="72" fill="#ff9a2e" opacity=".38" style="mix-blend-mode:multiply"/>` : ''}<rect x="60" y="10" width="200" height="72" fill="url(#g${id})"/></g>
 <path d="${body}" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="1"/>${taps}`;
-  const top = brs.length || notes || (o.mark || []).some(m => m[2] === 'top') ? -30 : 0, bottom = (o.mark && o.mark.length) || brs.some(x => x.labels) ? 108 : 92;
+  // Rutor under banden (knappa in): värdet man skrivit, markerat band, och rätt eller fel efter svaret
+  // Rutorna är lika breda som avståndet mellan banden tillåter, och långa värden (×100k) får mindre text
+  const gap = Math.min(...st.xs.slice(1).map((x, i) => Math.abs(x - st.xs[i])));
+  const slots = o.slots ? o.slots.map((sl, i) => {
+    const cx = cxOf(i), w = Math.min(30, gap - 3), fs = sl.txt.length > 3 ? 10 : sl.txt.length > 1 ? 12 : 15;
+    return `<g class="bslot${sl.sel ? ' sel' : ''}${sl.state ? ' ' + sl.state : ''}" data-band="${i}"><rect x="${cx - w/2}" y="96" width="${w}" height="24" rx="5"/>` +
+      `<text x="${cx}" y="${108 + fs * .35}" text-anchor="middle" style="font-size:${fs}px">${sl.txt}</text></g>` +
+      (sl.sel ? `<rect class="bsel" x="${cx - st.w[i]/2 - 4}" y="3" width="${st.w[i] + 8}" height="86" rx="4" fill="none" stroke-width="3"/>` : '');
+  }).join('') : '';
+  const top = brs.length || notes || (o.mark || []).some(m => m[2] === 'top') ? -30 : 0;
+  const bottom = o.slots ? 124 : (o.mark && o.mark.length) || brs.some(x => x.labels) ? 108 : 92;
   return `<svg viewBox="0 ${top} 320 ${bottom - top}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}"><defs>${mdefs}
 <clipPath id="c${id}"><path d="${body}"/></clipPath>
 <linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
-${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}${rings}${brackets}${notes}${sweep}${cheatMark}</svg>`;
+${st.flip ? `<g transform="translate(320 0) scale(-1 1)">${inner}</g>` : inner}${mk}${marks}${rings}${brackets}${notes}${sweep}${cheatMark}${slots}</svg>`;
 }
 const colorNames = b => b.map(k => C[k].n).join(', ');
 
@@ -1373,7 +1394,7 @@ function next(){
   S.type = S.plan.type; S.focus = S.plan.focus || null;
   const n = S.plan.n || rnd([4, 5, 6]);
   S.n = n; S.q = genBands(n);
-  S.answered = false; S.ord = null; S.pointPrompt = null; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.bflip = false; S.style = null;
+  S.answered = false; S.be = null; S.ord = null; S.pointPrompt = null; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.bflip = false; S.style = null;
   S.bpick = null; S.pickDir = null; S.pickSr = null; S.pickC = null; S.pickBand = null; S.ok = null; S.cq = null; S.pointSupport = null;
   S.palAll = null; S.entry = newEntry(); S.fieldOk = null;
   S.moreOK = ['read','build','dir','series','point'].includes(S.type);
@@ -1402,6 +1423,8 @@ function next(){
     S.style = S.plan.varied ? variedStyle(S.q, fl) : {...stdStyle(n), flip: fl};
   }
   if (S.plan.setup) S.plan.setup();
+  // Knappa in på Resistansens Stormästare: en ruta under varje band, markeringen börjar längst till vänster
+  S.be = bandEntry() ? {vals: Array(S.n).fill(null), sel: S.style.flip ? S.n - 1 : 0, tab: 'd'} : null;
   render();
   // Ingen automatisk skroll efter svar. Har man skrollat ner till Allt om motståndet tas kortet tillbaka i bild.
   const card = document.getElementById('q');
@@ -1758,7 +1781,8 @@ function slotLabels(n){
 }
 
 // Svara behövs bara i svår variant där man knappar in värden
-const needsSubmit = () => S.type === 'read' && S.plan.fmt === 'hard';
+const bandEntry = () => S.type === 'read' && S.plan && S.plan.fmt === 'hard' && S.focus === 'v';
+const needsSubmit = () => S.type === 'read' && S.plan.fmt === 'hard' && !bandEntry();
 function entryReady(){
   return entryFields().every(fieldFilled);
 }
@@ -1833,8 +1857,11 @@ function render(){
     const rq = {v:'Vilken resistans har motståndet?', t:'Vilken tolerans har motståndet?', k:'Vilken temperaturkoefficient har motståndet?',
       d:'Vilka siffror visar motståndet?', x:'Vilken multiplikator har motståndet?', all:'Vilket värde har motståndet?'}[S.focus];
     const wrongV = S.answered && !S.ok && !inExam() && hardV(), A = wrongV ? hardAnim() : null;
-    h += `${topHTML(rq)}<div class="res">${svg(S.q, {style: S.style, ...(wrongV ? {mark: valueMarks(S.q), markKind: 'ok', markAnim: A} : {})})}</div>`;
-    h += S.plan.fmt !== 'hard' ? mcHTML() : fieldsHTML();
+    // Med rutor under banden visar rutorna facit för siffrorna, och bara multiplikatorn står ovanför bandet
+    const marks = wrongV ? (S.be ? valueMarks(S.q).map(([i, l, pos]) => [i, pos === 'top' ? l : '', pos]) : valueMarks(S.q)) : null;
+    h += `${topHTML(rq)}<div class="res">${svg(S.q, {style: S.style, tap: !!S.be && !S.answered, slots: S.be ? beSlots() : null,
+      ...(wrongV ? {mark: marks, markKind: 'ok', markAnim: A} : {})})}</div>`;
+    h += S.plan.fmt !== 'hard' ? mcHTML() : S.be ? beHTML() : fieldsHTML();
     if (wrongV) h += calcRowHTML(S.q, A.eq).html;
   } else if (S.type === 'choice') {
     h += choiceHTML();
@@ -2312,6 +2339,53 @@ function answerRead(){
 const MULTS = [0.01, 0.1, 1, 10, 100, 1e3, 1e4, 1e5, 1e6];
 const TOL_VALS = [10, 5, 2, 1, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01];
 const TC_VALS = [250, 100, 50, 25, 20, 15, 10, 5, 1];
+// Knappa in på Stormästare: man trycker på ett band och skriver dess siffra, eller väljer multiplikatorn under fliken ×.
+// Ingen ledtråd om läsriktningen: rutor under alla band, markeringen börjar till vänster och fliken byts bara av en själv.
+// Efter en inmatning hoppar markeringen till närmaste lediga band åt höger, annars åt vänster.
+// Svaret rättas när lika många rutor som siffror plus multiplikator är fyllda.
+const BE_MULTS = [0.01, 0.1, 1, 10, 100, 1e3, 1e4, 1e5, 1e6, 1e7];
+// I rutan står multiplikatorn utan ×, så att den får plats: 1k, 100, 0,01
+const multShort = m => fmtMult(m).slice(1);
+const beTxt = v => !v ? '' : v.d != null ? String(v.d) : multShort(v.m);
+// Rätt eller fel per ruta: siffrorna och multiplikatorn i läsordning, och inget i de andra
+function beRight(i){
+  const v = S.be.vals[i], k = nd(S.q), c = S.q[i];
+  return i < k ? !!v && v.d === C[c].d : i === k ? !!v && v.m != null && close(v.m, C[c].m) : !v;
+}
+// Efter fel svar visar en felaktig ruta det rätta värdet i rött (tom om bandet inte ska ha något)
+const beTruth = i => { const k = nd(S.q); return i < k ? String(C[S.q[i]].d) : i === k ? multShort(C[S.q[k]].m) : ''; };
+const beSlots = () => S.q.map((_, i) => {
+  const shown = S.answered && !inExam(), right = shown && beRight(i);
+  return {txt: shown && !right ? beTruth(i) : beTxt(S.be.vals[i]), sel: !S.answered && i === S.be.sel,
+    state: shown ? (right ? (S.be.vals[i] ? 'ok' : '') : 'bad') : ''};
+});
+function beType(v){
+  const be = S.be;
+  if (S.answered || !be) return;
+  be.vals[be.sel] = v;
+  const k = nd(S.q);
+  if (be.vals.filter(Boolean).length >= k + 1) { finish(S.q.every((_, i) => beRight(i))); return; }
+  const n = S.n, flip = !!S.style.flip, at = p => flip ? n - 1 - p : p, p0 = flip ? n - 1 - be.sel : be.sel;
+  let nx = null;
+  for (let p = p0 + 1; p < n && nx == null; p++) if (!be.vals[at(p)]) nx = at(p);
+  for (let p = p0 - 1; p >= 0 && nx == null; p--) if (!be.vals[at(p)]) nx = at(p);
+  if (nx != null) be.sel = nx;
+  render();
+}
+function beClear(){ if (S.answered || !S.be) return; S.be.vals[S.be.sel] = null; render(); }
+function beHTML(){
+  if (S.answered) return '';
+  const tab = S.be.tab;
+  const tabs = `<div class="betabs" role="group" aria-label="Knappsats">${[['d', 'Siffror'], ['m', '×']].map(([t, l]) =>
+    `<button data-betab="${t}" aria-pressed="${tab === t}">${l}</button>`).join('')}</div>`;
+  const pad = tab === 'd'
+    ? `<div class="keypad">${['7','8','9','4','5','6','1','2','3','⌫','0'].map(k =>
+        `<button class="key${k === '⌫' ? ' fn' : ''}" data-bekey="${k}" aria-label="${k === '⌫' ? 'Radera' : k}">${k}</button>`).join('')}</div>`
+    : `<div class="chiprow bemults">${BE_MULTS.map(m => `<button class="chip" data-bemult="${m}">${fmtMult(m)}</button>`).join('')}<button class="chip fn" data-bekey="⌫" aria-label="Radera">⌫</button></div>`;
+  const k = nd(S.q);
+  const cheatLine = cheat(true) ? `<p class="cheatline">Svar: ${S.q.slice(0, k).map(c => C[c].d).join(' ')} · ${fmtMult(C[S.q[k]].m)}</p>` : '';
+  return `<div class="entry bentry">${tabs}${pad}${cheatLine}</div>`;
+}
 const newEntry = () => ({v:'', t:'', k:'', mult:null, tol:null, tc:null, field:'v'});
 // Svår variant, läs av: rutor överst och ett inmatningsfält i taget under.
 // Siffror har knappsats, de andra hela värdelistan. Val i en lista går vidare till nästa tomma ruta.
@@ -2428,6 +2502,12 @@ document.getElementById('q').addEventListener('click', e => {
   } else if (btn.dataset.tpick) {
     if (S.answered) return;
     answerBMC(btn.dataset.tpick);
+  } else if (btn.dataset.bekey) {
+    btn.dataset.bekey === '⌫' ? beClear() : beType({d: +btn.dataset.bekey});
+  } else if (btn.dataset.bemult) {
+    beType({m: +btn.dataset.bemult});
+  } else if (btn.dataset.betab) {
+    if (S.be && !S.answered) { S.be.tab = btn.dataset.betab; render(); }
   } else if (btn.dataset.key) {
     keyPress(btn.dataset.key);
   } else if (btn.dataset.field) {
@@ -2573,6 +2653,7 @@ function orderCheck(lastBox){
   setTimeout(restart, 700);
 }
 function pickBand(i){
+  if (S.be) { if (!S.answered) { S.be.sel = i; render(); } return; }
   if (S.answered || S.type !== 'point') return;
   S.pickBand = i; finish(i === S.pointAt);
 }
@@ -2585,6 +2666,7 @@ document.addEventListener('keydown', e => {
   if (typing) {
     const map = {Backspace:'⌫', ',':',', '.':','};
     const k = /^\d$/.test(e.key) ? e.key : map[e.key];
+    if (S.be && (/^\d$/.test(e.key) || e.key === 'Backspace')) { e.preventDefault(); e.key === 'Backspace' ? beClear() : beType({d: +e.key}); return; }
     if (k && entryFields().includes('v')) { e.preventDefault(); keyPress(k); return; }
   }
   if (S.busy && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); reveal(); return; }

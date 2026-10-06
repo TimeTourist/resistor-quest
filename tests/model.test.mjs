@@ -642,7 +642,10 @@ test('Resistansen Stormästare fel: talet byggs upp, och vid avläsning får ban
       const mult = texts.find(e => e.textContent === t.g('fmtMult(C[S.q[nd(S.q)]].m)'));
       assert.ok(mult, 'hela multiplikatorn står på bandet');
       assert.ok(+mult.getAttribute('y') < 0, 'ovanför motståndet');
-      texts.filter(e => e !== mult).forEach(e => assert.ok(+e.getAttribute('y') > 92, 'siffrorna under'));
+      texts.filter(e => e !== mult && e.textContent).forEach(e => assert.ok(+e.getAttribute('y') > 92, 'siffrorna under'));
+      // Med rutor under banden visar rutorna facit: siffrorna och multiplikatorn i läsordning
+      if (t.g('!!S.be')) assert.deepEqual(t.$$('#q .bslot text').slice(0, t.g('nd(S.q)')).map(e => e.textContent),
+        Array.from(t.g('S.q.slice(0, nd(S.q)).map(c => String(C[c].d))')));
     }
     assert.equal(t.$$('#q .lesson').length, 0);
   }
@@ -713,7 +716,8 @@ test('Motståndet Lärling fel: det udda räknar sina band i rött och poppar, d
 });
 
 test('Svår variant: Svara sitter under inmatningen', () => {
-  const t = atGrade('ohm', 4);
+  // Resistansens Stormästare skriver under banden och har ingen Svara-knapp, Toleransens har fält
+  const t = atGrade('tol', 4);
   until(t, p => p.type === 'read');
   const sub = t.$('#submit');
   assert.ok(sub && sub.closest('.entry'), 'Svara finns i inmatningen');

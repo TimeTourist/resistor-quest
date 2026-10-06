@@ -48,6 +48,19 @@ export function answer(t, correct = true) {
     if (typeof r === 'number') return pickBy('[data-vpick]', 'vpick', r);
     return g("S.focus === 'k'") ? pickBy('[data-kpick]', 'kpick', r) : pickBy('[data-tpick]', 'tpick', r);
   }
+  if (fmt === 'hard' && type === 'read' && g('!!S.be')) {
+    // Knappa in under banden: tryck på bandet och skriv, multiplikatorn under fliken ×
+    const k = g('nd(S.q)');
+    for (let i = 0; i < k; i++) {
+      tap(t, t.$(`#q [data-band="${i}"]`));
+      const d = g(`C[S.q[${i}]].d`);
+      t.$(`#q [data-bekey="${!correct && i === 0 ? (d + 1) % 10 : d}"]`).click();
+    }
+    tap(t, t.$(`#q [data-band="${k}"]`));
+    t.$('#q [data-betab="m"]').click();
+    const m = g(`C[S.q[${k}]].m`);
+    return $$('#q [data-bemult]').find(b => Math.abs(+b.dataset.bemult - m) < 1e-9 * Math.max(1, m)).click();
+  }
   if (fmt === 'hard' && type === 'read') {
     const fs = Array.from(g('entryFields()'));
     fs.forEach((f, j) => {
