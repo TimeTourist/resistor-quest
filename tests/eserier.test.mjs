@@ -201,3 +201,55 @@ test('Utrullningen hoppas över med S.instant men räknas ändå', () => {
   assert.equal(t.$$('#q .eruler.unroll').length, 0);
   assert.equal(t.g('S.rolled'), true);
 });
+
+// Rättningar efter slutgranskningen
+test('Inte i E12 vid rätt svar: linjalen rullas inte ut, utrullningen sparas', () => {
+  const t = atGrade('e', 3);
+  until(t, p => p.eq === 'e12');
+  t.g('S.rolled = false');
+  answer(t, true);
+  assert.equal(t.g('S.rolled'), false);
+  t.g('S.grade.e = 3; S.down = 0');
+  until(t, p => p.eq === 'e12');
+  answer(t, false);
+  assert.equal(t.g('S.rolled'), true, 'fel svar förbrukar den');
+});
+
+test('Vid fel går det inte att gå vidare förrän värdet har fallit ner på den utrullade linjalen', async () => {
+  const t = live('e', 4);
+  t.g('S.rolled = false');
+  answer(t, false);
+  await new Promise(r => setTimeout(r, t.g('SPARK_MS') + 150));
+  assert.equal(t.g('S.answered'), true);
+  assert.ok(t.$('#q .eruler.unroll'), 'linjalen rullas ut');
+  const lock = t.g('S.lockUntil - S.revealAt');
+  assert.ok(lock >= (1.5 + .36 + t.g('BAR_WRONG')) * 1000, `låst ${lock} ms`);
+  t.g('stopTimer()');
+});
+
+test('Linjalen går att läsa på telefon: smal viewBox och värden som inte trängs på samma rad', () => {
+  const t = atGrade('e', 0);
+  for (const s of [6, 12, 24]) {
+    const svg = frag(t, `rulerSVG(${s})`).querySelector('svg');
+    const vb = svg.getAttribute('viewBox').split(' ').map(Number);
+    assert.ok(vb[2] <= 440, `E${s} viewBox ${vb[2]}`);
+    const rows = {};
+    for (const l of svg.querySelectorAll('.elab')) (rows[l.getAttribute('y')] ||= []).push(+l.getAttribute('x'));
+    for (const xs of Object.values(rows)) for (let i = 1; i < xs.length; i++) assert.ok(xs[i] - xs[i - 1] >= 24, `E${s}: ${xs[i - 1]}–${xs[i]}`);
+  }
+});
+
+test('Värden som faller nära varandra hamnar på olika höjd', () => {
+  const t = atGrade('e', 0);
+  const d = frag(t, "rulerSVG(12, {marks: [{v: 81, ok: false}, {v: 82, ok: true}, {v: 32, ok: false}, {v: 33, ok: true}]})");
+  const m = [...d.querySelectorAll('.emark text')].map(x => [+x.getAttribute('x'), +x.getAttribute('y')]);
+  for (let i = 0; i < m.length; i++) for (let j = i + 1; j < m.length; j++)
+    if (Math.abs(m[i][0] - m[j][0]) < 34) assert.notEqual(m[i][1], m[j][1], `${m[i]} och ${m[j]}`);
+});
+
+test('Klockan är högst 330 px bred även i .res', () => {
+  const t = atGrade('e', 0);
+  const rule = [...t.doc.styleSheets].flatMap(s => [...s.cssRules]).find(r => r.selectorText === '.res .edial');
+  assert.ok(rule, 'regeln .res .edial finns');
+  assert.equal(rule.style.maxWidth, '330px');
+});

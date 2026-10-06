@@ -430,6 +430,8 @@ p.epre{margin:0}
 .meterfb .gnote{margin:6px 0 0}
 .edial{display:block;width:100%;max-width:330px;height:auto;margin:0 auto;overflow:visible}
 .eruler{display:block;width:100%;height:auto;overflow:visible}
+.res .edial{max-width:330px}
+.res .eruler{max-width:480px}
 .ering{fill:none;stroke:var(--line);stroke-width:10}
 .etick{stroke:var(--line);stroke-width:2}
 .emid{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:34px;text-anchor:middle;fill:var(--ink)}
@@ -439,8 +441,8 @@ p.epre{margin:0}
 .edot{transform-box:fill-box;transform-origin:center}
 .elab{font-size:14px;font-weight:600;text-anchor:middle;fill:var(--ink)}
 .elab.sm{font-size:11px}
-.eruler .elab{font-size:12px}
-.eruler .elab.sm{font-size:9px}
+.eruler .elab{font-size:15px}
+.eruler .elab.sm{font-size:14px}
 .enum{font-size:12px;font-weight:700;text-anchor:middle;fill:var(--ok)}
 .eline{stroke:var(--line);stroke-width:6;stroke-linecap:round}
 .ebar{fill:var(--accent);opacity:.85}
@@ -450,7 +452,7 @@ p.epre{margin:0}
 .emark line{stroke-width:2}
 .emark.ok line{stroke:var(--ok)}
 .emark.bad line{stroke:var(--bad);stroke-dasharray:4 3}
-.emark text{font-size:12px;font-weight:700;text-anchor:middle}
+.emark text{font-size:15px;font-weight:700;text-anchor:middle}
 .emark.ok text{fill:var(--ok)}
 .emark.bad text{fill:var(--bad)}
 .eroll{fill:none;stroke:var(--line);stroke-width:6;opacity:0}
@@ -463,12 +465,12 @@ p.epre{margin:0}
   .edot.pop{animation:edot .26s cubic-bezier(.3,1.6,.5,1) backwards}
   .emark{animation:edrop .36s ease-out backwards}
   .eruler.unroll .epdot{animation:eunroll 1.4s ease-in-out backwards}
-  .eruler.unroll .eline{stroke-dasharray:600;animation:edraw 1.4s ease-in-out backwards}
+  .eruler.unroll .eline{stroke-dasharray:400;animation:edraw 1.4s ease-in-out backwards}
   .eruler.unroll .elab{animation:efade .5s 1.1s backwards}
   .eruler.unroll .ebar{animation:efade .5s 1.2s backwards}
   .eruler.unroll .eroll{animation:eroll 1.4s ease-in-out}
   @keyframes eunroll{from{transform:translate(var(--fx),var(--fy))}}
-  @keyframes edraw{from{stroke-dashoffset:600}}
+  @keyframes edraw{from{stroke-dashoffset:400}}
   @keyframes efade{from{opacity:0}}
   @keyframes eroll{from{opacity:1}to{opacity:0}}
   @keyframes edot{from{opacity:0;transform:scale(.4)}}
@@ -2013,7 +2015,7 @@ const GRADES = {
       const vals = [0,1,2,3].map(i => Math.round((i === right ? odd : pool[i]) / 10 * rnd([1, 10, 100, 1000, 10000]) * 100) / 100);
       const marks = [0,1,2,3].map(i => ({v: i === right ? odd : pool[i], ok: i !== right}));
       S.cq = {odd:true, prompt:'Tre av värdena finns i E12.', layout:'mc', right, opts: vals.map(v => ({html: fmtVal(v)})),
-        after: () => rulerSVG(12, {marks, roll: rollNow()}),
+        after: () => rulerSVG(12, {marks, roll: !S.ok && rollNow()}),
         wrong: `Titta på de två första siffrorna: ${odd} hamnar mellan prickarna och finns inte i E12. De andra landar på en prick.`};
     }, {eq: 'e12'}), () => ({type:'series', fmt:'mc', showVal:true})])(),
     // Stormästare: vilken serie, utan hjälp
@@ -2235,7 +2237,8 @@ function reveal(){
   // Vid fel måste man se hela förklaringen innan man kan gå vidare
   const anim = !S.ok && !inExam() && qAnim();
   // Stapeln kommer när animeringen är klar. Vid fel måste man se både förklaringen och stapeln innan man kan gå vidare.
-  const barStart = S.ok ? .1 : anim && !reduceMotion() ? anim.total : .3;
+  // E-seriernas linjal: utrullningen och värdena som faller ner ska synas innan man kan gå vidare
+  const barStart = S.ok ? .1 : Math.max(anim && !reduceMotion() ? anim.total : .3, inExam() ? 0 : rulerHold());
   const barDur = !S.barPlan || S.ok ? 0 : S.barPlan.moved === 'down' ? BAR_DOWN : BAR_WRONG;
   S.lockUntil = S.revealAt + (S.instant ? 0 : S.ok || inExam() ? 600 : (barStart + barDur) * 1000);
   render();
@@ -3202,15 +3205,23 @@ function dialSVG(n, {dots = true, labels = true, count = false, pop = false} = {
 }
 // Första linjalen per sidladdning rullas ut från klockan. Flaggan sätts även när animeringen hoppas över.
 const rollNow = () => { if (S.rolled) return false; S.rolled = true; return !S.instant && !reduceMotion(); };
+// Hur länge facit på linjalen behöver vid fel: utrullningen och värdena som faller ner (sekunder)
+function rulerHold(){
+  const start = !S.rolled && !S.instant && !reduceMotion() ? 1.5 : .2;
+  if (S.plan && S.plan.eq === 'e12') return start + 3 * .26 + .36;
+  if (S.type === 'series') return start + .36;
+  return 0;
+}
 // Toleransstaplar: avvikelser mindre än så här (andel av ett varv) räknas som att staplarna möts
-const ETOL_MIN = 0.03, RW = 600, RY = 70;
+// Linjalen är smal i användarenheter så att texten går att läsa på telefon. E24 har värdena i två rader.
+const ETOL_MIN = 0.03, RW = 400, RY = 76, RC = [200, 40, 34];
 function rulerSVG(n, {tol = null, marks = [], roll = false} = {}){
-  const vals = eVals(n).concat([100]), many = vals.length > 26, x = v => f1(RW * ePos(v));
+  const vals = eVals(n).concat([100]), many = vals.length > 26, two = !many && vals.length > 13, x = v => f1(RW * ePos(v));
   let h = `<line class="eline" x1="0" y1="${RY}" x2="${RW}" y2="${RY}"/>`;
-  if (roll) h = `<circle class="eroll" cx="300" cy="50" r="45"/>` + h;
+  if (roll) h = `<circle class="eroll" cx="${RC[0]}" cy="${RC[1]}" r="${RC[2]}"/>` + h;
   if (tol != null) {
     const bars = vals.map(v => [Math.max(0, ePos(v * (1 - tol / 100))), Math.min(1, ePos(v * (1 + tol / 100)))]);
-    bars.forEach(([a, b], i) => { h += `<rect class="ebar${i % 2 ? ' alt' : ''}" x="${f1(RW * a)}" y="${i % 2 ? 44 : 54}" width="${f1(Math.max(2, RW * (b - a)))}" height="9" rx="3"/>`; });
+    bars.forEach(([a, b], i) => { h += `<rect class="ebar${i % 2 ? ' alt' : ''}" x="${f1(RW * a)}" y="${i % 2 ? 50 : 60}" width="${f1(Math.max(2, RW * (b - a)))}" height="9" rx="3"/>`; });
     for (let i = 0; i < bars.length - 1; i++) {
       const over = bars[i][1] - bars[i + 1][0];
       if (Math.abs(over) < ETOL_MIN) continue;
@@ -3220,15 +3231,23 @@ function rulerSVG(n, {tol = null, marks = [], roll = false} = {}){
   }
   vals.forEach((v, i) => {
     const last = i === vals.length - 1;
-    const rs = roll ? (() => { const s = last ? 1 : ePos(v), cx = 300 + 45 * Math.sin(2 * Math.PI * s), cy = 50 - 45 * Math.cos(2 * Math.PI * s);
+    const rs = roll ? (() => { const s = last ? 1 : ePos(v), cx = RC[0] + RC[2] * Math.sin(2 * Math.PI * s), cy = RC[1] - RC[2] * Math.cos(2 * Math.PI * s);
       return ` style="--fx:${f1(cx - RW * ePos(v))}px;--fy:${f1(cy - RY)}px"`; })() : '';
-    h += `<circle class="epdot${last ? ' next' : ''}" cx="${x(v)}" cy="${RY}" r="${many ? 2.5 : 4.5}"${rs}/>`;
-    if (!many) h += `<text class="elab${vals.length > 13 ? ' sm' : ''}" x="${x(v)}" y="${RY + 22}">${eLab(v)}</text>`;
+    h += `<circle class="epdot${last ? ' next' : ''}" cx="${x(v)}" cy="${RY}" r="${many ? 2 : 4}"${rs}/>`;
+    if (!many) h += `<text class="elab${two ? ' sm' : ''}" x="${x(v)}" y="${RY + (two && i % 2 ? 42 : 24)}">${eLab(v)}</text>`;
+  });
+  // Värden som faller nära varandra läggs på olika höjd, så att bock och kryss inte täcker varandra
+  const lv = [], placed = [];
+  marks.map((m, i) => i).sort((a, b) => marks[a].v - marks[b].v).forEach(i => {
+    const xi = RW * ePos(marks[i].v);
+    let l = 0; while (placed.some(([xj, lj]) => lj === l && Math.abs(xj - xi) < 34)) l++;
+    lv[i] = l; placed.push([xi, l]);
   });
   marks.forEach(({v, ok}, i) => {
-    h += `<g class="emark ${ok ? 'ok' : 'bad'}" style="animation-delay:${((roll ? 1.5 : .2) + i * .26).toFixed(2)}s"><line x1="${x(v)}" y1="20" x2="${x(v)}" y2="${RY - 8}"/><text x="${x(v)}" y="14">${ok ? '✓' : '✗'} ${eLab(v)}</text></g>`;
+    const ty = 16 + lv[i] * 18;
+    h += `<g class="emark ${ok ? 'ok' : 'bad'}" style="animation-delay:${((roll ? 1.5 : .2) + i * .26).toFixed(2)}s"><line x1="${x(v)}" y1="${ty + 6}" x2="${x(v)}" y2="${RY - 8}"/><text x="${x(v)}" y="${ty}">${ok ? '✓' : '✗'} ${eLab(v)}</text></g>`;
   });
-  return `<svg class="eruler${roll ? ' unroll' : ''}" viewBox="-30 0 660 100" role="img" aria-label="Linjalen för E${n}">${h}</svg>`;
+  return `<svg class="eruler${roll ? ' unroll' : ''}" viewBox="-20 0 440 ${many ? 88 : two ? 124 : 106}" role="img" aria-label="Linjalen för E${n}">${h}</svg>`;
 }
 // Gesäll: tre toleranser per serie, för stor, rätt och för liten
 const ETOL_Q = {6: [50, 20, 1], 12: [20, 10, 1], 24: [10, 5, 1]};
