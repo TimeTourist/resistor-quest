@@ -233,3 +233,11 @@ test('Byt ämne medan färgerna i en Ordna-fråga flyger: frågan besvaras inte 
   assert.equal(t.g('S.up'), 0);
   t.g('stopTimer(); S.instant = true');
 });
+
+test('Allt om motståndet är dolt tills vidare, även efter svar', () => {
+  const t = atGrade('ohm', 3);
+  t.g('S.grade.ohm = 3; next()'); answer(t, true);
+  assert.equal(t.$('#more').hidden, true);
+  t.g('S.showMore = true; render()');
+  assert.equal(t.$('#more').hidden, false, 'flaggan tar fram det igen');
+});

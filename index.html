@@ -719,7 +719,8 @@ const GRADE_LINE = {
 };
 // 3 rätt i rad upp en grad, 3 fel i rad ner. Mästare (tre klarade grader) låser upp nästa ämne.
 const UP_AT = 3, DOWN_AT = 3, UNLOCK_AT = 3, MAX = 4;
-const S = {topic:'body', grade:{}, done:{}, up:0, down:0, exam:null, q:null, n:4, type:null, answered:false, build:null, slot:0, style:null};
+// showMore: Allt om motståndet är dolt tills vidare. Koden finns kvar, true tar fram det igen.
+const S = {topic:'body', grade:{}, done:{}, up:0, down:0, exam:null, showMore:false, q:null, n:4, type:null, answered:false, build:null, slot:0, style:null};
 TOPICS.forEach(t => { S.grade[t] = 0; S.done[t] = 0; });
 const save = (k, v) => { if (S.pin && k !== 'fargkoden2-sound' && k !== 'fargkoden2-cheat') return; try { localStorage.setItem(k, v); } catch(e) {} };
 // Testläge: ?test=true i adressen, eller data-test="true" på html-elementet (så publiceras artifacten).
@@ -2104,7 +2105,7 @@ function render(){
   const more = document.getElementById('more');
   let mh = moreHTML();
   if (S.answered) S.lastMore = mh; else mh = S.prevMore || '';
-  more.innerHTML = mh; more.hidden = !mh;
+  more.innerHTML = mh; more.hidden = !mh || !S.showMore;
   if (!S.answered) barIdle(); else noPick(document.getElementById('gbar'));
 }
 // Flervalsfrågor som beskriver sina alternativ själva. Hitta felet: de tre giltiga blir gröna och det felaktiga rött.

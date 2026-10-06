@@ -635,6 +635,7 @@ test('Resistansen Mästare och Stormästare fel: talet byggs upp, och vid avläs
 
 test('Allt om förra motståndet ligger kvar vid nästa fråga', () => {
   const t = atGrade('ohm', 3);
+  t.g('S.showMore = true');
   t.g('S.grade.ohm = 3; next()'); answer(t, true);
   const val = t.g('fmtVal(valueOf(S.q))');
   assert.match(t.$('#more h2').textContent, /^Allt om motståndet$/);
@@ -714,6 +715,7 @@ test('Glödlampan och Öva finns inte', () => {
 
 test('Allt om motståndet finns kvar efter svar på en fråga med ett motstånd', () => {
   const t = atGrade('ohm', 3);
+  t.g('S.showMore = true');
   t.g('next()'); answer(t, true);
   assert.equal(t.$('#more').hidden, false);
   assert.match(t.$('#more').textContent, /Allt om motståndet/);
