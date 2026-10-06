@@ -584,6 +584,34 @@ th{color:var(--muted);font-weight:500}
 .kopt.bad{border-color:var(--bad);background:var(--bad-bg);cursor:default;opacity:.75}
 .kopt.ok{border-color:var(--ok);background:var(--ok-bg)}
 @media (prefers-reduced-motion:no-preference){.kickopts.shake{animation:shake .45s ease-in-out}}
+/* Nyckeln */
+.ghost{position:fixed;z-index:100;width:70px;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
+.ghost svg,.inkey svg{display:block;width:100%;height:auto}
+/* Nyckeln sitter i nyckelhålet och skakar tills man trycker på kortet */
+.inkey{position:absolute;left:calc(50% - 64px);top:calc(54% - 2px);width:70px;z-index:3;pointer-events:none;transform-origin:92% 50%;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));
+  /* Det som är till höger om nyckelhålets mitt syns inte: spetsen sitter inne i låset. --kin är avståndet från hålet till nyckelns högra kant. */
+  --kin:6px;--push:12px;clip-path:inset(-30px var(--kin) -30px -30px)}
+.inkey.arriving{visibility:hidden}
+@media (prefers-reduced-motion:no-preference){
+  .inkey{animation:keyrattle 1.6s ease-in-out infinite}
+  @keyframes keyrattle{0%,55%,100%{transform:none}60%{transform:rotate(-8deg)}65%{transform:rotate(7deg)}70%{transform:rotate(-5deg)}75%{transform:rotate(4deg)}80%{transform:rotate(-2deg)}}
+  .tile.turning .inkey{animation:pushturn .75s ease-in forwards}
+  /* Nyckeln glider in: den flyttas åt höger och klippet flyttas lika mycket åt vänster, så spetsen försvinner in i hålet */
+  @keyframes pushturn{
+    0%{transform:none;clip-path:inset(-30px var(--kin) -30px -30px)}
+    40%,55%{transform:translateX(var(--push));clip-path:inset(-30px calc(var(--kin) + var(--push)) -30px -30px)}
+    100%{transform:translateX(var(--push)) rotateX(80deg);clip-path:inset(-30px calc(var(--kin) + var(--push)) -30px -30px)}}
+}
+.tile.haskey{box-shadow:0 0 0 3px var(--c),0 0 26px color-mix(in srgb,var(--c) 60%,transparent)}
+.tile.haskey .kh{fill:var(--c)}
+.tile.opening .inkey{opacity:0;transition:opacity .3s .3s}
+@media (max-width:719px){.inkey{left:calc(50% - 50px);width:54px;--kin:4px;--push:9px}}
+/* Mästare: nyckeln visas på spelkortet */
+.keywin{margin:auto;text-align:center;display:grid;justify-items:center;gap:6px}
+.keywin svg{width:180px;height:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3))}
+@media (prefers-reduced-motion:no-preference){.keywin svg{animation:keyin .8s cubic-bezier(.3,1.6,.5,1) both}@keyframes keyin{from{transform:scale(.2) rotate(-90deg);opacity:0}}}
+.keywin h3{font-family:var(--display);font-size:2rem;line-height:1.05;margin:8px 0 0;text-wrap:balance}
+.keywin p{margin:0;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1079,8 +1107,62 @@ function goTopic(lv){
 function advance(){
   stopTimer();
   if (S.goldNow) { S.goldNow = null; closePlay(); }
-  else if (S.unlockedNow) { S.unlockedNow = null; closePlay(); }
+  else if (S.unlockedNow) { const lv = S.unlockedNow; S.unlockedNow = null; showKeyWin(lv); }
   else next();
+}
+// Mästare: nyckeln till nästa ämne visas på spelkortet, sedan minimeras kortet och nyckeln flyger till låset
+function showKeyWin(lv){
+  S.keyWin = lv;
+  const q = document.getElementById('q');
+  q.classList.remove(...KINDS);
+  q.innerHTML = `<div class="keywin">${keySVG(TOPIC_LOOK[lv].c)}<h3>Mästare! Du fick nyckeln till ${topicName(lv)}.</h3><p>Den flyger till låset.</p></div>`;
+  document.getElementById('more').hidden = true;
+  if (S.instant) { closePlay(); return; }
+  S.timer = setTimeout(closePlay, 2200);
+}
+// Nycklarna flyger en i taget i en båge från kortet man lämnade till sina nyckelhål, och blir sittande där
+function flyKeys(fromId){
+  const list = S.flying.splice(0);
+  if (!list.length) return;
+  const fromEl = fromId && document.querySelector(`#grid [data-id="${fromId}"]`);
+  if (S.instant || reduceMotion() || !fromEl || !fromEl.animate) { renderGrid(); return; }
+  S.arriving.push(...list);
+  renderGrid();
+  const from = fromEl.getBoundingClientRect();
+  list.forEach((t, i) => setTimeout(() => flyOne(t, from), 250 + i * 1300));
+}
+function flyOne(t, from){
+  const target = document.querySelector(`#grid [data-id="${t}"]`), slot = target && target.querySelector('.inkey');
+  const land = () => { S.arriving = S.arriving.filter(x => x !== t); document.querySelector(`#grid [data-id="${t}"] .inkey`)?.classList.remove('arriving'); renderLead(); sfx.clink(); };
+  if (!slot || S.screen !== 'grid') { land(); return; }
+  target.scrollIntoView?.({block: 'nearest', behavior: 'smooth'});
+  const to = slot.getBoundingClientRect(), g = document.createElement('div');
+  g.className = 'ghost'; g.innerHTML = keySVG(TOPIC_LOOK[t].c); g.style.width = to.width + 'px';
+  document.body.appendChild(g);
+  g.animate([
+    {left: from.left + from.width / 2 - to.width / 2 + 'px', top: from.top + from.height / 2 + 'px', transform: 'scale(2.2) rotate(-30deg)'},
+    {left: (from.left + to.left) / 2 + 'px', top: Math.min(from.top, to.top) - 60 + 'px', transform: 'scale(1.6) rotate(200deg)', offset: .55},
+    {left: to.left + 'px', top: to.top + 'px', transform: 'scale(1) rotate(360deg)'}
+  ], {duration: 1100, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards'}).onfinish = () => { g.remove(); land(); };
+}
+// Ett tryck på ett kort med nyckel: nyckeln glider in i nyckelhålet och vrids om, låset och kedjorna faller, dimman lättar, och omslaget öppnas
+function unlockTile(tile){
+  const t = tile.dataset.id;
+  if (tile.classList.contains('turning') || !S.keys.includes(t)) return;
+  tile.classList.add('turning');
+  sfx.insert();
+  const open = () => {
+    S.keys = S.keys.filter(x => x !== t); saveKeys();
+    S.fresh = t; renderGrid();
+    if (S.instant || reduceMotion()) { openTopic(t); return; }
+    setTimeout(() => { if (S.screen === 'grid') openTopic(t); }, 700);
+  };
+  if (S.instant || reduceMotion()) { sfx.turn(); sfx.chains(); open(); return; }
+  // Ljuden följer CSS-animeringen pushturn (0,75 s): skrap när nyckeln glider in, klick när den vrids om vid 0,41 s,
+  // och kedjorna när låset öppnas
+  setTimeout(() => sfx.turn(), 410);
+  setTimeout(() => { tile.classList.add('opening'); sfx.chains(); }, 760);
+  setTimeout(open, 1850);
 }
 
 // Startsidan: sex minikort i fast ordning och en rad om vad man ska göra
@@ -1129,7 +1211,7 @@ document.getElementById('grid').addEventListener('click', e => {
   if (!tile || S.screen !== 'grid') return;
   const t = tile.dataset.id, state = tileState(t);
   if (state === 'locked') { lockedTap(t); return; }
-  if (state === 'key') return;
+  if (state === 'key') { unlockTile(tile); return; }
   openTopic(t);
 });
 // Spelkortet. Ett minikort zoomas upp hit och krymper tillbaka med Byt ämne.
@@ -1238,7 +1320,7 @@ function closePlay(){
   S.screen = 'grid'; S.open = null;
   renderGrid();
   const tile = document.querySelector(`#grid [data-id="${lv}"]`);
-  const done = () => { showScreen(); tile?.focus({preventScroll: true}); };
+  const done = () => { showScreen(); tile?.focus({preventScroll: true}); flyKeys(lv); };
   if (S.instant || reduceMotion() || !el.animate || !from.width || !tile) { done(); return; }
   document.getElementById('grid').hidden = false; document.getElementById('lead').hidden = false;
   Object.assign(el.style, {position: 'fixed', left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px', zIndex: 40, margin: 0});
@@ -2445,7 +2527,15 @@ const sfx = (() => {
     // Ordna: fel ordning, ett kort dovt ljud
     thud(){ const a = ctx(); if (!a) return; tone(a, 150, {f2: 85, d: .22, type: 'square', v: .07, at: .005}); },
     // Eldprovet: svaret är registrerat
-    tick(){ const a = ctx(); if (!a) return; tone(a, 660, {d: .09, type: 'square', v: .06, at: .005}); tone(a, 990, {t0: .07, d: .12, type: 'square', v: .05, at: .005}); }
+    tick(){ const a = ctx(); if (!a) return; tone(a, 660, {d: .09, type: 'square', v: .06, at: .005}); tone(a, 990, {t0: .07, d: .12, type: 'square', v: .05, at: .005}); },
+    // Nyckeln landar i låset: ett metalliskt klirr
+    clink(){ const a = ctx(); if (!a) return; tone(a, 2200, {d: .25, v: .08, at: .003}); tone(a, 3300, {t0: .03, d: .2, v: .05, at: .003}); noise(a, .06, {hp: 4000, v: .15}); },
+    // Nyckeln glider in i låset: ett kort metalliskt skrap
+    insert(){ const a = ctx(); if (!a) return; noise(a, .22, {hp: 3500, v: .1}); tone(a, 1800, {f2: 1200, d: .2, type: 'sawtooth', v: .015, at: .02}); },
+    // Nyckeln vrids om: ett klick
+    turn(){ const a = ctx(); if (!a) return; tone(a, 900, {f2: 500, d: .06, type: 'square', v: .08, at: .002}); noise(a, .05, {hp: 2500, v: .25, t0: .05}); },
+    // Låset öppnas: kedjorna skramlar och faller
+    chains(){ const a = ctx(); if (!a) return; for (let i = 0; i < 7; i++) { noise(a, .08, {hp: 3000, v: .12, t0: i * .07}); tone(a, 1600 + Math.random() * 1400, {t0: i * .07, d: .08, v: .03, at: .002}); } tone(a, 120, {f2: 60, t0: .5, d: .25, type: 'triangle', v: .2, at: .003}); }
   };
 })();
 function syncSound(){
@@ -2640,6 +2730,8 @@ function keyPress(k){
 }
 
 document.getElementById('q').addEventListener('click', e => {
+  // Nyckeln på spelkortet: ett tryck går direkt till startsidan
+  if (S.keyWin) { closePlay(); return; }
   // Tryck under animeringen: hoppa till utfallet, eller vidare om svaret var rätt
   if (S.busy) { reveal(); return; }
   if (S.autoNext) { advance(); return; }

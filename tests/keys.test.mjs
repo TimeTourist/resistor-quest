@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { load } from './harness.mjs';
-import { answer } from './answer.mjs';
+import { answer, cont } from './answer.mjs';
 
 const ALL = ['body', 'ohm', 'tol', 'tc', 'e', 'ultra'];
 const states = t => ALL.map(x => t.g(`tileState('${x}')`));
@@ -66,4 +66,81 @@ test('Förhandsvisningen från dev.html har inga nycklar och ingen snabbkoll', (
   const t = load({ start: true, url: 'http://localhost/index.html?test=true&topic=ohm&grade=2' });
   assert.deepEqual(Array.from(t.g('S.keys')), []);
   assert.deepEqual(Array.from(t.g('S.seen')).sort(), ['body', 'e', 'ohm', 'tc', 'tol']);
+});
+
+test('Första besöket: nyckeln sitter i Motståndets lås och raden säger vad man ska göra', () => {
+  const t = load({ start: true });
+  const tile = t.$('#grid [data-id="body"]');
+  assert.ok(tile.classList.contains('haskey'));
+  assert.ok(tile.querySelector('.inkey svg'), 'nyckeln sitter i låset');
+  assert.ok(!tile.querySelector('.inkey').classList.contains('arriving'));
+  assert.match(t.$('#lead').textContent, /Tryck på Motståndet för att vrida om nyckeln och låsa upp\./);
+});
+
+test('Ett tryck vrider om nyckeln: låset öppnas, nyckeln är förbrukad och omslaget visas', () => {
+  const t = load({ start: true });
+  t.g("S.played = []; ['insert','turn','chains'].forEach(k => { sfx[k] = () => S.played.push(k); })");
+  t.$('#grid [data-id="body"]').click();
+  assert.deepEqual(Array.from(t.g('S.keys')), []);
+  assert.deepEqual(JSON.parse(t.g("localStorage.getItem('fargkoden2-keys')")), []);
+  assert.deepEqual(Array.from(t.g('S.played')), ['insert', 'turn', 'chains']);
+  assert.equal(t.g('S.screen'), 'play');
+  assert.equal(t.g('S.cover'), 'body');
+  t.$('#coverClose').click();
+  assert.ok(t.$('#grid [data-id="body"]').classList.contains('open'));
+  assert.match(t.$('#lead').textContent, /Välj ett ämne/);
+});
+
+test('Dubbeltryck på nyckeln låser upp en gång och ger inga fel', () => {
+  const t = load({ start: true });
+  const tile = t.$('#grid [data-id="body"]');
+  tile.click(); tile.click();
+  assert.equal(t.g('S.screen'), 'play');
+  assert.equal(t.g('S.cover'), 'body');
+  assert.deepEqual(t.errors.map(String), []);
+});
+
+test('Mästare: nyckeln visas på spelkortet, kortet minimeras och nyckeln sitter i nästa lås', async () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 2 }), 'fargkoden2-done': JSON.stringify({ body: 2 }) } });
+  t.g('S.up = 2');
+  answer(t, true);
+  t.g('S.instant = false; advance()');
+  const win = t.$('#q .keywin');
+  assert.match(win.textContent, /Mästare! Du fick nyckeln till Resistansen\./);
+  assert.match(win.textContent, /Den flyger till låset\./);
+  assert.ok(win.querySelector('svg'));
+  await new Promise(r => setTimeout(r, 2400));
+  t.g('S.instant = true');
+  assert.equal(t.g('S.screen'), 'grid');
+  assert.equal(t.g("tileState('ohm')"), 'key');
+  const key = t.$('#grid [data-id="ohm"] .inkey');
+  assert.ok(key && !key.classList.contains('arriving'), 'nyckeln har landat');
+  assert.deepEqual(Array.from(t.g('S.flying')), []);
+});
+
+test('Mästare i instant-läge: ett tryck på kortet går direkt till startsidan med nyckeln i låset', () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 2 }), 'fargkoden2-done': JSON.stringify({ body: 2 }) } });
+  t.g('S.up = 2');
+  answer(t, true); cont(t);
+  assert.equal(t.g('S.screen'), 'grid');
+  assert.equal(t.g("tileState('ohm')"), 'key');
+});
+
+test('Byt ämne direkt efter Mästare: nyckeln hamnar ändå i låset', () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 2 }), 'fargkoden2-done': JSON.stringify({ body: 2 }) } });
+  t.g('S.up = 2');
+  answer(t, true);
+  t.$('#closeBtn').click();
+  assert.equal(t.g("tileState('ohm')"), 'key');
+  assert.ok(t.$('#grid [data-id="ohm"] .inkey'));
+});
+
+test('Eldprovet som låser upp två ämnen: två nycklar i låsen när man går tillbaka', () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'ohm', 'fargkoden2-done': JSON.stringify({ body: 4, ohm: 1 }), 'fargkoden2-grade': JSON.stringify({ ohm: 1 }) } });
+  t.g("openTopic('ultra'); S.exam = {queue: [], i: 20, done: true, score: {ohm: {ok: 3, n: 4}, tol: {ok: 4, n: 4}}}; next()");
+  assert.match(t.$('#q').textContent, /Eldprovet är klart/);
+  t.$('#closeBtn').click();
+  assert.equal(t.g("tileState('tol')"), 'key');
+  assert.equal(t.g("tileState('tc')"), 'key');
+  assert.equal(t.$$('#grid .inkey').length, 2);
 });
