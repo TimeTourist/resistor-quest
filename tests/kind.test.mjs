@@ -20,12 +20,12 @@ test('Motståndet: Fel antal band är Lärling och säger åt en att räkna', ()
   assert.equal(t.g('S.cq.odd'), true);
 });
 
-test('Motståndet: Färg som inte finns är Gesäll, med fler falska färger', () => {
+test('Motståndet: Färg som inte finns är Gesäll, med turkos och limegrön som falska färger', () => {
   const t = atGrade('body', 2);
   assert.match(t.g('S.cq.prompt'), /färg som inte finns/);
   const fakes = new Set();
   for (let i = 0; i < 120; i++) { t.g('next()'); fakes.add(t.g('S.cq.fake')); }
-  assert.ok(fakes.size >= 4, `falska färger: ${[...fakes]}`);
+  assert.deepEqual([...fakes].sort(), ['lime', 'turq']);
   for (const f of fakes) assert.ok(t.g(`C.${f}.hex && C.${f}.n`), f);
 });
 

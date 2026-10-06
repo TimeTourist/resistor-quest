@@ -108,3 +108,14 @@ test('Ordna: fel val låtsas aldrig, och var femte rätt ungefär gör det', () 
   }
   assert.ok(fakes > 3 && fakes < 25, `${fakes} av ${rights}`);
 });
+
+test('Ordna: bara färgen som just landade rör sig, de som redan ligger i sina lådor står still', () => {
+  const t = atGrade('ohm', 1);
+  until(t, isOrder('d'));
+  clickKey(t, 'red');
+  assert.ok(t.$('#q [data-oslot="red"]').classList.contains('landnow'));
+  clickKey(t, 'black');
+  assert.ok(!t.$('#q [data-oslot="red"]').classList.contains('landnow'), 'den röda skakar inte igen');
+  assert.ok(t.$('#q [data-oslot="black"]').classList.contains('landnow'));
+  assert.equal(t.$$('#q .landnow').length, 1);
+});

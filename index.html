@@ -77,8 +77,8 @@ html,body{overflow-x:clip}
 .osw{position:absolute;inset:3px;border-radius:3px;display:block;z-index:5}
 .obox.fly{border-style:solid;border-color:var(--muted)}
 @media (prefers-reduced-motion: no-preference){
-  .obox.ok .osw{animation:oland .35s ease-out}
-  .obox.bad{animation:shake .4s ease-in-out}
+  .obox.ok.landnow .osw{animation:oland .35s ease-out}
+  .obox.bad.landnow{animation:shake .4s ease-in-out}
   @keyframes oland{40%{transform:scale(1.25)}}
 }
 .opool{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
@@ -595,9 +595,7 @@ const C = {
   pink:{n:'Rosa',hex:'#f2a0bd',m:0.001},
   // Finns inte på motstånd. Bara för Vilken ska bort?
   turq:{n:'Turkos',hex:'#16c2b8'},
-  lime:{n:'Limegrön',hex:'#a3e02a'},
-  olive:{n:'Olivgrön',hex:'#6f7a1d'},
-  sky:{n:'Himmelsblå',hex:'#7cc8f5'}
+  lime:{n:'Limegrön',hex:'#a3e02a'}
 };
 // Nyansvarianter: [standard, blekt, mörk/varm]
 const HX = {
@@ -607,8 +605,7 @@ const HX = {
   blue:['#1f5fbf','#3d70b5','#234894'], violet:['#7b3fa0','#9061a8','#672d7c'],
   grey:['#8a8a8a','#9b9994','#75767a'], white:['#f7f7f2','#e9e8e0','#fbfbf6'],
   gold:['#c9a43a','#b8932f','#a6883d'], silver:['#b9bdc3','#a8acb1','#c8cacd'], pink:['#f2a0bd','#f2a0bd','#f2a0bd'],
-  turq:['#16c2b8','#16c2b8','#16c2b8'], lime:['#a3e02a','#a3e02a','#a3e02a'],
-  olive:['#6f7a1d','#6f7a1d','#6f7a1d'], sky:['#7cc8f5','#7cc8f5','#7cc8f5']
+  turq:['#16c2b8','#16c2b8','#16c2b8'], lime:['#a3e02a','#a3e02a','#a3e02a']
 };
 const DIG = ['black','brown','red','orange','yellow','green','blue','violet','grey','white'];
 const BAND1 = DIG.slice(1);
@@ -1388,7 +1385,7 @@ const hardFocus = () => S.plan && S.plan.fmt === 'hard' && S.focus && S.focus !=
 // Frågorna per ämne och grad. Varje grad ger en plan: frågetyp, format och för de nya frågetyperna en setup.
 // choice: flerval där frågan själv beskriver alternativen (S.cq). point: peka på ett band i motståndet.
 // Vilken ska bort? (odd): tre alternativ hör ihop och ett ska bort, och det är det man ska välja.
-const FAKE = ['turq','lime','olive','sky'];
+const FAKE = ['turq','lime'];
 const rnd4 = () => Math.floor(Math.random() * 4);
 // Rätt svar och tre andra, helst sådana som liknar det rätta
 function pick4(right, near, pool){
@@ -2424,7 +2421,8 @@ function orderPick(btn){
     if (S.ord !== o) return;
     o.flying = null;
     const b = box();
-    if (b) { b.classList.remove('fly'); b.classList.add(o.placed[k]); }
+    // Bara lådan som just landade studsar eller skakar. De som redan ligger still rör sig inte.
+    if (b) { b.classList.remove('fly'); b.classList.add(o.placed[k], 'landnow'); }
     ok ? sfx.blip(Object.values(o.placed).filter(v => v === 'ok').length) : sfx.thud();
     if (o.keys.every(x => o.placed[x])) { S.lastTap = b; finish(Object.values(o.placed).every(v => v === 'ok')); }
   };
