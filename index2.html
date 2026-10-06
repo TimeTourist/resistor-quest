@@ -580,7 +580,7 @@ const GRADE_LINE = {
 const UP_AT = 3, DOWN_AT = 3, UNLOCK_AT = 3, MAX = 4;
 const S = {topic:'body', grade:{}, done:{}, up:0, down:0, q:null, n:4, type:null, answered:false, build:null, slot:0, style:null};
 TOPICS.forEach(t => { S.grade[t] = 0; S.done[t] = 0; });
-const save = (k, v) => { try { localStorage.setItem(k, v); } catch(e) {} };
+const save = (k, v) => { if (S.pin && k !== 'fargkoden2-sound') return; try { localStorage.setItem(k, v); } catch(e) {} };
 // Testläge: ?test=true i adressen, eller data-test="true" på html-elementet (så publiceras artifacten).
 // Visar testraden och en grön pil på rätt svar.
 const TEST_MODE = new URLSearchParams(location.search).get('test') === 'true' || document.documentElement.dataset.test === 'true';
@@ -595,6 +595,17 @@ try {
   TOPICS.forEach(t => { S.done[t] = clamp(dn[t], 5); S.grade[t] = Math.min(clamp(gr[t], MAX), S.done[t]); });
 } catch(e) { S.firstVisit = true; }
 // Blandat: ett gyllene (klart) ämne spelas med frågor från alla grader. Sviten räknas, och rekordet sparas per ämne.
+// Förhandsvisning från dev.html: ?test=true&topic=ohm&grade=2 öppnar ett ämne på en grad och stannar där.
+// Allt är öppet, inget sparas och trappan står still.
+{
+  const u = new URLSearchParams(location.search), t = u.get('topic'), g = +u.get('grade');
+  if (TEST_MODE && ORDER.includes(t)) {
+    S.pin = {topic: t, grade: g >= 0 && g <= MAX ? Math.floor(g) : 0};
+    S.topic = t; S.firstVisit = false;
+    TOPICS.forEach(x => { S.done[x] = MAX; S.grade[x] = Math.min(S.grade[x], MAX); });
+    if (t !== 'ultra') S.grade[t] = S.pin.grade;
+  }
+}
 S.mix = {streak: 0, best: {}};
 try { Object.assign(S.mix.best, JSON.parse(localStorage.getItem('fargkoden2-best') || '{}')); } catch(e) {}
 const saveProgress = () => { save('fargkoden2-done', JSON.stringify(S.done)); save('fargkoden2-grade', JSON.stringify(S.grade)); };
@@ -1591,6 +1602,7 @@ function finish(ok){
   } else {
     const t = S.topic, before = S.done[t], from = {g: S.grade[t], up: S.up, down: S.down, done: before};
     const r = ladder({g: S.grade[t], up: S.up, down: S.down, done: before}, ok);
+    if (S.pin && S.pin.topic === t) { r.g = S.pin.grade; r.done = before; r.moved = null; }
     S.grade[t] = r.g; S.up = r.up; S.down = r.down; S.done[t] = r.done;
     S.moved = r.moved || (r.done === 5 && before < 5 ? 'top' : null);
     // Stapeln i slutet av svaret: från läget före till läget efter

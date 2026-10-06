@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Färgkoden dev</title>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#fff; --ink:#1d1d1b; --muted:#6b6a64; --line:#dedad0; --strong:#1d1d1b;
+  --accent:#2f6f4f; --accent-ink:#fff; --head:#ece8de; --warn:#fff3cd; --warn-ink:#5c4400; --hover:#f1efe8; --drop:#2f6f4f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171715; --card:#21211e; --ink:#ecebe6; --muted:#a3a198; --line:#3a3933; --strong:#ecebe6;
+    --accent:#6fbf8f; --accent-ink:#10140f; --head:#2a2a26; --warn:#3d3415; --warn-ink:#f3e2a4; --hover:#2a2a26; --drop:#6fbf8f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171715; --card:#21211e; --ink:#ecebe6; --muted:#a3a198; --line:#3a3933; --strong:#ecebe6;
+  --accent:#6fbf8f; --accent-ink:#10140f; --head:#2a2a26; --warn:#3d3415; --warn-ink:#f3e2a4; --hover:#2a2a26; --drop:#6fbf8f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:16px;max-width:1500px;margin:0 auto}
+h1{font-size:18px;margin:0 auto 0 0}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer;text-decoration:none}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+main{max-width:1500px;margin:0 auto;padding:0 16px 40px}
+.notice{background:var(--warn);color:var(--warn-ink);border-radius:8px;padding:8px 12px;margin-bottom:12px}
+[role=tablist]{display:flex;flex-wrap:wrap;gap:4px;border-bottom:2px solid var(--strong);margin-bottom:0}
+[role=tab]{border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;background:var(--head)}
+[role=tab][aria-selected=true]{background:var(--strong);color:var(--bg);border-color:var(--strong)}
+[role=tab] .n{opacity:.7;font-size:12px;margin-left:4px}
+.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-top:none}
+table{border-collapse:collapse;width:100%;min-width:1150px}
+th,td{text-align:left;vertical-align:top;padding:4px 6px;border-top:1px solid var(--line)}
+thead th{font-size:12px;color:var(--muted);font-weight:600;background:var(--card);position:sticky;top:0}
+td.grade{font-weight:700;white-space:nowrap;width:96px}
+tr.first td{border-top:3px solid var(--strong)}
+tr.first td.grade{color:var(--ink)}
+tr:not(.first) td.grade{color:transparent}
+tr.empty td{color:var(--muted);font-style:italic}
+tr.idea td.grade{color:var(--muted)}
+tr.idea.first td{border-top-style:dashed}
+tr[data-id]:hover{background:var(--hover)}
+tr.dragging{opacity:.4}
+tr.drop-before td{box-shadow:inset 0 3px 0 var(--drop)}
+tr.drop-after td{box-shadow:inset 0 -3px 0 var(--drop)}
+tr.changed td.handle{box-shadow:inset 3px 0 0 var(--accent)}
+.handle{cursor:grab;color:var(--muted);user-select:none;width:22px;text-align:center;padding-top:8px}
+textarea,select{font:inherit;color:inherit;background:transparent;border:1px solid transparent;border-radius:6px;padding:4px;width:100%;resize:vertical;field-sizing:content;min-height:2.2em}
+textarea:hover,select:hover{border-color:var(--line)}
+textarea:focus,select:focus{outline:none;border-color:var(--accent);background:var(--card)}
+textarea[data-f=name]{font-weight:600}
+td.acts{white-space:nowrap;width:70px}
+td.acts a,td.acts button{padding:2px 6px;font-size:12px}
+.foot{display:flex;gap:8px;margin-top:10px}
+#out{margin-top:16px}
+#out[hidden]{display:none}
+#prompt{width:100%;min-height:260px;font:12px/1.5 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--card);color:var(--ink)}
+.outbar{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.outbar span{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Färgkoden · dev</h1>
+  <button id="reset">Återställ</button>
+  <button id="gen" class="primary">Generera prompt</button>
+</header>
+<main>
+  <div id="notice" class="notice" hidden>Spelets katalog har uppdaterats sedan dina ändringar. Prompten jämför fortfarande mot den gamla versionen. Generera den, eller tryck Återställ för att börja från den nya.</div>
+  <div role="tablist" id="tabs"></div>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Grad</th><th></th><th>Kort namn</th><th>Fråga</th><th>Svarstyp</th><th>Rätt-animering</th><th>Fel-animering</th><th>Status</th><th>Kommentar</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="foot"><button id="add">+ Ny frågetyp</button></div>
+  <section id="out" hidden>
+    <div class="outbar"><button id="copy">Kopiera</button><span id="copied"></span></div>
+    <textarea id="prompt" readonly></textarea>
+  </section>
+</main>
+<script>
+// Översikt över spelets frågetyper. Katalogen nedan beskriver index2.html och uppdateras när spelet ändras.
+// Dina ändringar sparas i webbläsaren. "Generera prompt" skriver ut det som skiljer sig från katalogen.
+const TABS = [
+  {id:'body', name:'Motståndet'}, {id:'ohm', name:'Resistansen'}, {id:'tol', name:'Toleransen'},
+  {id:'tc', name:'Temperaturen'}, {id:'e', name:'E-serierna'}, {id:'ultra', name:'Eldprovet'}
+];
+const GRADE_NAME = ['Nykomling','Lärling','Gesäll','Mästare','Stormästare','Idéer'];
+const EXAM_GROUPS = ['Eldprovet', null, null, null, null, 'Idéer'];
+const IDEA = 5;
+const groupsOf = tab => tab === 'ultra' ? [0, IDEA] : [0, 1, 2, 3, 4, IDEA];
+const groupName = (tab, g) => (tab === 'ultra' ? EXAM_GROUPS : GRADE_NAME)[g];
+const FIELDS = [['name','Namn'], ['q','Fråga'], ['kind','Svarstyp'], ['right','Rätt-animering'], ['wrong','Felanimering'], ['status','Status'], ['comment','Kommentar']];
+const STATUS = ['klar', 'behöver animering', 'ändra', 'idé'];
+
+// Standard: gnista, lysdiod, konfetti och priing, sedan kommer nästa fråga själv
+const STD = 'Standard';
+const POP = 'Ballongen poppar, de tre kvar blir gröna, nästa själv';
+const VSB = 'Vilken ska bort?';
+const r = (id, g, name, q, kind, right, wrong, status = 'klar') => ({id, g, name, q, kind, right, wrong, status, comment: ''});
+const CATALOG = {
+  body: [
+    r('body-antal', 0, 'Fel antal band', 'Ett av fyra motstånd har 2, 7 eller 8 band.', VSB, POP,
+      'Det udda räknar sina band i rött och poppar, de andra räknar i grönt och får ✓.'),
+    r('body-farg', 1, 'Färg som inte finns', 'Ett av fyra motstånd har en färg som inte finns (turkos, lime).', VSB, POP,
+      'Ringen runt den falska färgen blir röd, de tolv riktiga färgerna läggs ut och den falska hamnar bredvid med ✗. Sedan poppar kortet.'),
+    r('body-rakna', 2, 'Räkna banden', 'Hur många färgband har motståndet? 4, 5 eller 6.', 'Flerval', STD,
+      'Banden numreras ett i taget och rätt antal landar.'),
+    r('body-hall', 3, 'Läsriktning', 'Från vilket håll läser man? Motståndet kan sitta vänt.', 'Vänster/höger', STD,
+      'Banden räknas 1, 2, 3 … från rätt ände. Ledtråden skrivs ut: brett band, mellanrum eller samlade band.'),
+    r('body-forsta', 4, 'Peka på första bandet', 'Peka på första bandet. Kan sitta vänt, inga guld- eller silverband.', 'Peka på band', STD,
+      'Röd ring på ditt val, grön ring och 1 på rätt band, ledtråden och en svepande pil.')
+  ],
+  ohm: [
+    r('ohm-klammer', 0, 'Fel klammer', 'Klammern ska sitta över ohm-banden. På ett av fyra motstånd tar den med för många eller för få.', VSB, POP,
+      'Den felaktiga klammern blir röd, rätt klammer glider in, kortet poppar.'),
+    r('ohm-farg-siffra', 1, 'Färg → siffra', 'Vilken siffra är det markerade bandet?', 'Flerval', STD,
+      'Färgskalan visas och markeringen går fram till rätt färg.'),
+    r('ohm-siffra-farg', 1, 'Siffra → färg', 'Vilken färg betyder 7?', 'Färgval', STD,
+      'Färgskalan visas och markeringen går fram till rätt färg.'),
+    r('ohm-peka', 2, 'Peka på siffra', 'Peka på första/andra/tredje siffran eller multiplikatorn. Värdena står under banden och klammern säger t.ex. Resistans = 23 kΩ. 4–6 band, guld och silver som multiplikator.', 'Peka på band', STD,
+      'Ringar vandrar över banden från början fram till rätt band.'),
+    r('ohm-mastare', 3, 'Siffror och nollor', 'Hur stor är resistansen? 4–6 band, bara klammern som stöd.', 'Flerval', STD,
+      'Banden får sina värden (multiplikatorn ovanför), sedan byggs talet: 47 · 00 = 4 700 Ω = 4,7 kΩ.'),
+    r('ohm-knappa', 4, 'Knappa in värdet', 'Fem band, kan sitta vänt. Skriv värdet på knappsatsen.', 'Knappsats', STD,
+      'Värdena på banden och beräkningsraden.'),
+    r('ohm-bygg', 4, 'Bygg värdet', 'Bygg motståndet för ett värde med färgpaletten. Fem band.', 'Palett', STD,
+      'Beräkningsraden.')
+  ],
+  tol: [
+    r('tol-ring', 0, 'Fel band markerat', 'Toleransbandet är markerat på fyra motstånd. På ett sitter markeringen fel.', VSB, POP,
+      'Röd ring på fel band och grön ring där toleransen sitter. Raden med regeln.', 'behöver animering'),
+    r('tol-gs-farg', 1, 'Guld/silver → tolerans', 'Vilken tolerans har det markerade bandet (guld eller silver)?', 'Flerval', STD,
+      'Bara raden: Guld är ±5 % och silver ±10 %.', 'behöver animering'),
+    r('tol-gs-tol', 1, 'Tolerans → guld/silver', 'Vilken färg betyder ±5 %?', 'Färgval', STD,
+      'Bara raden: Guld är ±5 % och silver ±10 %.', 'behöver animering'),
+    r('tol-alla-farg', 2, 'Färg → tolerans', 'Vilken tolerans har det markerade bandet? Alla toleransfärger.', 'Flerval', STD,
+      'Toleransskalan (utan animering) och raden.', 'behöver animering'),
+    r('tol-alla-tol', 2, 'Tolerans → färg', 'Vilken färg betyder ±2 %?', 'Färgval', STD,
+      'Toleransskalan (utan animering) och raden.', 'behöver animering'),
+    r('tol-intervall', 3, 'Intervall', 'Mellan vilka värden får resistansen ligga? Fyra band.', 'Flerval (text)', STD,
+      'Bara raden med gränserna.', 'behöver animering'),
+    r('tol-knappa', 4, 'Knappa in hela', 'Värde och tolerans, 4 eller 5 band, kan sitta vänt.', 'Knappsats', STD,
+      'Fälten markeras och raden.', 'behöver animering'),
+    r('tol-bygg', 4, 'Bygg hela', 'Bygg motståndet med värde och tolerans.', 'Palett', STD,
+      'Banden markeras och raden.', 'behöver animering')
+  ],
+  tc: [
+    r('tc-ring', 0, 'Fel band markerat', 'Temperaturbandet är markerat på fyra sexbandare. På ett sitter markeringen fel.', VSB, POP,
+      'Röd ring på fel band och grön ring på sjätte bandet. Raden med regeln.', 'behöver animering'),
+    r('tc-vilket', 1, 'Vilket har temperaturband?', 'Fyra motstånd, ett har sex band.', 'Flerval (motstånd)', STD,
+      'Bara raden: bara sexbandare har temperaturband.', 'behöver animering'),
+    r('tc-farg', 2, 'Färg → ppm/K', 'Vilken temperaturkoefficient har det markerade bandet?', 'Flerval', STD,
+      'Ppm-skalan (utan animering) och raden.', 'behöver animering'),
+    r('tc-ppm', 2, 'ppm/K → färg', 'Vilken färg betyder 50 ppm/K?', 'Färgval', STD,
+      'Ppm-skalan (utan animering) och raden.', 'behöver animering'),
+    r('tc-stabil', 3, 'Stabilast', 'Vilket motstånd ändrar sitt värde minst när det blir varmt?', 'Flerval (motstånd)', STD,
+      'Bara raden: lägst ppm/K ändras minst.', 'behöver animering'),
+    r('tc-knappa', 4, 'Knappa in hela', 'Sex band: värde, tolerans och ppm/K. Kan sitta vänt.', 'Knappsats', STD,
+      'Fälten markeras och raden.', 'behöver animering'),
+    r('tc-bygg', 4, 'Bygg hela', 'Bygg en sexbandare.', 'Palett', STD,
+      'Banden markeras och raden.', 'behöver animering')
+  ],
+  e: [
+    r('e-e12', 0, 'Inte i E12', 'Tre av fyra värden finns i E12.', VSB, POP,
+      'E12-rutnätet med de tre värdena markerade och raden.', 'behöver animering'),
+    r('e-namn', 1, 'Vad namnet betyder', 'Vad betyder 12 i E12?', 'Flerval (text)', STD,
+      'Bara raden.', 'behöver animering'),
+    r('e-serie-tol', 2, 'Serie → tolerans', 'Vilken tolerans hör till E24?', 'Flerval', STD,
+      'Bara raden: E6 ±20 %, E12 ±10 % …', 'behöver animering'),
+    r('e-tol-serie', 2, 'Tolerans → serie', 'Vilken serie hör till ±5 %?', 'Flerval', STD,
+      'Bara raden: E6 ±20 %, E12 ±10 % …', 'behöver animering'),
+    r('e-serie-hjalp', 3, 'Vilken serie, med värde', 'Vilken serie hör motståndet till? Värdet står utskrivet.', 'Serieknappar', STD,
+      'Raden: toleransen pekar ut serien och om värdet finns i den.', 'behöver animering'),
+    r('e-serie', 4, 'Vilken serie, utan hjälp', 'Vilken serie hör motståndet till? Inget värde utskrivet.', 'Serieknappar', STD,
+      'Raden: toleransen pekar ut serien och om värdet finns i den.', 'behöver animering')
+  ],
+  ultra: [
+    r('ultra-fragor', 0, 'Frågorna', '4 frågor per ämne, 20 totalt, i blandad ordning. Alla är Stormästare-frågan i sitt ämne.', 'Som i ämnet',
+      'Neutral: ett registrerat-klick, inget rätt eller fel, nästa själv', 'Samma som rätt (man ser inte om det blev fel)'),
+    r('ultra-resultat', 0, 'Resultatet', '3 av 4 i ett ämne ger Mästare, 4 av 4 klarar ämnet. Provet kan bara höja.', 'Resultatkort',
+      'Resultatkortet listar varje ämne', '–')
+  ]
+};
+
+const KEY = 'fargkoden-dev';
+const clone = x => JSON.parse(JSON.stringify(x));
+let state = {base: clone(CATALOG), rows: clone(CATALOG), tab: 'body'};
+try {
+  const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (saved && saved.base && saved.rows) state = {tab: 'body', ...saved};
+} catch(e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} };
+document.getElementById('notice').hidden = JSON.stringify(state.base) === JSON.stringify(CATALOG);
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const ta = (f, v) => `<textarea data-f="${f}" rows="1" aria-label="${FIELDS.find(x => x[0] === f)[1]}">${esc(v)}</textarea>`;
+const baseRow = (tab, id) => state.base[tab].find(x => x.id === id);
+const changed = (tab, row) => { const b = baseRow(tab, row.id); return !b || JSON.stringify(b) !== JSON.stringify(row); };
+
+function render(){
+  document.getElementById('tabs').innerHTML = TABS.map(t => {
+    const n = state.rows[t.id].filter(x => changed(t.id, x)).length + state.base[t.id].filter(b => !state.rows[t.id].some(x => x.id === b.id)).length;
+    return `<button role="tab" data-tab="${t.id}" aria-selected="${t.id === state.tab}">${t.name}${n ? `<span class="n">${n} ändr.</span>` : ''}</button>`;
+  }).join('');
+  const tab = state.tab, rows = state.rows[tab];
+  document.getElementById('rows').innerHTML = groupsOf(tab).map(g => {
+    const list = rows.filter(x => x.g === g), cls = g === IDEA ? ' idea' : '';
+    if (!list.length) return `<tr class="first empty${cls}" data-g="${g}"><td class="grade">${groupName(tab, g)}</td><td></td><td colspan="8">${g === IDEA ? 'Dra hit eller tryck + Ny frågetyp' : 'Tom grad: dra hit en frågetyp'}</td></tr>`;
+    return list.map((x, i) => `<tr data-id="${x.id}" data-g="${g}" class="${i ? '' : 'first'}${cls}${changed(tab, x) ? ' changed' : ''}">
+      <td class="grade">${groupName(tab, g)}</td>
+      <td class="handle" draggable="true" title="Dra för att flytta">⠿</td>
+      <td>${ta('name', x.name)}</td><td>${ta('q', x.q)}</td><td>${ta('kind', x.kind)}</td>
+      <td>${ta('right', x.right)}</td><td>${ta('wrong', x.wrong)}</td>
+      <td><select data-f="status" aria-label="Status">${STATUS.concat(STATUS.includes(x.status) ? [] : [x.status]).map(s => `<option${s === x.status ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select></td>
+      <td>${ta('comment', x.comment)}</td>
+      <td class="acts">${g === IDEA ? '' : `<a class="btn show" target="fargkoden" href="index2.html?test=true&topic=${tab}${tab === 'ultra' ? '' : `&grade=${g}`}" title="Öppna spelet här">Visa</a>`}<button class="del" title="Ta bort">✕</button></td>
+    </tr>`).join('');
+  }).join('');
+}
+
+// Flyttar raden id före eller efter raden target (eller sist i en tom grad: target är då ett gradnummer)
+function move(tab, id, target, after){
+  const rows = state.rows[tab], i = rows.findIndex(x => x.id === id);
+  if (i < 0 || id === target) return;
+  const [row] = rows.splice(i, 1);
+  if (typeof target === 'number') { row.g = target; rows.push(row); }
+  else {
+    const j = rows.findIndex(x => x.id === target);
+    row.g = rows[j].g;
+    rows.splice(after ? j + 1 : j, 0, row);
+  }
+  save(); render();
+}
+
+// Prompten: allt som skiljer sig från katalogen, ämne för ämne
+function genPrompt(){
+  const out = [];
+  for (const t of TABS) {
+    const B = state.base[t.id], R = state.rows[t.id], lines = [];
+    const label = (row, g = row.g) => `${groupName(t.id, g)} · ${row.name}`;
+    for (const b of B) if (!R.some(x => x.id === b.id)) lines.push(`- Ta bort: ${label(b)}`);
+    for (const x of R) {
+      const b = B.find(y => y.id === x.id);
+      if (!b) {
+        lines.push(`- Ny frågetyp under ${groupName(t.id, x.g)}: "${x.name}"` +
+          FIELDS.filter(([f]) => f !== 'name' && x[f]).map(([f, n]) => `\n  - ${n}: "${x[f]}"`).join(''));
+        continue;
+      }
+      const ch = [];
+      if (b.g !== x.g) ch.push(`  - flyttad från ${groupName(t.id, b.g)} till ${groupName(t.id, x.g)}`);
+      for (const [f, n] of FIELDS) {
+        if (b[f] === x[f]) continue;
+        ch.push(f === 'comment' ? `  - Kommentar: "${x[f]}"` : `  - ${n}: "${b[f]}" → "${x[f]}"`);
+      }
+      if (ch.length) lines.push(`- ${label(b, b.g)}\n${ch.join('\n')}`);
+    }
+    // Ordningen inom en grad, bland rader som fanns där förut
+    for (const g of groupsOf(t.id)) {
+      const before = B.filter(b => b.g === g).map(b => b.id);
+      const now = R.filter(x => x.g === g).map(x => x.id);
+      const keep = id => before.includes(id) && now.includes(id);
+      const moved = now.some(id => !before.includes(id) && baseRow(t.id, id));
+      if (before.filter(keep).join() !== now.filter(keep).join() || (moved && now.length > 1))
+        lines.push(`- Ny ordning på ${groupName(t.id, g)}: ${R.filter(x => x.g === g).map(x => x.name).join(', ')}`);
+    }
+    if (lines.length) out.push(`## ${t.name}\n${lines.join('\n')}`);
+  }
+  if (!out.length) return 'Inga ändringar.';
+  return 'Ändringar från dev.html för Färgkoden. Uppdatera index2.html så att spelet följer dem, ' +
+    'och uppdatera katalogen i dev.html så att den beskriver det nya spelet. Fråga om något är oklart.\n\n' + out.join('\n\n');
+}
+
+const rowsEl = document.getElementById('rows');
+document.getElementById('tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]');
+  if (b) { state.tab = b.dataset.tab; save(); render(); }
+});
+rowsEl.addEventListener('input', e => {
+  const f = e.target.dataset.f, tr = e.target.closest('tr[data-id]');
+  if (!f || !tr) return;
+  const row = state.rows[state.tab].find(x => x.id === tr.dataset.id);
+  row[f] = e.target.value;
+  tr.classList.toggle('changed', changed(state.tab, row));
+  save();
+});
+rowsEl.addEventListener('change', e => { if (e.target.tagName === 'SELECT') render(); });
+rowsEl.addEventListener('click', e => {
+  const del = e.target.closest('.del');
+  if (!del) return;
+  const id = del.closest('tr').dataset.id, row = state.rows[state.tab].find(x => x.id === id);
+  if (!confirm(`Ta bort "${row.name}"?`)) return;
+  state.rows[state.tab] = state.rows[state.tab].filter(x => x.id !== id);
+  save(); render();
+});
+document.getElementById('add').addEventListener('click', () => {
+  const id = 'ny-' + Date.now().toString(36);
+  state.rows[state.tab].push({id, g: IDEA, name: '', q: '', kind: '', right: '', wrong: '', status: 'idé', comment: ''});
+  save(); render();
+  const el = rowsEl.querySelector(`tr[data-id="${id}"] [data-f=name]`);
+  if (el.focus) el.focus();
+});
+
+// Dra och släpp: handtaget dras, raden markerar var den hamnar
+let dragId = null;
+const clearDrop = () => rowsEl.querySelectorAll('.drop-before,.drop-after').forEach(x => x.classList.remove('drop-before', 'drop-after'));
+rowsEl.addEventListener('dragstart', e => {
+  const tr = e.target.closest && e.target.closest('tr[data-id]');
+  if (!tr) return;
+  dragId = tr.dataset.id; tr.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId);
+  e.dataTransfer.setDragImage(tr, 20, 20);
+});
+rowsEl.addEventListener('dragend', () => { dragId = null; clearDrop(); rowsEl.querySelectorAll('.dragging').forEach(x => x.classList.remove('dragging')); });
+const dropAt = e => {
+  const tr = e.target.closest('tr[data-g]');
+  if (!tr) return null;
+  if (!tr.dataset.id) return {tr, target: +tr.dataset.g, after: false};
+  const box = tr.getBoundingClientRect();
+  return {tr, target: tr.dataset.id, after: e.clientY > box.top + box.height / 2};
+};
+rowsEl.addEventListener('dragover', e => {
+  if (!dragId) return;
+  const d = dropAt(e);
+  if (!d) return;
+  e.preventDefault(); clearDrop();
+  d.tr.classList.add(d.after ? 'drop-after' : 'drop-before');
+});
+rowsEl.addEventListener('drop', e => {
+  const d = dragId && dropAt(e);
+  if (!d) return;
+  e.preventDefault();
+  move(state.tab, dragId, d.target, d.after);
+});
+
+document.getElementById('gen').addEventListener('click', () => {
+  document.getElementById('out').hidden = false;
+  document.getElementById('prompt').value = genPrompt();
+  document.getElementById('copied').textContent = '';
+});
+document.getElementById('copy').addEventListener('click', async () => {
+  const p = document.getElementById('prompt');
+  try { await navigator.clipboard.writeText(p.value); } catch(e) { p.select(); document.execCommand('copy'); }
+  document.getElementById('copied').textContent = 'Kopierad';
+});
+document.getElementById('reset').addEventListener('click', () => {
+  if (!confirm('Släng alla ändringar och börja om från spelets katalog?')) return;
+  state = {base: clone(CATALOG), rows: clone(CATALOG), tab: state.tab};
+  save(); render();
+  document.getElementById('notice').hidden = true;
+  document.getElementById('out').hidden = true;
+});
+render();
+</script>
+</body>
+</html>
