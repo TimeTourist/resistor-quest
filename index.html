@@ -453,6 +453,7 @@ p.epre{margin:0}
 .emark text{font-size:12px;font-weight:700;text-anchor:middle}
 .emark.ok text{fill:var(--ok)}
 .emark.bad text{fill:var(--bad)}
+.eroll{fill:none;stroke:var(--line);stroke-width:6;opacity:0}
 .etrows{display:flex;flex-direction:column;gap:6px}
 .etrow{border:2px solid transparent;border-radius:10px;padding:4px 6px 0}
 .etrow.pick{border-color:var(--accent)}
@@ -461,6 +462,15 @@ p.epre{margin:0}
 @media (prefers-reduced-motion:no-preference){
   .edot.pop{animation:edot .26s cubic-bezier(.3,1.6,.5,1) backwards}
   .emark{animation:edrop .36s ease-out backwards}
+  .eruler.unroll .epdot{animation:eunroll 1.4s ease-in-out backwards}
+  .eruler.unroll .eline{stroke-dasharray:600;animation:edraw 1.4s ease-in-out backwards}
+  .eruler.unroll .elab{animation:efade .5s 1.1s backwards}
+  .eruler.unroll .ebar{animation:efade .5s 1.2s backwards}
+  .eruler.unroll .eroll{animation:eroll 1.4s ease-in-out}
+  @keyframes eunroll{from{transform:translate(var(--fx),var(--fy))}}
+  @keyframes edraw{from{stroke-dashoffset:600}}
+  @keyframes efade{from{opacity:0}}
+  @keyframes eroll{from{opacity:1}to{opacity:0}}
   @keyframes edot{from{opacity:0;transform:scale(.4)}}
   @keyframes edrop{from{opacity:0;transform:translateY(-14px)}}
 }
@@ -1984,7 +1994,7 @@ const GRADES = {
       const n = rnd([6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
       S.cq = {prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
         opts: opts.map(v => ({html: fmtTol(v)})),
-        res: () => S.answered && !inExam() ? etolRows(n, tols) : rulerSVG(n),
+        res: () => S.answered && !inExam() ? etolRows(n, tols) : rulerSVG(n, {roll: rollNow()}),
         wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
     }, {eq: 'staplar'}), () => choice(() => {
       const s = rnd(Object.keys(SER_TOL)), t = SER_TOL[s], line = 'E6 ±20 %, E12 ±10 %, E24 ±5 %, E48 ±2 %, E96 ±1 %.';
@@ -2003,7 +2013,7 @@ const GRADES = {
       const vals = [0,1,2,3].map(i => Math.round((i === right ? odd : pool[i]) / 10 * rnd([1, 10, 100, 1000, 10000]) * 100) / 100);
       const marks = [0,1,2,3].map(i => ({v: i === right ? odd : pool[i], ok: i !== right}));
       S.cq = {odd:true, prompt:'Tre av värdena finns i E12.', layout:'mc', right, opts: vals.map(v => ({html: fmtVal(v)})),
-        after: () => rulerSVG(12, {marks}),
+        after: () => rulerSVG(12, {marks, roll: rollNow()}),
         wrong: `Titta på de två första siffrorna: ${odd} hamnar mellan prickarna och finns inte i E12. De andra landar på en prick.`};
     }, {eq: 'e12'}), () => ({type:'series', fmt:'mc', showVal:true})])(),
     // Stormästare: vilken serie, utan hjälp
@@ -3190,11 +3200,14 @@ function dialSVG(n, {dots = true, labels = true, count = false, pop = false} = {
   });
   return `<svg class="edial" viewBox="-40 -40 380 380" role="img" aria-label="Klockan för E${n}">${h}</svg>`;
 }
+// Första linjalen per sidladdning rullas ut från klockan. Flaggan sätts även när animeringen hoppas över.
+const rollNow = () => { if (S.rolled) return false; S.rolled = true; return !S.instant && !reduceMotion(); };
 // Toleransstaplar: avvikelser mindre än så här (andel av ett varv) räknas som att staplarna möts
 const ETOL_MIN = 0.03, RW = 600, RY = 70;
 function rulerSVG(n, {tol = null, marks = [], roll = false} = {}){
   const vals = eVals(n).concat([100]), many = vals.length > 26, x = v => f1(RW * ePos(v));
   let h = `<line class="eline" x1="0" y1="${RY}" x2="${RW}" y2="${RY}"/>`;
+  if (roll) h = `<circle class="eroll" cx="300" cy="50" r="45"/>` + h;
   if (tol != null) {
     const bars = vals.map(v => [Math.max(0, ePos(v * (1 - tol / 100))), Math.min(1, ePos(v * (1 + tol / 100)))]);
     bars.forEach(([a, b], i) => { h += `<rect class="ebar${i % 2 ? ' alt' : ''}" x="${f1(RW * a)}" y="${i % 2 ? 44 : 54}" width="${f1(Math.max(2, RW * (b - a)))}" height="9" rx="3"/>`; });
@@ -3207,13 +3220,15 @@ function rulerSVG(n, {tol = null, marks = [], roll = false} = {}){
   }
   vals.forEach((v, i) => {
     const last = i === vals.length - 1;
-    h += `<circle class="epdot${last ? ' next' : ''}" cx="${x(v)}" cy="${RY}" r="${many ? 2.5 : 4.5}"/>`;
+    const rs = roll ? (() => { const s = last ? 1 : ePos(v), cx = 300 + 45 * Math.sin(2 * Math.PI * s), cy = 50 - 45 * Math.cos(2 * Math.PI * s);
+      return ` style="--fx:${f1(cx - RW * ePos(v))}px;--fy:${f1(cy - RY)}px"`; })() : '';
+    h += `<circle class="epdot${last ? ' next' : ''}" cx="${x(v)}" cy="${RY}" r="${many ? 2.5 : 4.5}"${rs}/>`;
     if (!many) h += `<text class="elab${vals.length > 13 ? ' sm' : ''}" x="${x(v)}" y="${RY + 22}">${eLab(v)}</text>`;
   });
   marks.forEach(({v, ok}, i) => {
     h += `<g class="emark ${ok ? 'ok' : 'bad'}" style="animation-delay:${((roll ? 1.5 : .2) + i * .26).toFixed(2)}s"><line x1="${x(v)}" y1="20" x2="${x(v)}" y2="${RY - 8}"/><text x="${x(v)}" y="14">${ok ? '✓' : '✗'} ${eLab(v)}</text></g>`;
   });
-  return `<svg class="eruler" viewBox="-30 0 660 100" role="img" aria-label="Linjalen för E${n}">${h}</svg>`;
+  return `<svg class="eruler${roll ? ' unroll' : ''}" viewBox="-30 0 660 100" role="img" aria-label="Linjalen för E${n}">${h}</svg>`;
 }
 // Gesäll: tre toleranser per serie, för stor, rätt och för liten
 const ETOL_Q = {6: [50, 20, 1], 12: [20, 10, 1], 24: [10, 5, 1]};
@@ -3225,7 +3240,7 @@ function etolRows(n, [big, right, small]){
 // Vilken serie, fel svar: linjalen för serien som toleransen pekar ut, och var värdet hamnar
 function seriesRuler(){
   const r = S.sr, ser = TOL_SER[bandsTol(r.bands)];
-  return `<div class="res after">${rulerSVG(+ser.slice(1), {marks: [{v: r.m3 / 10, ok: seriesOf(r.m3).includes(ser)}]})}</div>`;
+  return `<div class="res after">${rulerSVG(+ser.slice(1), {marks: [{v: r.m3 / 10, ok: seriesOf(r.m3).includes(ser)}], roll: rollNow()})}</div>`;
 }
 function seriesOf(m3){
   const out = [];

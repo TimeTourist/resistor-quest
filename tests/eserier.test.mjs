@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { atGrade, golden } from './harness.mjs';
+import { atGrade, golden, load, ALL_OPEN } from './harness.mjs';
 import { answer, until } from './answer.mjs';
 
 // Ritar en sträng från spelet i en div, så att man kan räkna element
@@ -175,4 +175,29 @@ test('Vilken serie: fel svar visar linjalen för serien som toleransen pekar ut,
   }
   t.g('next()'); answer(t, true);
   assert.equal(t.$$('#q .eruler').length, 0, 'rätt svar visar ingen linjal');
+});
+
+// Som atGrade, men med animeringar (S.instant är av)
+const live = (topic, grade) => load({ instant: false, storage: { ...ALL_OPEN, 'fargkoden2-topic': topic,
+  'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }), 'fargkoden2-grade': JSON.stringify({ [topic]: grade }) } });
+
+test('Utrullningen: första linjalen rullas ut, nästa visas direkt', () => {
+  const t = live('e', 2);
+  // Första frågan som öppnas kan redan ha haft en linjal, och då är utrullningen förbrukad
+  t.g('S.rolled = false');
+  until(t, p => p.eq === 'staplar');
+  assert.equal(t.$$('#q .eruler.unroll').length, 1);
+  assert.equal(t.$$('#q .eroll').length, 1, 'klockan som rullas ut');
+  assert.ok(t.$('#q .eruler.unroll .epdot').getAttribute('style').includes('--fx'));
+  t.g('stopTimer()'); t.g('next()');
+  until(t, p => p.eq === 'staplar');
+  assert.equal(t.$$('#q .eruler.unroll').length, 0);
+  assert.equal(t.g('S.rolled'), true);
+});
+
+test('Utrullningen hoppas över med S.instant men räknas ändå', () => {
+  const t = atGrade('e', 2);
+  until(t, p => p.eq === 'staplar');
+  assert.equal(t.$$('#q .eruler.unroll').length, 0);
+  assert.equal(t.g('S.rolled'), true);
 });
