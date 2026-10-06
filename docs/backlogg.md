@@ -39,5 +39,14 @@ Sammanställt 2026-10-06 när sessionen avslutades. Spelet ligger i `index.html`
 
 ## Kända småsaker
 
+- **Från granskningen av startsidan (2026-10-06), inte rättade:**
+  - Byter man ämne innan guldet går vidare tänds inte minikortet (det blir guld, men utan glöden).
+  - Trasig data i `fargkoden2-keys` nollställer också `fargkoden2-seen`, och tvärtom. De borde läsas var för sig.
+  - Fokus tappas när omslaget öppnas (det ska till `#coverClose`), efter snabbkollen och när nycklar flyger.
+  - Tryck på rutnätet under stängningsanimeringen (0,42 s) tas emot.
+  - Ett avslutat Eldprov öppnar på resultatkortet i stället för de tre trycken, vilket avviker från specen.
+  - Glöden på ett nytt minikort (`.tile.fresh`) följer inte inställningen för minskad rörelse, och `[data-level]` i tangentlyssnaren är död kod.
+- **Allt om motståndet är dolt** (`S.showMore = false`). Koden finns kvar.
+
 - Testlägets knapp "Dölj/Visa rätt svar" ritar om frågan direkt. Mitt under Ordna kan det avbryta färger som flyger. Det gäller bara testläget.
 - Specerna i `docs/superpowers/specs/` beskriver tidiga versioner. dev.html är den aktuella beskrivningen av frågetyperna.
