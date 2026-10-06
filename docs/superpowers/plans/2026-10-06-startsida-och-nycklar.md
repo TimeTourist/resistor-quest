@@ -1411,7 +1411,7 @@ Först i `#q`-lyssnaren, före `if (S.busy)`, lägger du till:
 
 - [ ] **Steg 5: CSS för nyckeln**
 
-Kopiera från skissen blocket som börjar med `.ghost{position:fixed;...}` och fortsätter till och med `.tile.opening .inkey{...}` (det står under kommentaren `/* Nyckeln sitter i nyckelhålet ... */`). Kopiera också hela `.keywin`-blocket (`.keywin`, `.keywin svg`, `@media ... keyin`, `.keywin h3`, `.keywin p`). Byt `.m2 .inkey{...}` mot `@media (max-width:719px){.inkey{left:calc(50% - 50px);width:54px}}`. Ändra `.keywin h3` så att `font-family:var(--display)` gäller, vilket det gör om tokens från uppgift 2 finns.
+Kopiera från skissen blocket som börjar med `.ghost{position:fixed;...}` och fortsätter till och med `.tile.opening .inkey{...}` (det står under kommentaren `/* Nyckeln sitter i nyckelhålet ... */`). Kopiera också hela `.keywin`-blocket (`.keywin`, `.keywin svg`, `@media ... keyin`, `.keywin h3`, `.keywin p`). Byt `.m2 .inkey{...}` mot `@media (max-width:719px){.inkey{left:calc(50% - 50px);width:54px;--kin:4px;--push:9px}}`. Behåll `--kin`, `--push` och `clip-path` på `.inkey` och i `@keyframes pushturn`: klippet gör att spetsen syns gå in i nyckelhålet. Ändrar du nyckelns storlek eller läge måste `--kin` (avståndet från nyckelhålets mitt till nyckelns högra kant) räknas om. Ändra `.keywin h3` så att `font-family:var(--display)` gäller, vilket det gör om tokens från uppgift 2 finns.
 
 - [ ] **Steg 6: Kör testerna och se dem gå igenom**
 

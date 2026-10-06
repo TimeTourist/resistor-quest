@@ -147,14 +147,20 @@ button{font:inherit;color:inherit}
 .ghost{position:fixed;z-index:100;width:70px;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
 .ghost svg,.inkey svg{display:block;width:100%;height:auto}
 /* Nyckeln sitter i nyckelhålet och skakar tills man trycker på kortet */
-.inkey{position:absolute;left:calc(50% - 64px);top:calc(54% - 2px);width:70px;z-index:3;pointer-events:none;transform-origin:92% 50%;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
-.m2 .inkey{left:calc(50% - 50px);width:54px}
+.inkey{position:absolute;left:calc(50% - 64px);top:calc(54% - 2px);width:70px;z-index:3;pointer-events:none;transform-origin:92% 50%;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));
+  /* Det som är till höger om nyckelhålets mitt syns inte: spetsen sitter inne i låset. --kin är avståndet från hålet till nyckelns högra kant. */
+  --kin:6px;--push:12px;clip-path:inset(-30px var(--kin) -30px -30px)}
+.m2 .inkey{left:calc(50% - 50px);width:54px;--kin:4px;--push:9px}
 .inkey.arriving{visibility:hidden}
 @media (prefers-reduced-motion:no-preference){
   .inkey{animation:rattle 1.6s ease-in-out infinite}
   @keyframes rattle{0%,55%,100%{transform:none}60%{transform:rotate(-8deg)}65%{transform:rotate(7deg)}70%{transform:rotate(-5deg)}75%{transform:rotate(4deg)}80%{transform:rotate(-2deg)}}
   .tile.turning .inkey{animation:pushturn .75s ease-in forwards}
-  @keyframes pushturn{0%{transform:none}40%,55%{transform:translateX(12px) scale(.92)}100%{transform:translateX(12px) scale(.92) rotateX(80deg)}}
+  /* Nyckeln glider in: den flyttas åt höger och klippet flyttas lika mycket åt vänster, så spetsen försvinner in i hålet */
+  @keyframes pushturn{
+    0%{transform:none;clip-path:inset(-30px var(--kin) -30px -30px)}
+    40%,55%{transform:translateX(var(--push));clip-path:inset(-30px calc(var(--kin) + var(--push)) -30px -30px)}
+    100%{transform:translateX(var(--push)) rotateX(80deg);clip-path:inset(-30px calc(var(--kin) + var(--push)) -30px -30px)}}
 }
 .tile.haskey{box-shadow:0 0 0 3px var(--c),0 0 26px color-mix(in srgb,var(--c) 60%,transparent)}
 .tile.haskey .kh{fill:var(--c)}
