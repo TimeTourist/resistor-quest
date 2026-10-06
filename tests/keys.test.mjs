@@ -144,3 +144,19 @@ test('Eldprovet som låser upp två ämnen: två nycklar i låsen när man går 
   assert.equal(t.g("tileState('tc')"), 'key');
   assert.equal(t.$$('#grid .inkey').length, 2);
 });
+
+test('Den flygande nyckeln har en egen klass, inte knappklassen .ghost', () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 2 }), 'fargkoden2-done': JSON.stringify({ body: 2 }) } });
+  // jsdom saknar animate: en enkel ersättare så att flygturen startar
+  t.g('HTMLElement.prototype.animate = function(){ return {cancel(){}, set onfinish(f){}} }');
+  t.g('S.up = 2');
+  answer(t, true);
+  t.g('S.instant = false');
+  t.$('#closeBtn').click();
+  return new Promise(r => setTimeout(r, 400)).then(() => {
+    const g = t.$('body > .keyghost');
+    assert.ok(g, 'nyckeln flyger');
+    assert.ok(!g.classList.contains('ghost'));
+    t.g('S.instant = true');
+  });
+});

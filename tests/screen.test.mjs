@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { load, atGrade, golden, ALL_OPEN } from './harness.mjs';
-import { answer, cont, dare } from './answer.mjs';
+import { answer, cont, dare, until } from './answer.mjs';
 
 const ORDER = ['body', 'ohm', 'tol', 'tc', 'e', 'ultra'];
 const curGrade = t => t.$$('#gbar .gseg').indexOf(t.$('#gbar .gseg.cur'));
@@ -208,4 +208,28 @@ test('Testraden: Lås upp nästa ämne ger en nyckel, Börja om går tillbaka ti
   assert.deepEqual(Array.from(t.g('S.keys')), ['body']);
   assert.deepEqual(Array.from(t.g('S.seen')), []);
   assert.equal(t.g("tileState('ohm')"), 'locked');
+});
+
+test('Enter på nyckelskärmen minimerar kortet i stället för att ta en ny fråga', () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 2 }), 'fargkoden2-done': JSON.stringify({ body: 2 }) } });
+  t.g('S.up = 2');
+  answer(t, true);
+  t.g('S.instant = false; advance(); S.lockUntil = 0');
+  assert.ok(t.$('#q .keywin'));
+  t.doc.dispatchEvent(new t.w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  t.g('stopTimer(); S.instant = true');
+  assert.equal(t.g('S.screen'), 'grid');
+  assert.equal(t.g('S.keyWin'), null);
+});
+
+test('Byt ämne medan färgerna i en Ordna-fråga flyger: frågan besvaras inte bakom startsidan', async () => {
+  const t = atGrade('ohm', 2);
+  until(t, p => p.type === 'order');
+  t.g('S.instant = false; S.ord.fakeRate = 0; S.up = 0');
+  for (const k of t.g('S.ord.keys.slice()')) t.$(`[data-ord="${k}"]`).click();
+  t.$('#closeBtn').click();
+  await new Promise(r => setTimeout(r, 2500));
+  assert.equal(t.g('S.answered'), false, 'inget svar räknas');
+  assert.equal(t.g('S.up'), 0);
+  t.g('stopTimer(); S.instant = true');
 });

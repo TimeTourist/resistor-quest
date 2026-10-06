@@ -561,8 +561,8 @@ p.epre{margin:0}
 .kopt.ok{border-color:var(--ok);background:var(--ok-bg)}
 @media (prefers-reduced-motion:no-preference){.kickopts.shake{animation:shake .45s ease-in-out}}
 /* Nyckeln */
-.ghost{position:fixed;z-index:100;width:70px;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
-.ghost svg,.inkey svg{display:block;width:100%;height:auto}
+.keyghost{position:fixed;z-index:100;width:70px;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
+.keyghost svg,.inkey svg{display:block;width:100%;height:auto}
 /* Nyckeln sitter i nyckelhålet och skakar tills man trycker på kortet */
 .inkey{position:absolute;left:calc(50% - 64px);top:calc(54% - 2px);width:70px;z-index:3;pointer-events:none;transform-origin:92% 50%;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));
   /* Det som är till höger om nyckelhålets mitt syns inte: spetsen sitter inne i låset. --kin är avståndet från hålet till nyckelns högra kant. */
@@ -1006,6 +1006,8 @@ function goTopic(lv){
 // Efter svar: guld eller ett upplåst ämne går till startsidan, annars nästa fråga
 function advance(){
   stopTimer();
+  // Nyckeln på spelkortet: Enter eller tryck går direkt till startsidan
+  if (S.keyWin) { closePlay(); return; }
   if (S.goldNow) { const lv = S.goldNow; S.goldNow = null; S.fresh = lv; closePlay(); }
   else if (S.unlockedNow) { const lv = S.unlockedNow; S.unlockedNow = null; showKeyWin(lv); }
   else next();
@@ -1037,7 +1039,7 @@ function flyOne(t, from){
   if (!slot || S.screen !== 'grid') { land(); return; }
   target.scrollIntoView?.({block: 'nearest', behavior: 'smooth'});
   const to = slot.getBoundingClientRect(), g = document.createElement('div');
-  g.className = 'ghost'; g.innerHTML = keySVG(TOPIC_LOOK[t].c); g.style.width = to.width + 'px';
+  g.className = 'keyghost'; g.innerHTML = keySVG(TOPIC_LOOK[t].c); g.style.width = to.width + 'px';
   document.body.appendChild(g);
   g.animate([
     {left: from.left + from.width / 2 - to.width / 2 + 'px', top: from.top + from.height / 2 + 'px', transform: 'scale(2.2) rotate(-30deg)'},
@@ -1201,7 +1203,7 @@ function kickPick(btn){
   }
   k.busy = true; btn.classList.add('ok'); sfx.right();
   const go = () => {
-    if (S.cover !== lv) return;
+    if (S.cover !== lv || S.kick !== k) return;
     S.seen.push(lv); saveKeys();
     S.kick = null; S.cover = null;
     showScreen(); updateHead(); goTopic(lv);
@@ -1216,7 +1218,9 @@ function closePlay(){
   const lv = S.open, el = document.getElementById('spel'), from = el.getBoundingClientRect();
   stopTimer(); clearBar();
   if (S.answered && S.type !== 'exam') S.plan = null;
-  S.keyWin = null; S.cover = null; S.busy = false; S.unlockedNow = null; S.goldNow = null;
+  S.keyWin = null; S.cover = null; S.kick = null; S.busy = false; S.unlockedNow = null; S.goldNow = null;
+  // Färger som flyger i en Ordna-fråga landar inte bakom startsidan: frågan släpps och nästa gång kommer en ny
+  if (S.ord && (S.ord.inflight || S.ord.reset)) { S.plan = null; S.ord = null; }
   S.screen = 'grid'; S.open = null;
   renderGrid();
   const tile = document.querySelector(`#grid [data-id="${lv}"]`);

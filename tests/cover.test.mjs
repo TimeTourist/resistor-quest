@@ -91,3 +91,18 @@ test('Snabbkoll i testläge: grön pil på rätt val', () => {
   open(t, 'tol');
   assert.equal(+t.$('#q [data-kick].cheat').dataset.kick, t.g('S.kick.right'));
 });
+
+test('Snabbkoll: stänger man direkt efter rätt svar går den att göra igen, och det gamla svaret räknas inte', async () => {
+  const t = fresh();
+  open(t, 'ohm');
+  t.g('S.instant = false');
+  kick(t, true);
+  t.$('#coverClose').click();
+  t.g('S.instant = true');
+  open(t, 'ohm');
+  assert.equal(t.g('S.cover'), 'ohm');
+  await new Promise(r => setTimeout(r, 700));
+  assert.equal(t.g('S.cover'), 'ohm', 'det gamla svaret vänder inte kortet');
+  kick(t, false);
+  assert.ok(t.$('#q [data-kick].bad'), 'valen fungerar');
+});
