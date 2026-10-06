@@ -87,3 +87,28 @@ test('dev.html: Visa-länken öppnar spelet på rätt ämne och grad', () => {
   const a = d.$('tr[data-id="ohm-peka"] a.show');
   assert.match(a.getAttribute('href'), /index\.html\?test=true&topic=ohm&grade=2$/);
 });
+
+test('dev.html: Återställ fungerar utan webbläsarens dialogruta: första trycket frågar på knappen, andra återställer', () => {
+  const d = dev();
+  d.g('window.confirm = () => false');
+  d.$('[data-tab="ohm"]').click();
+  edit(d, d.$('tr[data-id="ohm-peka"] [data-f="comment"]'), 'test');
+  d.$('#reset').click();
+  assert.match(d.$('#reset').textContent, /Säker\?/);
+  assert.equal(d.g("state.rows.ohm.find(r => r.id === 'ohm-peka').comment"), 'test', 'inget händer på första trycket');
+  d.$('#reset').click();
+  assert.equal(d.g("state.rows.ohm.find(r => r.id === 'ohm-peka').comment"), '');
+  assert.match(d.$('#reset').textContent, /^Återställ$/);
+});
+
+test('dev.html: ta bort en rad fungerar utan dialogruta', () => {
+  const d = dev();
+  d.g('window.confirm = () => false');
+  d.$('[data-tab="ohm"]').click();
+  const del = () => d.$('tr[data-id="ohm-peka"] .del');
+  del().click();
+  assert.ok(d.$('tr[data-id="ohm-peka"]'), 'frågar först');
+  assert.match(del().textContent, /Säker\?/);
+  del().click();
+  assert.equal(d.$('tr[data-id="ohm-peka"]'), null);
+});

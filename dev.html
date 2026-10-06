@@ -65,7 +65,7 @@ td.acts a,td.acts button{padding:2px 6px;font-size:12px}
 <body>
 <header>
   <h1>Färgkoden · dev</h1>
-  <button id="reset">Återställ</button>
+  <button id="reset" title="Släng alla ändringar och börja om från spelets katalog">Återställ</button>
   <button id="gen" class="primary">Generera prompt</button>
 </header>
 <main>
@@ -300,11 +300,18 @@ rowsEl.addEventListener('input', e => {
   save();
 });
 rowsEl.addEventListener('change', e => { if (e.target.tagName === 'SELECT') render(); });
+// Bekräftelse på själva knappen: första trycket frågar, andra gör det. Webbläsarens dialogrutor är blockerade i artifacts.
+function armed(btn, label, ask = 'Säker? Tryck igen'){
+  if (btn.dataset.armed) return true;
+  btn.dataset.armed = '1'; btn.textContent = ask;
+  setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = label; } }, 3000);
+  return false;
+}
 rowsEl.addEventListener('click', e => {
   const del = e.target.closest('.del');
   if (!del) return;
-  const id = del.closest('tr').dataset.id, row = state.rows[state.tab].find(x => x.id === id);
-  if (!confirm(`Ta bort "${row.name}"?`)) return;
+  const id = del.closest('tr').dataset.id;
+  if (!armed(del, '✕', 'Säker?')) return;
   state.rows[state.tab] = state.rows[state.tab].filter(x => x.id !== id);
   save(); render();
 });
@@ -358,8 +365,10 @@ document.getElementById('copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(p.value); } catch(e) { p.select(); document.execCommand('copy'); }
   document.getElementById('copied').textContent = 'Kopierad';
 });
-document.getElementById('reset').addEventListener('click', () => {
-  if (!confirm('Släng alla ändringar och börja om från spelets katalog?')) return;
+document.getElementById('reset').addEventListener('click', e => {
+  const btn = e.currentTarget;
+  if (!armed(btn, 'Återställ', 'Säker? Tryck igen')) return;
+  delete btn.dataset.armed; btn.textContent = 'Återställ';
   state = {base: clone(CATALOG), rows: clone(CATALOG), tab: state.tab};
   save(); render();
   document.getElementById('notice').hidden = true;
