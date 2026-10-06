@@ -196,18 +196,22 @@ const CATALOG = {
       'Banden markeras och raden.', 'behöver animering')
   ],
   e: [
-    r('e-e12', 0, 'Inte i E12', 'Tre av fyra värden finns i E12.', VSB, POP,
-      'E12-rutnätet med de tre värdena markerade och raden.', 'behöver animering'),
-    r('e-namn', 1, 'Vad namnet betyder', 'Vad betyder 12 i E12?', 'Flerval (text)', STD,
-      'Bara raden.', 'behöver animering'),
+    r('e-namn', 0, 'Vad namnet betyder', 'Vad betyder 12 i E12? Alltid E12. En tom klocka ovanför svaren.', 'Flerval (text)', STD,
+      'Klockan fylls: 12 prickar poppar in runt varvet, numrerade 1–12, med värdena utanför och "100 = nytt varv, ×10". Även vid rätt svar.'),
+    r('e-klocka', 1, 'Vilken serie är det här?', 'En klocka med 6, 12 eller 24 prickar utan värden. Svaren E6, E12, E24 och E48.', 'Flerval', STD,
+      'Prickarna får sina värden, och nummer på E6 och E12. Raden: 12 prickar på varvet, alltså E12.'),
+    r('e-tol-staplar', 2, 'Vilken tolerans är serien gjord för?', 'Vilken tolerans är E12 (E6, E24) gjord för? För stor, rätt och för liten. Linjalen ovanför svaren, och klockan rullas ut första gången.', 'Flerval', STD,
+      'Tre rader med toleransstaplar: krock i rött, kant i kant och glapp i gult. Den valda raden har en ram. Även vid rätt svar.'),
     r('e-serie-tol', 2, 'Serie → tolerans', 'Vilken tolerans hör till E24?', 'Flerval', STD,
       'Bara raden: E6 ±20 %, E12 ±10 % …', 'behöver animering'),
     r('e-tol-serie', 2, 'Tolerans → serie', 'Vilken serie hör till ±5 %?', 'Flerval', STD,
       'Bara raden: E6 ±20 %, E12 ±10 % …', 'behöver animering'),
+    r('e-e12', 3, 'Inte i E12', 'Tre av fyra värden finns i E12.', VSB, POP,
+      'Värdena faller ner på linjalen: tre landar på en prick med ✓, det udda hamnar mellan prickarna med ✗. Även vid rätt svar.'),
     r('e-serie-hjalp', 3, 'Vilken serie, med värde', 'Vilken serie hör motståndet till? Värdet står utskrivet.', 'Serieknappar', STD,
-      'Raden: toleransen pekar ut serien och om värdet finns i den.', 'behöver animering'),
+      'Linjalen för serien som toleransen pekar ut, med värdet markerat, och raden.'),
     r('e-serie', 4, 'Vilken serie, utan hjälp', 'Vilken serie hör motståndet till? Inget värde utskrivet.', 'Serieknappar', STD,
-      'Raden: toleransen pekar ut serien och om värdet finns i den.', 'behöver animering')
+      'Linjalen för serien som toleransen pekar ut, med värdet markerat, och raden.')
   ],
   ultra: [
     r('ultra-fragor', 0, 'Frågorna', '4 frågor per ämne, 20 totalt, i blandad ordning. Alla är Stormästare-frågan i sitt ämne.', 'Som i ämnet',
