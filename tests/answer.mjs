@@ -33,9 +33,12 @@ export function answer(t, correct = true) {
   if (type === 'dir') return pickBy('[data-dir]', 'dir', g("S.style.flip ? 'right' : 'left'"));
   if (type === 'series') return pickBy('[data-sr]', 'sr', g('S.sr.answer'));
   if (type === 'order') {
-    // Rätt: i ordning. Fel: andra färgen först, sedan resten i ordning.
-    const keys = Array.from(g('S.ord.keys')), seq = correct ? keys : [keys[1], keys[0], ...keys.slice(2)];
-    for (const k of seq) t.$(`[data-ord="${k}"]`).click();
+    // Rätt: i ordning. Fel: en felaktig färg först i varje försök, sedan resten i ordning.
+    for (let i = 0; i < 100 && !g('S.answered'); i++) {
+      const want = g('S.ord.keys.find(k => !S.ord.placed[k])');
+      const k = !correct && !g('S.ord.missed') ? g(`S.ord.keys.find(k => !S.ord.placed[k] && k !== '${want}')`) || want : want;
+      t.$(`[data-ord="${k}"]`).click();
+    }
     return;
   }
   if (fmt === 'mc' && type === 'read')

@@ -17,31 +17,60 @@ test('Ordna värdena: Lärling, tio tomma lådor med 0–9 ovanför och färgern
   assert.match(t.$('#q .kindtag').textContent, /ordning/i);
 });
 
-test('Ordna värdena: varje klick flyger till rätt låda, grön i tur och ordning, röd annars, med ljud', () => {
+test('Ordna: rätt färg landar grön, fel färg studsar tillbaka och den rätta får en grön ledtråd', () => {
   const t = atGrade('ohm', 1);
   until(t, isOrder('d'));
   t.g("S.played = []; ['blip','thud'].forEach(k => { sfx[k] = () => S.played.push(k); })");
   clickKey(t, 'black');
   assert.ok(t.$('#q [data-oslot="black"].ok .osw'));
   clickKey(t, 'red');
-  assert.ok(t.$('#q [data-oslot="red"].bad .osw'), 'hamnar på sin plats, men röd');
-  assert.ok(t.$('[data-ord="red"]').disabled);
+  assert.equal(t.$('#q [data-oslot="red"] .osw'), null, 'den felaktiga stannar inte');
+  assert.ok(!t.$('[data-ord="red"]').disabled, 'den går att välja igen');
+  assert.ok(t.$('[data-ord="brown"]').classList.contains('hint'), 'den rätta får en grön ledtråd');
+  assert.equal(t.g('S.ord.missed'), true);
   clickKey(t, 'brown');
   assert.ok(t.$('#q [data-oslot="brown"].ok'));
+  assert.equal(t.$$('#q .ochip.hint').length, 0, 'ledtråden försvinner');
   assert.deepEqual(Array.from(t.g('S.played')), ['blip', 'thud', 'blip']);
   assert.equal(t.g('S.answered'), false);
 });
 
-test('Ordna värdena: alla gröna är rätt, en röd gör frågan fel', () => {
+test('Ordna: utan fel i första försöket är frågan rätt direkt', () => {
   const t = atGrade('ohm', 1);
   until(t, isOrder('d'));
   answer(t, true);
   assert.equal(t.g('S.answered'), true); assert.equal(t.g('S.ok'), true);
-  t.g('S.grade.ohm = 1; S.up = 0');
+  assert.equal(t.g('S.ord.round'), 1);
+});
+
+test('Ordna: fel i första försöket ger ett sista försök, utan hjälp och med färgerna i samma ordning', () => {
+  const t = atGrade('ohm', 1);
   until(t, isOrder('d'));
-  answer(t, false);
-  assert.equal(t.g('S.ok'), false);
+  const pool = t.$$('[data-ord]').map(b => b.dataset.ord);
+  const keys = Array.from(t.g('S.ord.keys'));
+  clickKey(t, 'brown');
+  for (const k of keys) clickKey(t, k);
+  assert.equal(t.g('S.answered'), false, 'inte klart');
+  assert.equal(t.g('S.ord.round'), 2);
+  assert.equal(t.$$('#q .obox .osw').length, 0, 'alla har flugit tillbaka');
+  assert.deepEqual(t.$$('[data-ord]').map(b => b.dataset.ord), pool, 'samma ordning');
+  assert.match(t.$('#q .ordnote').textContent, /Du får ett sista försök/);
+  assert.match(t.$('#q .kindtag').textContent, /Sista försöket/i);
+  clickKey(t, 'red');
+  assert.ok(t.$('[data-ord="black"]').classList.contains('hint'), 'efter ett fel kommer ledtråden ändå, så att man kan bygga klart');
+  for (const k of keys) clickKey(t, k);
+  assert.equal(t.g('S.answered'), true); assert.equal(t.g('S.ok'), false);
   assert.match(t.$('#q .lesson').textContent, /Svart 0, brun 1/);
+});
+
+test('Ordna: inga ledtrådar i sista försöket förrän man gjort fel, och utan fel är frågan rätt', () => {
+  const t = atGrade('ohm', 1);
+  until(t, isOrder('d'));
+  const keys = Array.from(t.g('S.ord.keys'));
+  clickKey(t, 'brown'); for (const k of keys) clickKey(t, k);
+  assert.equal(t.$$('#q .ochip.hint').length, 0);
+  for (const k of keys) clickKey(t, k);
+  assert.equal(t.g('S.answered'), true); assert.equal(t.g('S.ok'), true);
 });
 
 test('Ordna multiplikatorerna: Gesäll, från ×0,01 till ×1M', () => {
@@ -112,11 +141,11 @@ test('Ordna: fel val låtsas aldrig, och var femte rätt ungefär gör det', () 
 test('Ordna: bara färgen som just landade rör sig, de som redan ligger i sina lådor står still', () => {
   const t = atGrade('ohm', 1);
   until(t, isOrder('d'));
-  clickKey(t, 'red');
-  assert.ok(t.$('#q [data-oslot="red"]').classList.contains('landnow'));
   clickKey(t, 'black');
-  assert.ok(!t.$('#q [data-oslot="red"]').classList.contains('landnow'), 'den röda skakar inte igen');
   assert.ok(t.$('#q [data-oslot="black"]').classList.contains('landnow'));
+  clickKey(t, 'brown');
+  assert.ok(!t.$('#q [data-oslot="black"]').classList.contains('landnow'), 'den första studsar inte igen');
+  assert.ok(t.$('#q [data-oslot="brown"]').classList.contains('landnow'));
   assert.equal(t.$$('#q .landnow').length, 1);
 });
 

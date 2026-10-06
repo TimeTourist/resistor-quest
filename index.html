@@ -80,11 +80,18 @@ html,body{overflow-x:clip}
 @media (prefers-reduced-motion: no-preference){
   .obox.ok.landnow .osw{animation:oland .35s ease-out}
   .obox.bad.landnow{animation:shake .4s ease-in-out}
+  .ochip.hint{animation:hintshake .55s ease-in-out 4}
+  @keyframes hintshake{20%{transform:rotate(-8deg) scale(1.08)}40%{transform:rotate(7deg) scale(1.08)}60%{transform:rotate(-5deg)}80%{transform:rotate(3deg)}}
+  .ordnote{animation:notein .5s cubic-bezier(.3,1.6,.5,1) both}
+  @keyframes notein{from{transform:scale(.7);opacity:0}}
   @keyframes oland{40%{transform:scale(1.25)}}
 }
 .opool{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
 .ochip{width:46px;height:46px;border-radius:10px;border:2px solid var(--line);cursor:pointer;padding:0;position:relative}
 .ochip.gone{visibility:hidden}
+.ochip.hint{box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--ok),0 0 14px var(--ok)}
+.ofloat{position:fixed;z-index:60;border-radius:10px;border:2px solid var(--line);pointer-events:none}
+.ordnote{margin:6px 0 0;padding:8px 12px;border-radius:10px;background:var(--k-order-line);color:var(--surface);font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.25rem;text-align:center}
 .ochip.cheat::after{left:2px;top:1px}
 .kindtag{display:inline-block;margin:0 0 8px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--bg);color:var(--muted)}
 .kind-point .kindtag{background:var(--k-point-line);color:var(--surface)}
@@ -1489,7 +1496,7 @@ const ORDER_SETS = {
   m: {keys: ['silver','gold','black','brown','red','orange','yellow','green','blue'], lab: c => fmtMult(C[c].m), prompt: 'Klicka på multiplikatorerna från minst till störst.',
     wrong: 'Silver ×0,01, guld ×0,1, svart ×1, brun ×10, röd ×100, orange ×1k, gul ×10k, grön ×100k, blå ×1M.'}
 };
-const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ S.ord = {set, keys: ORDER_SETS[set].keys, pool: shuffle(ORDER_SETS[set].keys.slice()), placed: {}}; }});
+const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ S.ord = {set, keys: ORDER_SETS[set].keys, pool: shuffle(ORDER_SETS[set].keys.slice()), placed: {}, round: 1, missed: false}; }});
 
 const GRADES = {
   body: [
@@ -1785,10 +1792,10 @@ function render(){
 
       <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}${cheat(k === S.sr.answer)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
   } else if (S.type === 'order') {
-    const O = ORDER_SETS[S.ord.set], P = S.ord.placed, want = S.ord.keys.find(k => !P[k]);
-    h += `${topHTML(O.prompt)}<div class="ordrow ord-${S.ord.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
-      `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${k === S.ord.flying ? ' fly' : P[k] ? ' ' + P[k] : ''}" data-oslot="${k}">${P[k] ? `<b class="osw" style="${swStyle(k)}"></b>` : ''}</i></div>`).join('')}</div>
-      <div class="opool">${S.ord.pool.map(k => `<button class="ochip${P[k] ? ' gone' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${C[k].n}" style="${swStyle(k)}"${P[k] || S.answered ? ' disabled' : ''}></button>`).join('')}</div>`;
+    const o = S.ord, O = ORDER_SETS[o.set], P = o.placed, want = o.keys.find(k => !P[k]);
+    h += `${topHTML(O.prompt)}${o.round === 2 ? '<p class="ordnote">Nästan! Du får ett sista försök – utan hjälp.</p>' : ''}<div class="ordrow ord-${S.ord.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
+      `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${k === o.flying && P[k] ? ' fly' : P[k] ? ' ok' : ''}" data-oslot="${k}">${P[k] ? `<b class="osw" style="${swStyle(k)}"></b>` : ''}</i></div>`).join('')}</div>
+      <div class="opool">${o.pool.map(k => `<button class="ochip${P[k] || o.away === k ? ' gone' : ''}${o.hint === k ? ' hint' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${C[k].n}" style="${swStyle(k)}"${P[k] || S.answered ? ' disabled' : ''}></button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
     const right = S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}${cheat(right === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
@@ -1857,7 +1864,7 @@ function render(){
   // Kortets färg och en rad om vad man ska göra, efter typ av svar
   const kind = S.cq && S.cq.odd ? 'odd' : S.type === 'point' ? 'point' : S.type === 'order' ? 'order' : S.plan && S.plan.fmt === 'hard' ? 'entry' : 'mc';
   q.classList.remove(...KINDS); q.classList.add('kind-' + kind);
-  const tag = {odd: '', point: 'Peka på bandet', entry: S.type === 'read' ? 'Knappa in svaret' : 'Bygg med färgerna', mc: 'Välj rätt svar', order: 'Klicka i ordning'}[kind];
+  const tag = {odd: '', point: 'Peka på bandet', entry: S.type === 'read' ? 'Knappa in svaret' : 'Bygg med färgerna', mc: 'Välj rätt svar', order: S.ord && S.ord.round === 2 ? 'Sista försöket' : 'Klicka i ordning'}[kind];
   if (tag) h = `<p class="kindtag">${tag}</p>` + h;
   q.innerHTML = h;
   // Allt om motståndet efter svar. Vid nästa fråga ligger det kvar som Allt om förra motståndet tills man svarat.
@@ -2414,19 +2421,23 @@ document.getElementById('q').addEventListener('click', e => {
   }
 });
 
-// Färgen flyger från knappen upp till sin låda. Flygturen är spänning: rätt eller fel syns och hörs först när den landar.
-// Var femte rätt val låtsas först flyga mot en annan tom låda, vänder och sätter sig rätt.
-const FLY_MS = 650, FAKE_MS = 1150;
+// Färgen flyger från knappen upp mot lådan. Flygturen är spänning: rätt eller fel syns och hörs först när den landar.
+// Rätt färg sätter sig grön i sin låda. Var femte låtsas först flyga mot en annan tom låda, vänder och sätter sig rätt.
+// Fel färg landar i lådan som står på tur, blir röd, skakar och flyger tillbaka. Sedan skakar den rätta färgen med en grön ring.
+// Utan fel är frågan rätt. Med fel i första försöket flyger alla tillbaka och man får ett sista försök, utan ledtråd
+// förrän man gör fel igen. Färgerna ligger kvar i samma ordning. Fel i sista försöket gör frågan fel, men raden byggs klart.
+const FLY_MS = 650, FAKE_MS = 1150, HINT_MS = 2600;
+const calmOrder = () => S.instant || reduceMotion();
 function orderPick(btn){
   const o = S.ord;
   if (S.answered || S.busy || !o || o.flying) return;
   const k = btn.dataset.ord, want = o.keys.find(x => !o.placed[x]);
   if (o.placed[k]) return;
-  const ok = k === want;
-  o.placed[k] = ok ? 'ok' : 'bad';
+  if (k !== want) { orderMiss(btn, k, want); return; }
+  o.placed[k] = 'ok'; o.hint = null;
   const empty = o.keys.filter(x => !o.placed[x]);
-  o.decoy = ok && empty.length && Math.random() < (o.fakeRate ?? .2) ? rnd(empty) : null;
-  const from = btn.getBoundingClientRect(), calm = S.instant || reduceMotion();
+  o.decoy = empty.length && Math.random() < (o.fakeRate ?? .2) ? rnd(empty) : null;
+  const from = btn.getBoundingClientRect(), calm = calmOrder();
   o.flying = calm ? null : k;
   render();
   const box = () => document.querySelector(`#q [data-oslot="${k}"]`);
@@ -2434,10 +2445,10 @@ function orderPick(btn){
     if (S.ord !== o) return;
     o.flying = null;
     const b = box();
-    // Bara lådan som just landade studsar eller skakar. De som redan ligger still rör sig inte.
-    if (b) { b.classList.remove('fly'); b.classList.add(o.placed[k], 'landnow'); }
-    ok ? sfx.blip(Object.values(o.placed).filter(v => v === 'ok').length) : sfx.thud();
-    if (o.keys.every(x => o.placed[x])) { S.lastTap = b; finish(Object.values(o.placed).every(v => v === 'ok')); }
+    // Bara lådan som just landade studsar. De som redan ligger still rör sig inte.
+    if (b) { b.classList.remove('fly'); b.classList.add('ok', 'landnow'); }
+    sfx.blip(Object.keys(o.placed).length);
+    if (o.keys.every(x => o.placed[x])) orderDone(b);
   };
   if (calm) { land(); return; }
   sfx.whoosh();
@@ -2455,6 +2466,65 @@ function orderPick(btn){
     }
   }
   setTimeout(land, dur);
+}
+// Fel färg: upp i lådan som står på tur, rött och skak, och tillbaka. Sedan en grön ledtråd på den rätta.
+function orderMiss(btn, k, want){
+  const o = S.ord;
+  o.missed = true; o.decoy = null;
+  const done = () => {
+    if (S.ord !== o) return;
+    o.flying = null; o.away = null; o.hint = want;
+    render();
+    clearTimeout(o.hintT);
+    o.hintT = setTimeout(() => { if (S.ord === o && o.hint === want) { o.hint = null; document.querySelector(`#q [data-ord="${want}"]`)?.classList.remove('hint'); } }, HINT_MS);
+  };
+  if (calmOrder()) { sfx.thud(); done(); return; }
+  const from = btn.getBoundingClientRect();
+  o.flying = k; o.away = k;
+  render();
+  const boxEl = document.querySelector(`#q [data-oslot="${want}"]`), to = boxEl.getBoundingClientRect();
+  const f = document.createElement('b');
+  f.className = 'ofloat'; f.setAttribute('aria-hidden', 'true');
+  f.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px;${swStyle(k)}`;
+  document.body.appendChild(f);
+  const dx = to.left + to.width / 2 - (from.left + from.width / 2), dy = to.top + to.height / 2 - (from.top + from.height / 2), sc = to.width / from.width;
+  const at = (x = 0) => `translate(${dx + x}px,${dy}px) scale(${sc})`;
+  sfx.whoosh();
+  f.animate([{transform: 'none'}, {transform: `translate(${dx / 2}px,${dy / 2 - 40}px)`, offset: .5}, {transform: at()}], {duration: FLY_MS, easing: 'cubic-bezier(.35,.1,.4,1)', fill: 'forwards'});
+  setTimeout(() => {
+    sfx.thud();
+    boxEl.classList.add('bad', 'landnow');
+    f.animate([{transform: at()}, {transform: at(-6)}, {transform: at(6)}, {transform: at(-4)}, {transform: at(3)}, {transform: at()}], {duration: 420, fill: 'forwards'});
+    setTimeout(() => {
+      boxEl.classList.remove('bad', 'landnow');
+      f.animate([{transform: at()}, {transform: 'none'}], {duration: 420, easing: 'ease-in-out', fill: 'forwards'});
+      setTimeout(() => { f.remove(); done(); }, 420);
+    }, 520);
+  }, FLY_MS);
+}
+// Raden är klar: utan fel är frågan rätt, annars ett sista försök (eller fel om det var det sista)
+function orderDone(lastBox){
+  const o = S.ord;
+  if (!o.missed || o.round === 2) { S.lastTap = lastBox; finish(!o.missed); return; }
+  const restart = () => {
+    if (S.ord !== o) return;
+    // Rutorna där färgerna satt, så att de kan flyga tillbaka till sina knappar
+    const was = Object.fromEntries(o.keys.map(x => [x, document.querySelector(`#q [data-oslot="${x}"] .osw`)?.getBoundingClientRect()]));
+    o.round = 2; o.placed = {}; o.missed = false; o.hint = null; o.flying = null;
+    render();
+    if (calmOrder()) return;
+    sfx.whoosh();
+    o.keys.forEach((x, i) => {
+      const chip = document.querySelector(`#q [data-ord="${x}"]`), r = was[x];
+      if (!chip || !r || !chip.animate) return;
+      const c = chip.getBoundingClientRect();
+      chip.animate([{transform: `translate(${r.left - c.left}px,${r.top - c.top}px) scale(${r.width / c.width})`}, {transform: 'none'}],
+        {duration: 600, delay: i * 45, easing: 'cubic-bezier(.3,.7,.4,1.1)', fill: 'backwards'});
+    });
+  };
+  if (calmOrder()) { restart(); return; }
+  o.flying = 'reset';
+  setTimeout(restart, 700);
 }
 function pickBand(i){
   if (S.answered || S.type !== 'point') return;
