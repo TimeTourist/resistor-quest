@@ -1048,17 +1048,16 @@ function flyOne(t, from){
     {left: to.left + 'px', top: to.top + 'px', transform: 'scale(1) rotate(360deg)'}
   ], {duration: 1100, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards'}).onfinish = () => { g.remove(); land(); };
 }
-// Ett tryck på ett kort med nyckel: nyckeln glider in i nyckelhålet och vrids om, låset och kedjorna faller, dimman lättar, och omslaget öppnas
+// Ett tryck på ett kort med nyckel: nyckeln glider in i nyckelhålet och vrids om, låset och kedjorna faller och dimman lättar
 function unlockTile(tile){
   const t = tile.dataset.id;
   if (tile.classList.contains('turning') || !S.keys.includes(t)) return;
   tile.classList.add('turning');
   sfx.insert();
+  // Kortet tänds med Nytt! men öppnas inte: man väljer själv vilket ämne man vill spela
   const open = () => {
     S.keys = S.keys.filter(x => x !== t); saveKeys();
     S.fresh = t; renderGrid();
-    if (S.instant || reduceMotion()) { openTopic(t); return; }
-    setTimeout(() => { if (S.screen === 'grid') openTopic(t); }, 700);
   };
   if (S.instant || reduceMotion()) { sfx.turn(); sfx.chains(); open(); return; }
   // Ljuden följer CSS-animeringen pushturn (0,75 s): skrap när nyckeln glider in, klick när den vrids om vid 0,41 s,

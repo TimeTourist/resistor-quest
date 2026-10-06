@@ -148,11 +148,11 @@ Första gången man öppnar ett ämne visas ett omslag i stället för spelsidan
 1. Nyckeln glider in i nyckelhålet (cirka 0,3 s), stannar ett ögonblick och vrids om (cirka 0,35 s), och det klickar.
 2. Bygeln lyfter, hänglåset och kedjorna faller, dimman lättar (cirka 1 s), och man hör kedjorna.
 3. Kortet tänds i sina färger och får etiketten "Nytt!".
-4. Efter 0,7 s zoomar kortet upp till omslaget. Från nyckeln till snabbkollen behövs bara ett tryck.
+4. Kortet öppnas inte av sig självt. Man väljer själv vilket ämne man vill spela, så det är lätt att fortsätta där man var (ändrat 2026-10-06 efter speltest).
 
 ### Första besöket
 
-Allt är låst och nyckeln sitter redan i Motståndets lås och skakar. Raden under namnet säger "Tryck på Motståndet för att vrida om nyckeln och låsa upp." Ett tryck låser upp och öppnar omslaget med snabbkollen.
+Allt är låst och nyckeln sitter redan i Motståndets lås och skakar. Raden under namnet säger "Tryck på Motståndet för att vrida om nyckeln och låsa upp." Ett tryck låser upp, och nästa tryck öppnar omslaget med snabbkollen.
 
 ### Eldprovet
 

@@ -77,26 +77,29 @@ test('Första besöket: nyckeln sitter i Motståndets lås och raden säger vad 
   assert.match(t.$('#lead').textContent, /Tryck på Motståndet för att vrida om nyckeln och låsa upp\./);
 });
 
-test('Ett tryck vrider om nyckeln: låset öppnas, nyckeln är förbrukad och omslaget visas', () => {
+test('Ett tryck vrider om nyckeln: låset öppnas och nyckeln är förbrukad, men inget kort öppnas', () => {
   const t = load({ start: true });
   t.g("S.played = []; ['insert','turn','chains'].forEach(k => { sfx[k] = () => S.played.push(k); })");
   t.$('#grid [data-id="body"]').click();
   assert.deepEqual(Array.from(t.g('S.keys')), []);
   assert.deepEqual(JSON.parse(t.g("localStorage.getItem('fargkoden2-keys')")), []);
   assert.deepEqual(Array.from(t.g('S.played')), ['insert', 'turn', 'chains']);
-  assert.equal(t.g('S.screen'), 'play');
-  assert.equal(t.g('S.cover'), 'body');
-  t.$('#coverClose').click();
-  assert.ok(t.$('#grid [data-id="body"]').classList.contains('open'));
+  assert.equal(t.g('S.screen'), 'grid', 'man väljer själv vilket kort man vill spela');
+  const tile = t.$('#grid [data-id="body"]');
+  assert.ok(tile.classList.contains('open'));
+  assert.ok(tile.classList.contains('fresh'));
+  assert.match(tile.textContent, /Nytt!/);
   assert.match(t.$('#lead').textContent, /Välj ett ämne/);
+  tile.click();
+  assert.equal(t.g('S.cover'), 'body', 'nästa tryck öppnar omslaget');
 });
 
 test('Dubbeltryck på nyckeln låser upp en gång och ger inga fel', () => {
   const t = load({ start: true });
   const tile = t.$('#grid [data-id="body"]');
   tile.click(); tile.click();
-  assert.equal(t.g('S.screen'), 'play');
-  assert.equal(t.g('S.cover'), 'body');
+  assert.equal(t.g('S.screen'), 'grid');
+  assert.deepEqual(Array.from(t.g('S.keys')), []);
   assert.deepEqual(t.errors.map(String), []);
 });
 
