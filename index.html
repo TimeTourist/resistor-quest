@@ -650,7 +650,8 @@ const HX = {
 const DIG = ['black','brown','red','orange','yellow','green','blue','violet','grey','white'];
 const BAND1 = DIG.slice(1);
 const MO = ['silver','gold',...DIG];
-const TOL = ['brown','red','orange','yellow','green','blue','violet','grey','gold','silver'];
+// Toleransfärgerna som i skoltabellerna. Orange, gul och grå finns bara på precisionsmotstånd och frågas inte
+const TOL = ['brown','red','green','blue','violet','gold','silver'];
 const TCS = ['black','brown','red','orange','yellow','green','blue','violet','grey'];
 const GEN = {
   mult4:['gold','black','brown','red','orange','yellow','green','blue'],
@@ -1719,9 +1720,9 @@ const ORDER_SETS = {
     wrong: 'Svart 0, brun 1, röd 2, orange 3, gul 4, grön 5, blå 6, violett 7, grå 8, vit 9.'},
   m: {keys: ['silver','gold','black','brown','red','orange','yellow','green','blue'], lab: c => fmtMult(C[c].m), prompt: 'Klicka på multiplikatorerna från minst till störst.',
     wrong: 'Silver ×0,01, guld ×0,1, svart ×1, brun ×10, röd ×100, orange ×1k, gul ×10k, grön ×100k, blå ×1M.'},
-  t: {keys: ['silver','gold','red','brown','green','blue','violet','orange','yellow','grey'], lab: c => num(C[c].t) + '%',
+  t: {keys: ['silver','gold','red','brown','green','blue','violet'], lab: c => num(C[c].t) + '%',
     prompt: 'Klicka på toleransfärgerna från störst till minst tolerans.',
-    wrong: 'Silver ±10 %, guld ±5 %, röd ±2 %, brun ±1 %, grön ±0,5 %, blå ±0,25 %, violett ±0,1 %, orange ±0,05 %, gul ±0,02 %, grå ±0,01 %.'}
+    wrong: 'Silver ±10 %, guld ±5 %, röd ±2 %, brun ±1 %, grön ±0,5 %, blå ±0,25 % och violett ±0,1 %.'}
 };
 const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ S.ord = {set, keys: ORDER_SETS[set].keys, pool: shuffle(ORDER_SETS[set].keys.slice()), placed: {}, landed: new Set(), away: new Set(), inflight: 0, round: 1, missed: false}; }});
 
@@ -2532,7 +2533,7 @@ function answerRead(){
 
 // Knappsats och värdelistor för Läs av i svår variant
 const MULTS = [0.01, 0.1, 1, 10, 100, 1e3, 1e4, 1e5, 1e6];
-const TOL_VALS = [10, 5, 2, 1, 0.5, 0.25, 0.1, 0.05, 0.02, 0.01];
+const TOL_VALS = [10, 5, 2, 1, 0.5, 0.25, 0.1];
 const TC_VALS = [250, 100, 50, 25, 20, 15, 10, 5, 1];
 // Knappa in på Stormästare: man trycker på ett band och skriver dess siffra, eller väljer multiplikatorn under fliken ×.
 // Ingen ledtråd om läsriktningen: rutor under alla band, markeringen börjar till vänster och fliken byts bara av en själv.

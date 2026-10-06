@@ -20,6 +20,8 @@ Sammanställt 2026-10-06 när sessionen avslutades. Spelet ligger i `index.html`
 
 - **Ohm-flervalen som multimetern.** (Idé från användaren, 2026-10-06.) Visa alla flerval med ohm-värden som den gamla multimeterkomponenten (`meterLcd`: LCD-display med mätspetsar) i stället för vanliga knappar. Gäller bland annat Siffror och nollor på Resistansens Mästare.
 
+- **Kuggfrågor på Eldprovet.** (Idé från användaren, 2026-10-06.) Specialfallen som skoltabellerna hoppar över lärs ut på Eldprovet: orange ±0,05 %, gul ±0,02 % och grå ±0,01 % som tolerans, rosa (×0,001) och andra ovanliga färger. Svarar man fel kommer en dialog, "Kuggfråga", som förklarar specialfallet. Toleransämnet frågar sedan 2026-10-06 bara skoltabellens färger (`TOL` i index.html).
+
 - **Visa i dev.html ska öppna exakt den frågetypen på raden.**
   - I dag öppnar Visa bara rätt grad, och grader med flera frågetyper slumpar vilken typ som visas. Till exempel visar "Ordna värdena" ibland en peka-fråga.
   - Det kräver en koppling mellan raderna i dev.html och frågetyperna i spelet.

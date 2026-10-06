@@ -803,3 +803,15 @@ test('Fel tre gånger i rad tar ner en grad och stapeln visar det', () => {
   t.g('next()');
   assert.equal(t.$$('#gbar .gseg').indexOf(t.$('#gbar .gseg.cur')), 1);
 });
+
+test('Toleransen följer skoltabellerna: orange, gul och grå frågas aldrig', () => {
+  const t = atGrade('tol', 2);
+  const special = /Orange|\bGul\b|Grå|0,05|0,02|0,01/i;
+  for (let i = 0; i < 60; i++) {
+    t.g('next()');
+    if (t.g('S.type') === 'order') continue;
+    assert.doesNotMatch(t.$('#q').textContent, special);
+    assert.ok(!['orange','yellow','grey'].includes(t.g('S.q[4]')), 'det markerade bandet');
+  }
+  assert.doesNotMatch(t.g("scaleHTML('t', 'red')"), special, 'facitskalan');
+});
