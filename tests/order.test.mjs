@@ -52,13 +52,13 @@ test('Ordna multiplikatorerna: Gesäll, från ×0,01 till ×1M', () => {
   assert.equal(t.g('S.ok'), true);
 });
 
-test('Peka: Lärling pekar på siffrorna, Gesäll bara på multiplikatorn', () => {
+test('Peka: Lärling pekar på siffrorna, Gesäll på siffrorna eller multiplikatorn', () => {
   const l = atGrade('ohm', 1), roles = new Set();
   for (let i = 0; i < 300; i++) { l.g('next()'); if (l.g('S.type') === 'point') roles.add(l.g('S.pointRole')); }
   assert.deepEqual([...roles].sort(), ['d1', 'd2', 'd3']);
   const g = atGrade('ohm', 2), groles = new Set();
-  for (let i = 0; i < 200; i++) { g.g('next()'); if (g.g('S.type') === 'point') groles.add(g.g('S.pointRole')); }
-  assert.deepEqual([...groles], ['mult']);
+  for (let i = 0; i < 300; i++) { g.g('next()'); if (g.g('S.type') === 'point') groles.add(g.g('S.pointRole')); }
+  assert.deepEqual([...groles].sort(), ['d1', 'd2', 'd3', 'mult']);
 });
 
 test('Lärling blandar färg ↔ siffra, ordna och peka; Gesäll blandar peka och ordna', () => {
@@ -118,4 +118,45 @@ test('Ordna: bara färgen som just landade rör sig, de som redan ligger i sina 
   assert.ok(!t.$('#q [data-oslot="red"]').classList.contains('landnow'), 'den röda skakar inte igen');
   assert.ok(t.$('#q [data-oslot="black"]').classList.contains('landnow'));
   assert.equal(t.$$('#q .landnow').length, 1);
+});
+
+test('Ordna värdena: frågan säger att varje siffra har en färg', () => {
+  const t = atGrade('ohm', 1);
+  until(t, isOrder('d'));
+  assert.equal(t.$('#q .prompt').textContent, 'Varje siffra har en färg. Klicka på färgerna i nummerordning.');
+});
+
+const WORDS = ['nollan','ettan','tvåan','trean','fyran','femman','sexan','sjuan','åttan','nian'];
+const digitPoint = p => p.type === 'point';
+function checkDigitPoint(t, withLabels) {
+  const at = t.g('S.pointAt'), k = t.g('nd(S.q)'), d = t.g(`C[S.q[${at}]].d`);
+  const digits = [...Array(k).keys()].map(j => t.g(`C[S.q[${j}]].d`));
+  const same = digits.filter(x => x === d).length, nth = digits.slice(0, at).filter(x => x === d).length;
+  const ord = same > 1 ? ['första ', 'andra ', 'tredje '][nth] : '';
+  assert.equal(t.$('#q .prompt').textContent, `Peka på bandet som ger ${ord}${WORDS[d]} i resistansen.`);
+  assert.equal(t.$('#q .res .bracket text .hl').textContent, String(d), 'siffran är markerad i värdet');
+  assert.match(t.$('#q .res .bracket text').textContent, new RegExp(`^Resistans = ${t.g('ohmTxt(valueOf(S.q))')}$`));
+  assert.ok(t.g('C[S.q[nd(S.q)]].m') >= 1, 'multiplikatorn är minst ×1, så att alla siffror syns');
+  assert.equal(t.$$('#q .res .blab').length > 0, withLabels);
+}
+
+test('Peka på siffra, Lärling: frågan nämner siffran, den är markerad i värdet, siffrorna står under banden', () => {
+  const t = atGrade('ohm', 1);
+  for (let i = 0; i < 80; i++) {
+    t.g('S.grade.ohm = 1; next()');
+    if (t.g('S.type') !== 'point') continue;
+    checkDigitPoint(t, true);
+  }
+});
+
+test('Peka på siffra, Gesäll: samma fråga men utan siffrorna under banden; multiplikatorn finns kvar', () => {
+  const t = atGrade('ohm', 2), roles = new Set();
+  for (let i = 0; i < 200; i++) {
+    t.g('S.grade.ohm = 2; next()');
+    if (t.g('S.type') !== 'point') continue;
+    const r = t.g('S.pointRole'); roles.add(r === 'mult' ? 'mult' : 'digit');
+    if (r !== 'mult') checkDigitPoint(t, false);
+    else assert.equal(t.$('#q .prompt').textContent, 'Peka på multiplikatorn.');
+  }
+  assert.deepEqual([...roles].sort(), ['digit', 'mult']);
 });

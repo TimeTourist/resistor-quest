@@ -71,6 +71,7 @@ html,body{overflow-x:clip}
 .oslot{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
 .oslot span{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.05rem;line-height:1;white-space:nowrap}
 .ord-m .oslot span{font-size:.78rem}
+.bracket text .hl{fill:var(--ink);font-weight:800;font-size:16px;text-decoration:underline}
 .obox{display:block;width:100%;aspect-ratio:3/4;max-width:34px;border:2px dashed var(--line);border-radius:6px;background:var(--surface);position:relative}
 .obox.ok{border:2px solid var(--ok);box-shadow:0 0 0 2px var(--ok-bg)}
 .obox.bad{border:2px solid var(--bad);box-shadow:0 0 0 2px var(--bad-bg)}
@@ -1345,7 +1346,7 @@ function next(){
   S.type = S.plan.type; S.focus = S.plan.focus || null;
   const n = S.plan.n || rnd([4, 5, 6]);
   S.n = n; S.q = genBands(n);
-  S.answered = false; S.ord = null; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.bflip = false; S.style = null;
+  S.answered = false; S.ord = null; S.pointPrompt = null; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.bflip = false; S.style = null;
   S.bpick = null; S.pickDir = null; S.pickSr = null; S.pickC = null; S.pickBand = null; S.ok = null; S.cq = null; S.pointSupport = null;
   S.palAll = null; S.entry = newEntry(); S.fieldOk = null;
   S.moreOK = ['read','build','dir','series','point'].includes(S.type);
@@ -1456,22 +1457,34 @@ const colorDigit = () => choice(() => {
     });
 // Peka på ett band i ett motstånd med 4, 5 eller 6 band. Klammern sitter ovanför och värdena står under banden
 // (4 · 7 · 0 · ×10), så att man ser vad banden säger. roles(k) ger vilka band man kan få peka på, k är antalet siffror.
-const pointPlan = roles => () => ({type:'point', fmt:'mc', setup(){
+// Siffrorna: frågan nämner siffran ("tvåan") och den är markerad i värdet i klammern, så att bandet kopplas till resistansen.
+// labels: siffrorna står också under banden (Lärling). Utan dem (Gesäll) måste man kunna färgen.
+const DIGIT_WORD = ['nollan','ettan','tvåan','trean','fyran','femman','sexan','sjuan','åttan','nian'];
+const pointPlan = (roles, {labels = true} = {}) => () => ({type:'point', fmt:'mc', setup(){
       // Multiplikatorn utskriven utan k (×1 000), eftersom k kommer först på Mästare. Lågt nog för att etiketten ska få plats.
-      // Guld och silver (×0,1 och ×0,01) får plats och är med.
+      // Guld och silver (×0,1 och ×0,01) får plats och är med, men inte när man pekar på en siffra: då ska alla siffror synas i värdet.
       const n = rnd([4, 5, 6]);
       S.n = n; S.q = genBands(n);
       const k = nd(S.q);
-      S.q[k] = rnd(n === 4 ? ['gold','silver','black','brown','red','orange'] : ['gold','silver','black','brown','red']);
-      S.style = spacedStyle(n); S.moreOK = true;
       S.pointRole = rnd(roles(k));
+      const digit = S.pointRole !== 'mult';
+      S.q[k] = rnd((n === 4 ? ['gold','silver','black','brown','red','orange'] : ['gold','silver','black','brown','red']).filter(c => !digit || C[c].m >= 1));
+      S.style = spacedStyle(n); S.moreOK = true;
       S.pointAt = {d1: 0, d2: 1, d3: 2, mult: k}[S.pointRole];
-      S.pointSupport = [{labels: S.q.slice(0, k).map(c => String(C[c].d)).concat([multPlain(C[S.q[k]].m)]), dim: true, title: `Resistans = ${fmtVal(valueOf(S.q))}`}];
+      const labs = labels ? S.q.slice(0, k).map(c => String(C[c].d)).concat([multPlain(C[S.q[k]].m)]) : null;
+      if (!digit) { S.pointSupport = [{labels: labs, dim: true, title: `Resistans = ${fmtVal(valueOf(S.q))}`}]; return; }
+      const ds = S.q.slice(0, k).map(c => C[c].d), d = ds[S.pointAt];
+      const same = ds.filter(x => x === d).length, nth = ds.slice(0, S.pointAt).filter(x => x === d).length;
+      S.pointPrompt = `Peka på bandet som ger ${same > 1 ? ['första ', 'andra ', 'tredje '][nth] : ''}${DIGIT_WORD[d]} i resistansen.`;
+      // Värdet i hela ohm börjar med siffrorna, så siffra nummer pointAt i texten är den som ska markeras
+      let seen = -1;
+      const val = ohmTxt(valueOf(S.q)).replace(/\d/g, c => ++seen === S.pointAt ? `<tspan class="hl">${c}</tspan>` : c);
+      S.pointSupport = [{labels: labs, dim: true, title: `Resistans = ${val}`}];
     }});
 // Ordna: alla färger som knappar, i blandad ordning. Den man klickar på flyger till sin låda,
 // grön om den kom i tur och ordning, annars röd. Rätt om alla blir gröna.
 const ORDER_SETS = {
-  d: {keys: DIG, lab: c => String(C[c].d), prompt: 'Klicka på färgerna i nummerordning.',
+  d: {keys: DIG, lab: c => String(C[c].d), prompt: 'Varje siffra har en färg. Klicka på färgerna i nummerordning.',
     wrong: 'Svart 0, brun 1, röd 2, orange 3, gul 4, grön 5, blå 6, violett 7, grå 8, vit 9.'},
   m: {keys: ['silver','gold','black','brown','red','orange','yellow','green','blue'], lab: c => fmtMult(C[c].m), prompt: 'Klicka på multiplikatorerna från minst till störst.',
     wrong: 'Silver ×0,01, guld ×0,1, svart ×1, brun ×10, röd ×100, orange ×1k, gul ×10k, grön ×100k, blå ×1M.'}
@@ -1564,8 +1577,8 @@ const GRADES = {
     }),
     // Lärling: färg ↔ siffra, ordna siffrorna eller peka på en siffra
     () => rnd([colorDigit, orderPlan('d'), pointPlan(k => k === 3 ? ['d1','d2','d3'] : ['d1','d2'])])(),
-    // Gesäll: peka på multiplikatorn eller ordna multiplikatorerna
-    () => rnd([pointPlan(() => ['mult']), orderPlan('m')])(),
+    // Gesäll: peka på multiplikatorn, peka på en siffra utan värdena under banden, eller ordna multiplikatorerna
+    () => rnd([pointPlan(() => ['mult']), pointPlan(k => k === 3 ? ['d1','d2','d3'] : ['d1','d2'], {labels: false}), orderPlan('m')])(),
     // Mästare: siffror och nollor till ohm, med k och M, på 4, 5 eller 6 band. Bara klammern som stöd.
     () => choice(() => {
       const n = rnd([4, 5, 6]), three = n > 4;
@@ -1807,7 +1820,7 @@ function render(){
     const why = wrong && first ? {mark: [[0, '1']], markKind: 'ok', markAnim: {start: POINT_T.ring, step: 0},
       notes: [cueNote(S.style, k)].filter(Boolean), sweep: {to: 0, at: POINT_T.sweep}}
       : wrong && S.pointSupport ? {} : {mark: wrong ? S.q.map((_, i) => [i, roleLabel(S.n, i)]) : null};
-    h += `${topHTML(`Peka på ${what}.`)}<div class="res">${svg(S.q, {style: S.style, tap: !S.answered, ring, bracket: S.pointSupport, cheatAt: cheat(true) ? S.pointAt : null, ...why})}</div>`;
+    h += `${topHTML(S.pointPrompt || `Peka på ${what}.`)}<div class="res">${svg(S.q, {style: S.style, tap: !S.answered, ring, bracket: S.pointSupport, cheatAt: cheat(true) ? S.pointAt : null, ...why})}</div>`;
   } else {
     const bq = {v:'Vilket motstånd har värdet', all:'Vilket motstånd har värdet', t:'Vilket toleransband ger', k:'Vilket sjätte band ger',
       d:'Vilka band ger siffrorna', x:'Vilket band ger multiplikatorn'}[S.focus];

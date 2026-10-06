@@ -200,10 +200,11 @@ test('Resistansen: klammern, fyra band till och med Mästare, fem band på Storm
     const k = t2.g('nd(S.q)');
     const labs = t2.$$('#q .res .blab').map(e => e.textContent);
     const want = [...Array(k).keys()].map(j => t2.g(`String(C[S.q[${j}]].d)`)).concat([t2.g('multPlain(C[S.q[nd(S.q)]].m)')]);
-    assert.deepEqual(labs, want, 'värdena står under banden');
+    // Gesäll pekar på siffrorna utan värdena under banden
+    if (labs.length) assert.deepEqual(labs, want, 'värdena står under banden');
     assert.equal(t2.g('S.pointAt'), {d1: 0, d2: 1, d3: 2, mult: k}[t2.g('S.pointRole')]);
     if (k === 2) assert.notEqual(t2.g('S.pointRole'), 'd3');
-    assert.match(t2.$('#q .prompt').textContent, /^Peka på (första|andra|tredje) siffran\.$|^Peka på multiplikatorn\.$/);
+    assert.match(t2.$('#q .prompt').textContent, /^Peka på bandet som ger .+ i resistansen\.$|^Peka på multiplikatorn\.$/);
   }
   assert.deepEqual([...roles].sort(), ['d1', 'd2', 'd3', 'mult']);
   const t4 = atGrade('ohm', 4);
@@ -553,7 +554,7 @@ test('Resistansens Gesäll: ohm-talet står i klammern', () => {
   const t = atGrade('ohm', 2);
   for (let i = 0; i < 20; i++) {
     t.g('S.grade.ohm = 2; next()');
-    if (t.g('S.type') !== 'point') continue;
+    if (t.g('S.type') !== 'point' || t.g('S.pointRole') !== 'mult') continue;
     assert.equal(t.$('#q .res .bracket text').textContent, `Resistans = ${t.g('fmtVal(valueOf(S.q))')}`);
   }
 });
@@ -562,7 +563,7 @@ test('Resistansens Gesäll: guld och silver förekommer som multiplikator, med �
   const t = atGrade('ohm', 2), seen = new Set();
   for (let i = 0; i < 200; i++) {
     t.g('S.grade.ohm = 2; next()');
-    if (t.g('S.type') !== 'point') continue;
+    if (t.g('S.type') !== 'point' || t.g('S.pointRole') !== 'mult') continue;
     const m = t.g('S.q[nd(S.q)]');
     seen.add(m);
     if (m === 'gold') assert.equal(t.$$('#q .res .blab').at(-1).textContent, '×0,1');
