@@ -1963,23 +1963,21 @@ const GRADES = {
     () => ({type: rnd(['read','build']), fmt:'hard', focus:'all', n:6, varied:true, flip:true})
   ],
   e: [
-    // Nykomling: vilket värde finns inte i E12?
+    // Nykomling: vad betyder 12 i E12? Klockan fylls efter svaret.
     () => choice(() => {
-      const right = rnd4(), pool = shuffle(E12.slice()).slice(0, 4);
-      let odd; do { odd = 11 + Math.floor(Math.random() * 89); } while (E24.includes(odd));
-      const vals = [0,1,2,3].map(i => Math.round((i === right ? odd : pool[i]) / 10 * rnd([1, 10, 100, 1000, 10000]) * 100) / 100);
-      const shown = pool.filter((_, i) => i !== right);
-      S.cq = {odd:true, prompt:'Tre av värdena finns i E12.', layout:'mc', right, opts: vals.map(v => ({html: fmtVal(v)})),
-        wrong: `${num(odd / 10)} finns inte i E12.`,
-        facit: () => `<div class="egrid">${E12.map(x => `<span class="${shown.includes(x) ? 'on' : ''}">${(x / 10).toFixed(1).replace('.', ',')}</span>`).join('')}</div>`};
-    }),
-    // Lärling: vad betyder siffran i namnet?
+      const right = '12 värden på varje varv';
+      const opts = shuffle([right, '±12 % tolerans', 'Värden upp till 12 kΩ', '12 färgband']);
+      S.cq = {prompt:'Vad betyder 12 i E12?', layout:'txt', right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
+        res: () => S.answered ? dialSVG(12, {count: true, pop: true}) : dialSVG(12, {dots: false}),
+        wrong: 'E12 har 12 värden på ett varv, från 10 till 82. Sedan kommer 100 och samma värden igen med en nolla till: 120, 150, 180 …'};
+    }, {eq: 'namn'}),
+    // Lärling: vilken serie är det här? Räkna prickarna på klockan.
     () => choice(() => {
-      const s = rnd(['E6','E12','E24','E96']), n = +s.slice(1), right = `${n} värden per tiopotens`;
-      const opts = shuffle([right, `±${n} % tolerans`, `Värden upp till ${n} kΩ`, `${n} färgband`]);
-      S.cq = {prompt:`Vad betyder ${n} i ${s}?`, layout:'txt', right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
-        wrong: `${s} har ${n} värden mellan 10 och 100, och samma värden upprepas i varje tiopotens.`};
-    }),
+      const n = rnd([6, 12, 24]), opts = ['E6','E12','E24','E48'];
+      S.cq = {prompt:'Vilken serie är det här?', layout:'mc', right: opts.indexOf('E' + n), opts: opts.map(x => ({html: x})),
+        res: () => S.answered ? dialSVG(n, {count: n <= 12, pop: true}) : dialSVG(n, {labels: false}),
+        wrong: `${n} prickar på varvet, alltså E${n}. En prick ${n === 6 ? 'varannan timme' : n === 12 ? 'på varje timme' : 'på varje halvtimme'}.`};
+    }, {eq: 'klocka'}),
     // Gesäll: serie och tolerans
     () => choice(() => {
       const s = rnd(Object.keys(SER_TOL)), t = SER_TOL[s], line = 'E6 ±20 %, E12 ±10 %, E24 ±5 %, E48 ±2 %, E96 ±1 %.';

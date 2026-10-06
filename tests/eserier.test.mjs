@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { atGrade } from './harness.mjs';
+import { answer, until } from './answer.mjs';
 
 // Ritar en sträng från spelet i en div, så att man kan räkna element
 const frag = (t, expr) => { const d = t.doc.createElement('div'); d.innerHTML = t.g(expr); return d; };
@@ -57,4 +58,39 @@ test('Linjalen: värden släpps ner med bock eller kryss', () => {
   assert.equal(n(d, '.emark.bad'), 1);
   assert.match(d.querySelector('.emark.bad').textContent, /✗ 64/);
   assert.match(d.querySelector('.emark.ok').textContent, /✓ 47/);
+});
+
+test('E-seriernas Nykomling: Vad betyder 12 i E12?, tom klocka före och 12 prickar efter, både rätt och fel', () => {
+  for (const ok of [true, false]) {
+    const t = atGrade('e', 0);
+    for (let i = 0; i < 10; i++) {
+      t.g('next()');
+      assert.equal(t.g('S.plan.eq'), 'namn');
+      assert.equal(t.$('#q .prompt').textContent.trim(), 'Vad betyder 12 i E12?');
+    }
+    assert.equal(t.$$('#q .edial').length, 1);
+    assert.equal(t.$$('#q .edot').length, 0, 'tom före svaret');
+    assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), '12 värden på varje varv');
+    answer(t, ok);
+    assert.equal(t.$$('#q .edot').length, 12);
+    assert.equal(t.$$('#q .enum').length, 12);
+  }
+});
+
+test('E-seriernas Lärling: Vilken serie är det här?, rätt svar stämmer med antalet prickar', () => {
+  const t = atGrade('e', 1), seen = new Set();
+  for (let i = 0; i < 30; i++) {
+    t.g('next()');
+    assert.equal(t.g('S.plan.eq'), 'klocka');
+    const dots = t.$$('#q .edot').length;
+    assert.ok([6, 12, 24].includes(dots));
+    assert.equal(t.$$('#q .elab').length, 0, 'inga värden före svaret');
+    assert.equal(t.$('#q .emid').textContent, '?');
+    assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), 'E' + dots);
+    seen.add(dots);
+  }
+  assert.equal(seen.size, 3, 'E6, E12 och E24 förekommer');
+  answer(t, false);
+  assert.ok(t.$$('#q .elab').length > 0, 'värdena visas efter svaret');
+  assert.match(t.$('#q').textContent, /prickar på varvet/);
 });
