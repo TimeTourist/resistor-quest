@@ -1106,7 +1106,7 @@ function goTopic(lv){
 // Efter svar: guld eller ett upplåst ämne går till startsidan, annars nästa fråga
 function advance(){
   stopTimer();
-  if (S.goldNow) { S.goldNow = null; closePlay(); }
+  if (S.goldNow) { const lv = S.goldNow; S.goldNow = null; S.fresh = lv; closePlay(); }
   else if (S.unlockedNow) { const lv = S.unlockedNow; S.unlockedNow = null; showKeyWin(lv); }
   else next();
 }
@@ -2981,14 +2981,15 @@ cheatBtn.addEventListener('click', () => {
 });
 document.getElementById('tGive').addEventListener('click', () => {
   const lv = TOPICS.find(l => !unlocked(l));
-  if (lv) { const p = TOPICS[TOPICS.indexOf(lv) - 1]; S.done[p] = Math.max(S.done[p], UNLOCK_AT); S.grade[p] = Math.max(S.grade[p], UNLOCK_AT); saveProgress(); }
-  renderGrid();
+  if (lv) { const p = TOPICS[TOPICS.indexOf(lv) - 1]; S.done[p] = Math.max(S.done[p], UNLOCK_AT); S.grade[p] = Math.max(S.grade[p], UNLOCK_AT); saveProgress(); grantKey(lv); }
+  if (S.screen === 'grid') flyKeys(null);
 });
 document.getElementById('tReset').addEventListener('click', () => {
+  if (S.screen === 'play') closePlay();
   TOPICS.forEach(t => { S.done[t] = 0; S.grade[t] = 0; });
   saveProgress();
-  S.up = 0; S.down = 0; S.exam = null; S.topic = 'body'; save('fargkoden2-topic', 'body');
-  if (S.screen === 'play') closePlay();
+  S.up = 0; S.down = 0; S.streaks = {}; S.exam = null; S.plan = null; S.topic = 'body'; save('fargkoden2-topic', 'body');
+  S.keys = ['body']; S.seen = []; S.flying = []; S.arriving = []; saveKeys();
   renderGrid();
 });
 

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { load, atGrade, golden, ALL_OPEN } from './harness.mjs';
-import { answer, cont } from './answer.mjs';
+import { answer, cont, dare } from './answer.mjs';
 
 const ORDER = ['body', 'ohm', 'tol', 'tc', 'e', 'ultra'];
 const curGrade = t => t.$$('#gbar .gseg').indexOf(t.$('#gbar .gseg.cur'));
@@ -171,4 +171,41 @@ test('Eldprovets kort: tre tryck, sedan visar stapeln vilken fråga man är på'
   assert.ok(t.$('#dare'));
   for (let i = 0; i < 3; i++) t.$('#dare').click();
   assert.match(t.$('#gbar').textContent, /Fråga 1 av 20/);
+});
+
+test('Eldprovets minikort: Pågår med frågans nummer, och provet står kvar om man spelar ett annat ämne emellan', () => {
+  const t = load({ storage: ALL_OPEN });
+  t.g("openTopic('ultra')"); dare(t);
+  answer(t, true);
+  t.$('#closeBtn').click();
+  assert.match(t.$('#grid [data-id="ultra"]').textContent, /Pågår · fråga 2 av 20/);
+  open(t, 'ohm');
+  answer(t, true);
+  t.$('#closeBtn').click();
+  open(t, 'ultra');
+  assert.equal(t.g('S.exam.i'), 1, 'provet står på fråga 2');
+  assert.equal(t.g('S.answered'), false);
+  assert.match(t.$('#gbar').textContent, /Fråga 2 av 20/);
+});
+
+test('Guld: minikortet tänds när ämnet blir klart', () => {
+  const t = atGrade('body', 4);
+  t.g('S.grade.body = 4; S.up = 2; S.done.body = 4; next()');
+  answer(t, true); cont(t);
+  const tile = t.$('#grid [data-id="body"]');
+  assert.ok(tile.classList.contains('done'));
+  assert.ok(tile.classList.contains('fresh'));
+});
+
+test('Testraden: Lås upp nästa ämne ger en nyckel, Börja om går tillbaka till första besöket', () => {
+  const t = load({ start: true, url: 'http://localhost/?test=true', storage: { 'fargkoden2-topic': 'body', 'fargkoden2-keys': '[]', 'fargkoden2-seen': '["body"]' } });
+  t.$('#tGive').click();
+  assert.equal(t.g("tileState('ohm')"), 'key');
+  assert.ok(t.$('#grid [data-id="ohm"] .inkey'));
+  open(t, 'body');
+  t.$('#tReset').click();
+  assert.equal(t.g('S.screen'), 'grid');
+  assert.deepEqual(Array.from(t.g('S.keys')), ['body']);
+  assert.deepEqual(Array.from(t.g('S.seen')), []);
+  assert.equal(t.g("tileState('ohm')"), 'locked');
 });
