@@ -94,3 +94,31 @@ test('E-seriernas Lärling: Vilken serie är det här?, rätt svar stämmer med 
   assert.ok(t.$$('#q .elab').length > 0, 'värdena visas efter svaret');
   assert.match(t.$('#q').textContent, /prickar på varvet/);
 });
+
+test('E-seriernas Gesäll: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
+  for (const ok of [false, true]) {
+    const t = atGrade('e', 2);
+    until(t, p => p.eq === 'staplar');
+    const m = t.$('#q .prompt').textContent.match(/Vilken tolerans är E(6|12|24) gjord för\?/);
+    assert.ok(m);
+    assert.equal(t.$$('#q [data-c]').length, 3);
+    assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), t.g(`fmtTol(SER_TOL.E${m[1]})`));
+    assert.equal(t.$$('#q .eruler').length, 1, 'linjalen före svaret');
+    assert.equal(t.$$('#q .etrow').length, 0);
+    answer(t, ok);
+    const rows = t.$$('#q .etrow');
+    assert.equal(rows.length, 3);
+    assert.equal(t.$$('#q .etrow.pick').length, 1);
+    assert.equal(rows.indexOf(t.$('#q .etrow.pick')) === 1, ok, 'den valda raden har ramen');
+    assert.ok(rows[0].querySelector('.ecrash'), 'för stor krockar');
+    assert.equal(rows[1].querySelectorAll('.ecrash, .egap').length, 0, 'den rätta är ren');
+    assert.ok(rows[2].querySelector('.egap'), 'för liten glappar');
+    assert.match(rows[0].textContent, /10 Ω kan vara 1[125] Ω/);
+  }
+});
+
+test('E-seriernas Gesäll blandar staplarna med serie ↔ tolerans', () => {
+  const t = atGrade('e', 2), seen = new Set();
+  for (let i = 0; i < 60; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
+  assert.deepEqual([...seen].sort(), ['serietol', 'staplar']);
+});
