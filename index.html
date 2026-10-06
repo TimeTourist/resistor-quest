@@ -207,10 +207,8 @@ html,body{overflow-x:clip}
 .kopt svg{width:100%;max-width:150px;height:auto}
 .kopt.bad{border-color:var(--bad);background:var(--bad-bg);cursor:default;opacity:.75}
 .kopt.ok{border-color:var(--ok);background:var(--ok-bg)}
-.kickmsg{min-height:1.4em;margin:10px 0 0;font-weight:600}
-.kickmsg:empty{min-height:0;margin:0}
-.kicklabel{color:var(--muted);font-size:.9rem;margin:8px 0 0}
-.bosscard .kicklabel,.firecard .rule{color:#ffd6b0}
+.kickwhy{margin-bottom:6px}
+.firecard .rule{color:#ffd6b0}
 .firecard{text-align:center}
 .dare{position:relative;display:block;width:100%;border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:6px 0 10px;border-radius:14px}
 .dare .fire{width:150px;height:auto;display:block;margin:0 auto;filter:drop-shadow(0 0 18px rgba(255,170,60,.7))}
@@ -704,24 +702,27 @@ function renderMap(){
 function animHTML(lv){
   const a = (d, s) => `<g class="a" style="animation-delay:${d}s">${s}</g>`;
   const band = (x, c, w = 14) => `<rect x="${x}" y="8" width="${w}" height="40" rx="2" fill="${C[c].hex}"/>`;
+  // Motståndet bakom banden: trådar och kropp, från x0 till x1
+  const res = (x0, x1) => `<g class="rbody"><path d="M${x0 - 34} 28 H${x1 + 34}" stroke="var(--lead)" stroke-width="4" stroke-linecap="round"/><rect x="${x0}" y="8" width="${x1 - x0}" height="40" rx="16" fill="var(--body)"/></g>`;
   const txt = (x, y, s, cls = '') => `<text x="${x}" y="${y}" text-anchor="middle" class="${cls}">${s}</text>`;
   let s = '';
   if (lv === 'body') {
-    s = ['brown','black','red','gold'].map((c, i) => a(i * .35, band(80 + i * 34 + (i === 3 ? 18 : 0), c, i === 3 ? 20 : 14))).join('')
+    s = res(62, 244) + ['brown','black','red','gold'].map((c, i) => a(.2 + i * .35, band(84 + i * 34 + (i === 3 ? 18 : 0), c, i === 3 ? 20 : 14))).join('')
       + a(1.6, `<path d="M70 62 H240" stroke="currentColor" stroke-width="2.5"/><path d="M240 62 l-9 -6 v12 z" fill="currentColor"/>`)
       + a(1.9, txt(155, 80, 'läs härifrån →'));
   } else if (lv === 'ohm') {
     const cs = [['brown','1'], ['black','0'], ['red','×100']];
-    s = cs.map(([c, t], i) => a(i * .45, band(70 + i * 50, c) + txt(77 + i * 50, 66, t, 'big'))).join('')
-      + a(1.6, txt(250, 34, '= 1 kΩ', 'big'));
+    s = res(52, 212) + `<rect x="188" y="8" width="14" height="40" rx="2" fill="${C.gold.hex}" opacity=".35"/>`
+      + cs.map(([c, t], i) => a(i * .45, band(66 + i * 40, c) + txt(73 + i * 40, 68, t, 'big'))).join('')
+      + a(1.6, txt(276, 34, '= 1 kΩ', 'big'));
   } else if (lv === 'tol') {
-    s = a(0, band(70, 'gold', 20)) + a(.5, txt(80, 66, '±5 %', 'big'))
-      + a(1, `<path d="M130 30 H290" stroke="currentColor" stroke-width="2"/>${txt(140, 22, '95')}${txt(210, 22, '100 Ω')}${txt(280, 22, '105')}`)
-      + `<g class="a swing" style="animation-delay:1.2s"><circle cx="210" cy="30" r="6" fill="var(--accent)"/></g>`;
+    s = res(40, 120) + ['brown','black','brown'].map((c, i) => band(52 + i * 16, c, 10)).join('') + a(0, band(100, 'gold', 12)) + a(.5, txt(106, 70, '±5 %', 'big'))
+      + a(1, `<path d="M170 30 H300" stroke="currentColor" stroke-width="2"/>${txt(178, 22, '95')}${txt(235, 22, '100 Ω')}${txt(294, 22, '105')}`)
+      + `<g class="a swing" style="animation-delay:1.2s"><circle cx="235" cy="30" r="6" fill="var(--accent)"/></g>`;
   } else if (lv === 'tc') {
-    s = ['red','violet','black','red','brown','brown'].map((c, i) => a(i * .2, band(60 + i * 26 + (i > 3 ? 12 : 0), c))).join('')
-      + a(1.4, `<rect x="${60 + 5 * 26 + 12 - 4}" y="4" width="22" height="48" rx="3" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`)
-      + a(1.8, txt(255, 34, '100 ppm/K', 'big'));
+    s = res(44, 232) + ['red','violet','black','red','brown','brown'].map((c, i) => a(i * .2, band(62 + i * 26 + (i > 3 ? 12 : 0), c))).join('')
+      + a(1.4, `<rect x="${62 + 5 * 26 + 12 - 4}" y="4" width="22" height="48" rx="3" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`)
+      + a(1.8, txt(211, 76, '100 ppm/K', 'big'));
   } else if (lv === 'e') {
     const xs = E12.map(v => 40 + 230 * Math.log10(v / 10));
     s = a(0, `<path d="M40 40 H270" stroke="currentColor" stroke-width="2"/>${txt(40, 64, '10')}${txt(270, 64, '100')}`)
@@ -745,9 +746,9 @@ function levelCardHTML(lv, fresh){
   if (cleared(lv)) {
     // Gyllene: trappan har gjort sitt jobb. Ämnet spelas blandat, och vägen vidare är nästa ämne eller Eldprovet.
     const on = nx && unlocked(nx) ? nx : 'ultra';
-    return `<div class="lvcard goldcard">${fresh ? '<span class="fresh gold">Ämnet är klart!</span>' : ''}<h2>${topicName(lv)} <span class="goldmark">✓</span></h2><p>${TOPIC_LINE[lv]}</p>
+    return `<div class="lvcard goldcard">${fresh ? '<span class="fresh gold">Ämnet är klart!</span>' : ''}<h2>${topicName(lv)} <span class="goldmark">✓</span></h2>${S.kick && S.kick.lv === lv && S.kick.bad.length ? `<div class="kickwhy"><p>${TOPIC_LINE[lv]}</p>${animHTML(lv)}</div>` : ''}
       <p class="state done">Klart! Nu blandas frågor från alla grader. <b>Rekordsvit: ${S.mix.best[lv] || 0}</b></p>
-      ${kickHTML(lv, 'Svara rätt så börjar blandat.')}
+      ${kickHTML(lv)}
       ${fresh ? `<div class="lvbtns"><button class="ghost go" data-go="${on}">${on === 'ultra' ? 'Till Eldprovet' : `Till ${topicName(on)}`}</button></div>` : ''}</div>`;
   }
   const top = Math.min(S.done[lv], MAX), pick = S.pickGrade ?? S.grade[lv];
@@ -755,9 +756,12 @@ function levelCardHTML(lv, fresh){
   const state = cleared(lv) ? 'Klar! Välj vilken grad du vill spela.'
     : !open ? `Låst. Nå Mästare i ${topicName(prev)} först.`
     : `3 rätt i rad tar dig upp en grad.${nx && S.done[lv] < UNLOCK_AT ? ` Mästare låser upp ${topicName(nx)}.` : ''}`;
-  return `<div class="lvcard">${fresh ? '<span class="fresh">Nytt ämne upplåst!</span>' : ''}<h2>${topicName(lv)}</h2><p>${TOPIC_LINE[lv]}</p>${animHTML(lv)}
-    <div class="grades" role="group" aria-label="Grad">${dots}</div><p class="state${cleared(lv) ? ' done' : ''}">${state}</p>
-    ${open ? kickHTML(lv, `Svara rätt så börjar du som ${GRADE_NAME[pick]}.`) : '<div class="lvbtns"><button class="primary" disabled>Låst</button></div>'}
+  // Öppet ämne: bara namnet, graderna och startfrågan. Ämnets rad och animering visas först vid fel svar.
+  const why = open && S.kick && S.kick.lv === lv && S.kick.bad.length;
+  const intro = `<p>${TOPIC_LINE[lv]}</p>${animHTML(lv)}`;
+  return `<div class="lvcard">${fresh ? '<span class="fresh">Nytt ämne upplåst!</span>' : ''}<h2>${topicName(lv)}</h2>${!open ? intro : why ? `<div class="kickwhy">${intro}</div>` : ''}
+    <div class="grades" role="group" aria-label="Grad">${dots}</div>${open ? '' : `<p class="state">${state}</p>`}
+    ${open ? kickHTML(lv) : '<div class="lvbtns"><button class="primary" disabled>Låst</button></div>'}
     ${fresh ? `<div class="lvbtns"><button class="ghost" id="stay">Stanna på ${topicName(S.topic)}</button></div>` : ''}</div>`;
 }
 function drawCard(lv, fresh){
@@ -766,6 +770,17 @@ function drawCard(lv, fresh){
   q.innerHTML = levelCardHTML(lv, fresh);
   document.getElementById('more').hidden = true;
   updateScore();
+  cardBar(lv);
+}
+// Stapeln uppe visas som vanligt medan ämnets kort är framme. Den går undan när frågan börjar.
+function cardBar(lv){
+  clearBar();
+  if (lv === 'ultra' || !unlocked(lv)) return;
+  const b = document.getElementById('gbar');
+  if (cleared(lv)) { barDrawMix(lv, 0, S.mix.best[lv] || 0, false); b.className = 'gbar show goldbar'; return; }
+  const here = lv === S.topic;
+  barDraw({g: S.grade[lv], up: here ? S.up : 0, down: here ? S.down : 0, done: S.done[lv]}, lv);
+  b.className = 'gbar show';
 }
 function showLevelCard(lv, fresh = false){
   stopTimer(); clearBar(); S.busy = false;
@@ -774,43 +789,38 @@ function showLevelCard(lv, fresh = false){
   document.querySelector('#q [data-kick], #dare, #play, #examStart')?.focus({preventScroll:true});
 }
 // Startfrågan på ämneskortet: en lätt, riktig fråga i stället för en Spela-knapp.
-// Rätt svar krossar kortet och ämnet börjar. Fel svar säger varför, och man får försöka igen. Trappan påverkas inte.
-// Första valet är det rätta. why är raden vid fel (per val, annars frågans).
+// Rätt svar krossar kortet och ämnet börjar. Fel svar visar ämnets rad och animering, och man får försöka igen. Trappan påverkas inte.
+// Första valet är det rätta.
 const emo = (e, t) => `<span class="emo" aria-hidden="true">${e}</span><span>${t}</span>`;
 const KICK = {
   body: {q: 'Välj motståndet', opts: [
     {html: () => svg(genBands(4), {style: stdStyle(4), label: 'Motstånd'})},
-    {html: emo('🐔', 'Kyckling'), why: 'Det där är en kyckling 🐔'},
-    {html: emo('🚗', 'Bil'), why: 'Det där är en bil 🚗'},
-    {html: emo('⚓', 'Ankare'), why: 'Det där är ett ankare ⚓'}]},
-  ohm: {q: 'Vilken enhet har resistans?', why: 'Resistans mäts i ohm, Ω.',
-    opts: [{html: '<b>Ω</b> ohm'}, {html: 'kg'}, {html: '°C'}, {html: 'km/h'}]},
-  tol: {q: 'Ett motstånd på 100 Ω ±10 %. Vilket mätvärde är okej?', why: '10 % av 100 Ω är 10 Ω, så allt mellan 90 och 110 Ω är okej.',
-    opts: [{html: '104 Ω'}, {html: '150 Ω'}, {html: '200 Ω'}, {html: '3 Ω'}]},
-  tc: {q: 'Vad händer med resistansen när motståndet blir varmt?', why: 'Den ändras lite. Hur mycket står i temperaturbandet.',
-    opts: [{html: 'Den ändras lite'}, {html: 'Den blir noll'}, {html: 'Motståndet byter färg'}, {html: 'Den blir tusen gånger större'}]},
-  e: {q: 'Motstånd säljs i standardvärden. Vilket kan du köpa?', why: 'Standardvärden har få siffror, som 4,7 kΩ.',
-    opts: [{html: '4,7 kΩ'}, {html: '4,713 kΩ'}, {html: '4,6982 kΩ'}, {html: '4,70015 kΩ'}]}
+    {html: emo('🐔', 'Kyckling')},
+    {html: emo('🚗', 'Bil')},
+    {html: emo('⚓', 'Ankare')}]},
+  ohm: {q: 'Vilken enhet har resistans?', opts: [{html: '<b>Ω</b> ohm'}, {html: 'kg'}, {html: '°C'}, {html: 'km/h'}]},
+  tol: {q: 'Ett motstånd på 100 Ω ±10 %. Vilket mätvärde är okej?', opts: [{html: '104 Ω'}, {html: '150 Ω'}, {html: '200 Ω'}, {html: '3 Ω'}]},
+  tc: {q: 'Vad händer med resistansen när motståndet blir varmt?', opts: [{html: 'Den ändras lite'}, {html: 'Den blir noll'}, {html: 'Motståndet byter färg'}, {html: 'Den blir tusen gånger större'}]},
+  e: {q: 'Motstånd säljs i standardvärden. Vilket kan du köpa?', opts: [{html: '4,7 kΩ'}, {html: '4,713 kΩ'}, {html: '4,6982 kΩ'}, {html: '4,70015 kΩ'}]}
 };
-function kickHTML(lv, label){
+function kickHTML(lv){
   if (!S.kick || S.kick.lv !== lv) {
     const K = KICK[lv], order = shuffle([0, 1, 2, 3]);
-    S.kick = {lv, right: order.indexOf(0), bad: [], msg: '',
-      opts: order.map(i => { const o = K.opts[i]; return {html: typeof o.html === 'function' ? o.html() : o.html, why: o.why || K.why}; })};
+    S.kick = {lv, right: order.indexOf(0), bad: [], opts: order.map(i => { const o = K.opts[i]; return {html: typeof o.html === 'function' ? o.html() : o.html}; })};
   }
   const k = S.kick;
   return `<div class="kick"><p class="kickq">${KICK[lv].q}</p><div class="kickopts">${k.opts.map((o, i) =>
-    `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${TEST_MODE && i === k.right ? ' cheat' : ''}" data-kick="${i}"${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o.html}</button>`).join('')}</div>
-    <p class="kickmsg" aria-live="polite">${k.msg}</p><p class="kicklabel">${label}</p></div>`;
+    `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${TEST_MODE && i === k.right ? ' cheat' : ''}" data-kick="${i}"${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o.html}</button>`).join('')}</div></div>`;
 }
 const centerOf = el => { const r = el.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
 function kickPick(btn){
   const k = S.kick, i = +btn.dataset.kick;
   if (!k || k.busy || k.bad.includes(i)) return;
   if (i !== k.right) {
-    k.bad.push(i); k.msg = k.opts[i].why;
-    btn.classList.add('bad'); btn.setAttribute('aria-disabled', 'true');
-    document.querySelector('#q .kickmsg').textContent = k.msg;
+    // Kortet ritas om med ämnets rad och animering ovanför graderna
+    k.bad.push(i);
+    drawCard(S.view, S.fresh);
+    document.querySelector(`#q [data-kick]:not([aria-disabled])`)?.focus({preventScroll:true});
     const box = document.querySelector('#q .kick');
     box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
     sfx.wrong();

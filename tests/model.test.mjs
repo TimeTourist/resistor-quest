@@ -506,7 +506,7 @@ test('Gyllene: tre rätt på Stormästare gör ämnet klart, och sedan visas äm
   cont(t);
   assert.equal(t.g('S.view'), 'body', 'ämnets kort');
   assert.match(t.$('#q').textContent, /klart/i);
-  assert.match(t.$('#q').textContent, /blandat/i);
+  assert.match(t.$('#q').textContent, /bland/i);
   assert.ok(t.g('S.kick'), 'startfråga på det gyllene kortet');
 });
 
