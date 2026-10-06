@@ -205,3 +205,16 @@ test('Ordna: snabba klick, raden blir klar och frågan avgörs först när alla 
   assert.equal(t.g('S.ok'), true);
   t.g('stopTimer(); clearBar()');
 });
+
+test('Ordna: fel färg flyger till sin egen låda, blir röd där och flyger tillbaka', async () => {
+  const t = atGrade('ohm', 1);
+  until(t, isOrder('d'));
+  t.g('S.instant = false');
+  clickKey(t, 'red');
+  await new Promise(r => setTimeout(r, 800));
+  assert.ok(t.$('#q [data-oslot="red"]').classList.contains('bad'), 'röd i sin egen låda');
+  assert.ok(!t.$('#q [data-oslot="black"]').classList.contains('bad'), 'inte i lådan som står på tur');
+  await new Promise(r => setTimeout(r, 1100));
+  assert.ok(!t.$('#q [data-oslot="red"]').classList.contains('bad'));
+  assert.equal(t.$('#q [data-oslot="red"] .osw'), null);
+});

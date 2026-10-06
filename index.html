@@ -2427,7 +2427,7 @@ document.getElementById('q').addEventListener('click', e => {
 
 // Färgen flyger från knappen upp mot lådan. Flygturen är spänning: rätt eller fel syns och hörs först när den landar.
 // Rätt färg sätter sig grön i sin låda. Var femte låtsas först flyga mot en annan tom låda, vänder och sätter sig rätt.
-// Fel färg landar i lådan som står på tur, blir röd, skakar och flyger tillbaka. Sedan skakar den rätta färgen med en grön ring.
+// Fel färg landar i sin egen låda, blir röd, skakar och flyger tillbaka. Sedan skakar den rätta färgen med en grön ring.
 // Utan fel är frågan rätt. Med fel i första försöket flyger alla tillbaka och man får ett sista försök, utan ledtråd
 // förrän man gör fel igen. Färgerna ligger kvar i samma ordning. Fel i sista försöket gör frågan fel, men raden byggs klart.
 // Man kan klicka snabbt: flera färger kan vara i luften samtidigt. Rätt eller fel avgörs vid klicket men visas vid landningen.
@@ -2488,7 +2488,7 @@ function orderPick(btn){
   }
   setTimeout(land, dur);
 }
-// Fel färg: upp i lådan som står på tur, rött och skak, och tillbaka. Sedan en grön ledtråd på den rätta.
+// Fel färg: upp till sin egen låda, rött och skak, och tillbaka. Sedan en grön ledtråd på den rätta.
 function orderMiss(btn, k, want){
   const o = S.ord;
   o.missed = true; o.decoy = null;
@@ -2507,7 +2507,7 @@ function orderMiss(btn, k, want){
   if (calmOrder()) { sfx.thud(); done(); return; }
   const from = btn.getBoundingClientRect();
   syncChips();
-  const boxEl = oslot(want), to = boxEl.getBoundingClientRect();
+  const boxEl = oslot(k), to = boxEl.getBoundingClientRect();
   const f = document.createElement('b');
   f.className = 'ofloat'; f.setAttribute('aria-hidden', 'true');
   // Placeras på sidan, inte på skärmen, så att den följer med om man skrollar
@@ -2523,8 +2523,7 @@ function orderMiss(btn, k, want){
     boxEl.classList.add('bad', 'landnow');
     f.animate?.([{transform: at()}, {transform: at(-6)}, {transform: at(6)}, {transform: at(-4)}, {transform: at(3)}, {transform: at()}], {duration: 420, fill: 'forwards'});
     setTimeout(() => {
-      boxEl.classList.remove('bad');
-      if (!o.placed[want]) boxEl.classList.remove('landnow');
+      boxEl.classList.remove('bad', 'landnow');
       f.animate?.([{transform: at()}, {transform: 'none'}], {duration: 420, easing: 'ease-in-out', fill: 'forwards'});
       setTimeout(() => { f.remove(); done(); }, 420);
     }, 520);
