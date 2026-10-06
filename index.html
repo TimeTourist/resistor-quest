@@ -237,13 +237,13 @@ html,body{overflow-x:clip}
 .cheatline{color:var(--ok);font-weight:700;font-size:.95rem;margin:10px 0 0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Nivåkortet: gradprickar och animering av ämnet */
-.grades{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
-.gdot{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:5px 11px 5px 7px;font:inherit;font-size:.88rem;cursor:pointer}
-.gdot b{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);display:block}
-.gdot.did b{background:var(--ok);border-color:var(--ok)}
-.gdot[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent);font-weight:600}
-.gdot:disabled{opacity:.45;cursor:default}
-.bosscard .gdot{color:var(--ink)}
+.gbar.pick{pointer-events:auto}
+.gbar.pick .gseg[data-gpick]{cursor:pointer}
+.gbar.pick .gseg[data-gpick]:hover .cells,.gbar.pick .gseg[data-gpick]:focus-visible .cells{outline:2px dashed var(--accent);outline-offset:2px;border-radius:5px}
+.gbar.pick .gseg:focus{outline:none}
+.gask{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px;font-weight:600;font-size:.95rem}
+.gask button{font:inherit;font-size:.9rem;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:4px 14px;cursor:pointer}
+.gask button[data-gyes]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .anim{display:block;width:100%;max-width:360px;height:auto;margin:2px 0 10px;color:var(--muted)}
 .anim text{font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:13px;fill:var(--muted)}
 .anim text.big{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:20px;font-weight:600;fill:var(--ink)}
@@ -751,16 +751,14 @@ function levelCardHTML(lv, fresh){
       ${kickHTML(lv)}
       ${fresh ? `<div class="lvbtns"><button class="ghost go" data-go="${on}">${on === 'ultra' ? 'Till Eldprovet' : `Till ${topicName(on)}`}</button></div>` : ''}</div>`;
   }
-  const top = Math.min(S.done[lv], MAX), pick = S.pickGrade ?? S.grade[lv];
-  const dots = GRADE_NAME.map((n, g) => `<button class="gdot${g < S.done[lv] ? ' did' : ''}" data-grade="${g}" aria-pressed="${open && g === pick}"${!open || g > top ? ' disabled' : ''}><b aria-hidden="true"></b>${n}</button>`).join('');
   const state = cleared(lv) ? 'Klar! Välj vilken grad du vill spela.'
     : !open ? `Låst. Nå Mästare i ${topicName(prev)} först.`
     : `3 rätt i rad tar dig upp en grad.${nx && S.done[lv] < UNLOCK_AT ? ` Mästare låser upp ${topicName(nx)}.` : ''}`;
-  // Öppet ämne: bara namnet, graderna och startfrågan. Ämnets rad och animering visas först vid fel svar.
+  // Öppet ämne: bara namnet och startfrågan. Graden väljs i stapeln uppe. Ämnets rad och animering visas först vid fel svar.
   const why = open && S.kick && S.kick.lv === lv && S.kick.bad.length;
   const intro = `<p>${TOPIC_LINE[lv]}</p>${animHTML(lv)}`;
   return `<div class="lvcard">${fresh ? '<span class="fresh">Nytt ämne upplåst!</span>' : ''}<h2>${topicName(lv)}</h2>${!open ? intro : why ? `<div class="kickwhy">${intro}</div>` : ''}
-    <div class="grades" role="group" aria-label="Grad">${dots}</div>${open ? '' : `<p class="state">${state}</p>`}
+    ${open ? '' : `<p class="state">${state}</p>`}
     ${open ? kickHTML(lv) : '<div class="lvbtns"><button class="primary" disabled>Låst</button></div>'}
     ${fresh ? `<div class="lvbtns"><button class="ghost" id="stay">Stanna på ${topicName(S.topic)}</button></div>` : ''}</div>`;
 }
@@ -780,11 +778,72 @@ function cardBar(lv){
   if (cleared(lv)) { barDrawMix(lv, 0, S.mix.best[lv] || 0, false); b.className = 'gbar show goldbar'; return; }
   const here = lv === S.topic;
   barDraw({g: S.grade[lv], up: here ? S.up : 0, down: here ? S.down : 0, done: S.done[lv]}, lv);
-  b.className = 'gbar show';
+  b.className = 'gbar show pick';
+  // Nådda grader går att välja, utom den man står på
+  const top = Math.min(S.done[lv], MAX);
+  b.querySelectorAll('.gseg').forEach((el, g) => {
+    if (g > top || g === S.grade[lv]) return;
+    el.dataset.gpick = g; el.setAttribute('role', 'button'); el.tabIndex = 0;
+    el.setAttribute('aria-label', `${g < S.grade[lv] ? 'Gå ner' : 'Gå upp'} till ${GRADE_NAME[g]}`);
+  });
 }
+// Byte av grad i stapeln: först en fråga, sedan en animering som om man fått många fel (ner) eller rätt (upp) i rad
+const gbarEl = document.getElementById('gbar');
+function gradeAsk(g){
+  const lv = S.view, cur = S.grade[lv];
+  gbarEl.querySelector('.gask')?.remove();
+  gbarEl.insertAdjacentHTML('beforeend', `<div class="gask" role="group"><span>${g < cur ? `Gå ner till ${GRADE_NAME[g]}?` : `Gå upp till ${GRADE_NAME[g]} igen?`}</span>
+    <button data-gyes="${g}">Ja</button><button data-gno>Nej</button></div>`);
+  gbarEl.querySelector('[data-gyes]').focus({preventScroll:true});
+}
+function gradeJump(lv, to){
+  const from = S.grade[lv], done = S.done[lv], down = to < from;
+  S.grade[lv] = to;
+  if (lv === S.topic) { S.up = 0; S.down = 0; S.plan = null; }
+  saveProgress(); updateScore();
+  down ? sfx.wrong() : sfx.fanfare();
+  const b = gbarEl;
+  clearBar();
+  if (S.instant || reduceMotion()) { cardBar(lv); return; }
+  b.className = 'gbar show';
+  const steps = Math.abs(to - from), sc = steps > 1 ? .6 : 1;
+  const cells = g => b.querySelectorAll('.gseg')[g]?.querySelectorAll('.cells i') || [];
+  const at = (g, i) => { const c = cells(g)[i]; if (!c) return null; const r = c.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+  const fresh = (...c) => { b.classList.remove('newgrade', 'fell', 'quake'); void b.offsetWidth; b.classList.add(...c); };
+  barDraw({g: from, up: 0, down: 0, done}, lv);
+  for (let k = 0; k < steps; k++) {
+    const g = down ? from - k : from + k, t0 = .25 + k * 1.15 * sc;
+    for (let n = 1; n <= 3; n++) later(t0 + (n - 1) * .18 * sc, () => {
+      if (down) { barDraw({g, up: 0, down: n, done}, lv); cells(g - 1)[3 - n]?.classList.add('newbad'); }
+      else { barDraw({g, up: n, down: 0, done}, lv); cells(g)[n - 1]?.classList.add('pop'); }
+    });
+    if (down) {
+      later(t0 + .5 * sc, () => fresh('quake'));
+      later(t0 + .9 * sc, () => { [0, 1, 2].forEach(i => dust(at(g - 1, i), null, 6, 'out bad')); barDraw({g: g - 1, up: 0, down: 0, done}, lv); fresh('newgrade', 'fell'); });
+    } else {
+      later(t0 + .55 * sc, () => { fresh('quake'); b.querySelectorAll('.gseg.cur .cells i').forEach(c => c.classList.add('ripe')); });
+      later(t0 + .95 * sc, () => { barDraw({g: g + 1, up: 0, down: 0, done}, lv); fresh('newgrade'); });
+    }
+  }
+  later(.25 + steps * 1.15 * sc + .4, () => { if (S.view === lv) cardBar(lv); });
+}
+gbarEl.addEventListener('click', e => {
+  if (!S.view || S.view === 'ultra') return;
+  const yes = e.target.closest('[data-gyes]');
+  if (yes) { gradeJump(S.view, +yes.dataset.gyes); return; }
+  if (e.target.closest('[data-gno]')) { gbarEl.querySelector('.gask')?.remove(); return; }
+  const seg = e.target.closest('[data-gpick]');
+  if (seg) gradeAsk(+seg.dataset.gpick);
+});
+gbarEl.addEventListener('keydown', e => {
+  const seg = e.target.closest('[data-gpick]');
+  if (seg && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); gradeAsk(+seg.dataset.gpick); }
+});
+// Ett tryck utanför stänger frågan
+document.addEventListener('click', e => { if (!gbarEl.contains(e.target)) gbarEl.querySelector('.gask')?.remove(); });
 function showLevelCard(lv, fresh = false){
   stopTimer(); clearBar(); S.busy = false;
-  S.view = lv; S.pickGrade = null; S.fresh = fresh; S.kick = null;
+  S.view = lv; S.fresh = fresh; S.kick = null;
   drawCard(lv, fresh);
   document.querySelector('#q [data-kick], #dare, #play, #examStart')?.focus({preventScroll:true});
 }
@@ -910,10 +969,8 @@ function shatter(fn, at){
 
 // Spela på ett nivåkort. Samma ämne och grad: fortsätt där man var.
 function goTopic(lv){
-  S.view = null;
+  S.view = null; clearBar();
   document.getElementById('q').classList.remove('bosscard');
-  const g = S.pickGrade; S.pickGrade = null;
-  if (lv !== 'ultra' && g != null && g !== S.grade[lv]) { S.grade[lv] = g; S.up = 0; S.down = 0; saveProgress(); S.plan = null; }
   if (lv === S.topic && S.plan && S.type !== 'exam') { render(); return; }
   if (lv !== S.topic) { S.up = 0; S.down = 0; S.mix.streak = 0; S.exam = null; S.lastMore = ''; S.topic = lv; save('fargkoden2-topic', lv); }
   S.moved = null;
@@ -1862,7 +1919,11 @@ const barT = [];
 const later = (sec, fn) => barT.push(setTimeout(fn, sec * 1000));
 function clearBar(){
   barT.forEach(clearTimeout); barT.length = 0;
-  document.getElementById('gbar').className = 'gbar';
+  const b = document.getElementById('gbar');
+  b.className = 'gbar';
+  // Valen från ämneskortet gäller bara där
+  b.querySelector('.gask')?.remove();
+  b.querySelectorAll('[data-gpick]').forEach(x => { x.removeAttribute('data-gpick'); x.removeAttribute('role'); x.removeAttribute('tabindex'); x.removeAttribute('aria-label'); });
   document.querySelectorAll('.dust').forEach(d => d.remove());
 }
 function barDraw(st, topic, label){
@@ -2215,9 +2276,6 @@ document.getElementById('q').addEventListener('click', e => {
     beginExam();
   } else if (btn.id === 'play' || btn.classList.contains('go')) {
     goTopic(btn.dataset.go);
-  } else if (btn.dataset.grade != null) {
-    S.pickGrade = +btn.dataset.grade; drawCard(S.view, S.fresh);
-    document.querySelector(`[data-grade="${S.pickGrade}"]`)?.focus({preventScroll:true});
   } else if (btn.dataset.c != null) {
     if (S.answered) return;
     S.pickC = +btn.dataset.c; finish(S.pickC === S.cq.right);

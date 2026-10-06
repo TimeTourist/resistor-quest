@@ -538,7 +538,7 @@ test('Blandat: statusraden, kartan och kortet', () => {
   assert.ok(t.$('#map [data-level="tol"].gold'), 'gyllene band på kartan');
   tap(t, t.$('#map [data-level="tol"]'));
   assert.match(t.$('#q').textContent, /Rekordsvit/);
-  assert.equal(t.$$('[data-grade]').length, 0, 'inga gradval på ett gyllene ämne');
+  assert.equal(t.$$('[data-gpick]').length, 0, 'inga gradval på ett gyllene ämne');
 });
 
 test('Resistansens Gesäll: ohm-talet står i klammern', () => {
@@ -804,13 +804,13 @@ test('Kartan: banden fylls efter klarade grader, låsta har lås, klara har ✓'
   assert.ok(t.$('#map [data-level="e"] .lock'));
 });
 
-test('Nivåkortet: fem gradprickar, nådda går att välja och ger den graden', () => {
+test('Nivåkortet: inga gradprickar, graden väljs i stapeln och spelet börjar där', () => {
   const t = load({ storage: { 'fargkoden2-done': JSON.stringify({ body: 5, ohm: 2 }), 'fargkoden2-grade': JSON.stringify({ ohm: 2 }) } });
   tap(t, t.$('#map [data-level="ohm"]'));
-  const dots = t.$$('[data-grade]');
-  assert.equal(dots.length, 5);
-  assert.deepEqual(dots.map(d => d.disabled), [false, false, false, true, true]);
-  dots[0].click();
+  assert.equal(t.$$('#q [data-grade]').length, 0, 'inga gradprickar på kortet');
+  assert.deepEqual(t.$$('#gbar [data-gpick]').map(x => +x.dataset.gpick), [0, 1], 'nådda grader utom den man står på');
+  t.$('#gbar [data-gpick="0"]').click();
+  t.$('#gbar [data-gyes]').click();
   kick(t);
   assert.equal(t.g('S.topic'), 'ohm');
   assert.equal(t.g('S.grade.ohm'), 0);

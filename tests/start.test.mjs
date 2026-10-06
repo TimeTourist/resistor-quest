@@ -28,7 +28,7 @@ test('Startfrågan: rätt svar startar ämnet på vald grad', () => {
   for (const lv of TOPICS) {
     const t = load({ storage: ALL_OPEN });
     t.g(`showLevelCard('${lv}')`);
-    t.$('[data-grade="1"]').click();
+    t.$('#gbar [data-gpick="1"]').click(); t.$('#gbar [data-gyes]').click();
     kick(t, true);
     assert.equal(t.g('S.view'), null, lv);
     assert.equal(t.g('S.topic'), lv);
@@ -123,7 +123,6 @@ test('Ämneskortet: stapeln visas uppe som vanligt, med ämnets läge', () => {
   assert.ok(bar.classList.contains('show'));
   assert.match(bar.querySelector('.gname').textContent, /Resistansen/);
   assert.equal(bar.querySelectorAll('.cells i.full').length, 6, 'två klarade grader');
-  assert.ok(t.$$('[data-grade]').length === 5, 'gradprickarna finns kvar på kortet');
   kick(t, true);
   assert.ok(!bar.classList.contains('show'), 'stapeln går undan när frågan börjar');
 });
@@ -138,4 +137,46 @@ test('Ämneskortet: gyllene kortet visar blandat-stapeln, Eldprovet och låsta �
   const u = load();
   u.g("showLevelCard('tc')");
   assert.ok(!u.$('#gbar').classList.contains('show'));
+});
+
+test('Stapeln på kortet: ner en grad frågar först, Ja byter grad och nollställer sviten', () => {
+  const t = atGrade('ohm', 2);
+  t.g('S.up = 2; S.down = 1');
+  t.g("S.played = []; ['wrong','fanfare'].forEach(k => { sfx[k] = () => S.played.push(k); })");
+  t.g("showLevelCard('ohm')");
+  t.$('#gbar [data-gpick="1"]').click();
+  assert.match(t.$('#gbar .gask').textContent, /Gå ner till Lärling\?/);
+  assert.equal(t.g('S.grade.ohm'), 2, 'inget händer innan Ja');
+  t.$('#gbar [data-gyes]').click();
+  assert.equal(t.g('S.grade.ohm'), 1);
+  assert.equal(t.g('S.up'), 0); assert.equal(t.g('S.down'), 0);
+  assert.equal(t.g('S.done.ohm'), 4, 'nådda grader finns kvar');
+  assert.equal(JSON.parse(t.g("localStorage.getItem('fargkoden2-grade')")).ohm, 1, 'sparas');
+  assert.deepEqual(Array.from(t.g('S.played')), ['wrong']);
+  assert.equal(t.g('S.view'), 'ohm', 'kortet med frågan står kvar');
+  assert.equal(t.$('#gbar .gask'), null);
+  assert.ok(t.$('#gbar .gseg.cur') === t.$$('#gbar .gseg')[1], 'stapeln visar nya graden');
+});
+
+test('Stapeln på kortet: upp igen till en nådd grad, med fanfar; grader över det nådda går inte', () => {
+  const t = load({ storage: { ...ALL_OPEN, 'fargkoden2-done': JSON.stringify({ body: 2 }), 'fargkoden2-grade': JSON.stringify({ body: 0 }), 'fargkoden2-topic': 'body' } });
+  t.g("S.played = []; ['wrong','fanfare'].forEach(k => { sfx[k] = () => S.played.push(k); })");
+  t.g("showLevelCard('body')");
+  assert.deepEqual(t.$$('#gbar [data-gpick]').map(x => +x.dataset.gpick), [1, 2]);
+  t.$('#gbar [data-gpick="2"]').click();
+  assert.match(t.$('#gbar .gask').textContent, /Gå upp till Gesäll igen\?/);
+  t.$('#gbar [data-gyes]').click();
+  assert.equal(t.g('S.grade.body'), 2);
+  assert.deepEqual(Array.from(t.g('S.played')), ['fanfare']);
+});
+
+test('Stapeln på kortet: Nej stänger frågan, och under spelet går stapeln inte att klicka', () => {
+  const t = atGrade('tol', 3);
+  t.g("showLevelCard('tol')");
+  t.$('#gbar [data-gpick="0"]').click();
+  t.$('#gbar [data-gno]').click();
+  assert.equal(t.$('#gbar .gask'), null);
+  assert.equal(t.g('S.grade.tol'), 3);
+  kick(t);
+  assert.equal(t.$$('#gbar [data-gpick]').length, 0);
 });
