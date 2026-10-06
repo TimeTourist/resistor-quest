@@ -1215,7 +1215,7 @@ git commit -m "Omslaget med Snabbkoll första gången man öppnar ett ämne"
 
 **Gränssnitt:**
 - Använder: `grantKey`, `S.keys`, `S.flying`, `S.arriving`, `keySVG(c)`, `renderGrid()`, `openTopic()`, `closePlay()`
-- Skapar: `showKeyWin(lv)`, `flyKeys(fromId)`, `flyOne(t, from)`, `unlockTile(tile)`, `sfx.clink()`, `sfx.turn()`, `sfx.chains()`
+- Skapar: `showKeyWin(lv)`, `flyKeys(fromId)`, `flyOne(t, from)`, `unlockTile(tile)`, `sfx.clink()`, `sfx.insert()`, `sfx.turn()`, `sfx.chains()`
 
 - [ ] **Steg 1: Skriv testerna**
 
@@ -1233,11 +1233,11 @@ test('Första besöket: nyckeln sitter i Motståndets lås och raden säger vad 
 
 test('Ett tryck vrider om nyckeln: låset öppnas, nyckeln är förbrukad och omslaget visas', () => {
   const t = load({ start: true });
-  t.g("S.played = []; ['turn','chains'].forEach(k => { sfx[k] = () => S.played.push(k); })");
+  t.g("S.played = []; ['insert','turn','chains'].forEach(k => { sfx[k] = () => S.played.push(k); })");
   t.$('#grid [data-id="body"]').click();
   assert.deepEqual(Array.from(t.g('S.keys')), []);
   assert.deepEqual(JSON.parse(t.g("localStorage.getItem('fargkoden2-keys')")), []);
-  assert.deepEqual(Array.from(t.g('S.played')), ['turn', 'chains']);
+  assert.deepEqual(Array.from(t.g('S.played')), ['insert', 'turn', 'chains']);
   assert.equal(t.g('S.screen'), 'play');
   assert.equal(t.g('S.cover'), 'body');
   t.$('#coverClose').click();
@@ -1312,6 +1312,8 @@ Lägg till i objektet som `sfx` returnerar, efter `tick()`:
 ```js
     // Nyckeln landar i låset: ett metalliskt klirr
     clink(){ const a = ctx(); if (!a) return; tone(a, 2200, {d: .25, v: .08, at: .003}); tone(a, 3300, {t0: .03, d: .2, v: .05, at: .003}); noise(a, .06, {hp: 4000, v: .15}); },
+    // Nyckeln glider in i låset: ett kort metalliskt skrap
+    insert(){ const a = ctx(); if (!a) return; noise(a, .22, {hp: 3500, v: .1}); tone(a, 1800, {f2: 1200, d: .2, type: 'sawtooth', v: .015, at: .02}); },
     // Nyckeln vrids om: ett klick
     turn(){ const a = ctx(); if (!a) return; tone(a, 900, {f2: 500, d: .06, type: 'square', v: .08, at: .002}); noise(a, .05, {hp: 2500, v: .25, t0: .05}); },
     // Låset öppnas: kedjorna skramlar och faller
@@ -1376,15 +1378,17 @@ function unlockTile(tile){
   const t = tile.dataset.id;
   if (tile.classList.contains('turning') || !S.keys.includes(t)) return;
   tile.classList.add('turning');
-  sfx.turn();
+  sfx.insert();
   const open = () => {
     S.keys = S.keys.filter(x => x !== t); saveKeys();
     S.fresh = t; renderGrid();
     if (S.instant || reduceMotion()) { openTopic(t); return; }
     setTimeout(() => { if (S.screen === 'grid') openTopic(t); }, 700);
   };
-  if (S.instant || reduceMotion()) { sfx.chains(); open(); return; }
-  // Nyckeln glider in i nyckelhålet och vrids om (CSS-animeringen pushturn, 0,75 s), sedan öppnas låset
+  if (S.instant || reduceMotion()) { sfx.turn(); sfx.chains(); open(); return; }
+  // Ljuden följer CSS-animeringen pushturn (0,75 s): skrap när nyckeln glider in, klick när den vrids om vid 0,41 s,
+  // och kedjorna när låset öppnas
+  setTimeout(() => sfx.turn(), 410);
   setTimeout(() => { tile.classList.add('opening'); sfx.chains(); }, 760);
   setTimeout(open, 1850);
 }
@@ -1599,7 +1603,7 @@ Kontrollera på mobil och dator:
   - E Eldprovet: uppgift 2 (kortet) och uppgift 5 (Pågår och fortsätta).
   - F Guld: uppgift 2 (minimeras) och uppgift 5 (tänds).
   - G Förhandsvisningen: uppgift 1 och 2.
-  - Ljud: uppgift 4. Zoom-ljudet är `sfx.whoosh()` i uppgift 2.
+  - Ljud: uppgift 4 (klirr, skrap, klick och kedjor, i takt med animeringen). Zoom-ljudet är `sfx.whoosh()` i uppgift 2.
   - Rörelse: `S.instant || reduceMotion()` i alla nya animeringar.
   - Det som tas bort: uppgift 2 och 6.
   - Tester: varje uppgift.

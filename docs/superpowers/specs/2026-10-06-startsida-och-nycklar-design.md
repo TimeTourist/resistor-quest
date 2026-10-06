@@ -182,7 +182,9 @@ När man klarar Stormästare spelas guldfesten i stapeln som i dag. Sedan minime
 Nya ljud, gjorda med Web Audio som de andra:
 
 - **Nyckeln landar:** ett metalliskt klirr.
-- **Vrida om:** ett klick.
+- **Nyckeln glider in i låset:** ett kort metalliskt skrap.
+- **Vrida om:** ett klick när nyckeln vrids, inte vid trycket.
+- **Nyckeln som skakar till i låset:** inget ljud, eftersom den upprepas så länge nyckeln sitter där.
 - **Låset öppnas:** kedjor som skramlar och faller.
 - **Zooma in och ut:** ett kort svep (samma som `whoosh`).
 
