@@ -1848,8 +1848,8 @@ const GRADES = {
   ],
   tol: [
     ringOdd(b => nd(b) + 1, () => rnd([4, 5, 6]), 'Toleransbandet är markerat.', 'Toleransbandet sitter i slutet, lite för sig självt. På sex band är det näst sist.', {count: true}),
-    // Lärling: guld och silver
-    () => choice(() => {
+    // Lärling: guld och silver, eller vilken som är vanligast
+    () => rnd([() => choice(() => {
       const c = rnd(['gold','silver']), t = C[c].t;
       if (Math.random() < .5) {
         S.n = 4; S.q = genBands(4); S.q[3] = c; S.style = stdStyle(4); S.moreOK = true;
@@ -1861,8 +1861,13 @@ const GRADES = {
         S.cq = {prompt:`Vilken färg betyder ${fmtTol(t)}?`, layout:'sw', right: cs.indexOf(c),
           opts: cs.map(x => swOpt(x, fmtTol(C[x].t))), wrong: 'Guld är ±5 % och silver ±10 %.'};
       }
-    }),
-    // Gesäll: alla toleransfärger, ordna dem, eller vilken som är vanligast
+    }), () => choice(() => {
+      const n = rnd([4, 5]), c = n === 4 ? 'gold' : 'brown', cs = shuffle(['gold','silver','brown','red']);
+      S.cq = {prompt:`De flesta motstånd med ${n === 4 ? 'fyra' : 'fem'} band har samma tolerans. Vilken?`, layout:'sw', right: cs.indexOf(c),
+        opts: cs.map(x => swOpt(x, fmtTol(C[x].t))),
+        wrong: 'Fyra band är oftast billiga kolfilmsmotstånd med guld, ±5 %. Fem band är oftast metallfilmsmotstånd med brun, ±1 %.'};
+    }, {common: true})])(),
+    // Gesäll: alla toleransfärger, eller ordna dem
     () => rnd([() => choice(() => {
       const c = rnd(TOL), t = C[c].t;
       if (Math.random() < .5) {
@@ -1875,12 +1880,7 @@ const GRADES = {
         S.cq = {prompt:`Vilken färg betyder ${fmtTol(t)}?`, layout:'sw', right: cs.indexOf(c),
           opts: cs.map(x => swOpt(x, fmtTol(C[x].t))), wrong: `${fmtTol(t)} är ${C[c].n.toLowerCase()}.`, facit: () => scaleHTML('t', c)};
       }
-    }), orderPlan('t'), () => choice(() => {
-      const n = rnd([4, 5]), c = n === 4 ? 'gold' : 'brown', cs = shuffle(['gold','silver','brown','red']);
-      S.cq = {prompt:`De flesta motstånd med ${n === 4 ? 'fyra' : 'fem'} band har samma tolerans. Vilken?`, layout:'sw', right: cs.indexOf(c),
-        opts: cs.map(x => swOpt(x, fmtTol(C[x].t))),
-        wrong: 'Fyra band är oftast billiga kolfilmsmotstånd med guld, ±5 %. Fem band är oftast metallfilmsmotstånd med brun, ±1 %.'};
-    }, {common: true})])(),
+    }), orderPlan('t')])(),
     // Mästare: vad får värdet vara?
     () => choice(() => {
       S.n = 4; S.q = genBands(4); S.q[3] = rnd(['gold','silver','brown','red']); S.style = stdStyle(4); S.moreOK = true;
@@ -1896,13 +1896,18 @@ const GRADES = {
   ],
   tc: [
     ringOdd(() => 5, () => 6, 'Temperaturbandet är markerat.', 'Temperaturbandet är det sjätte bandet, sist efter toleransen.'),
-    // Lärling: vilket motstånd har ett temperaturband?
-    () => choice(() => {
+    // Lärling: vilket motstånd har ett temperaturband, eller vilket värde är vanligast?
+    () => rnd([() => choice(() => {
       const right = rnd4(), ns = [0,1,2,3].map(i => i === right ? 6 : rnd([4, 5]));
       S.cq = {prompt:'Vilket motstånd har ett temperaturband?', layout:'r', right,
         opts: ns.map(n => ({html: svg(genBands(n), {style: stdStyle(n)}), ann: `${n} band`})),
         wrong: 'Bara motstånd med sex band har ett temperaturband. Det sitter sist, efter toleransen.'};
-    }),
+    }), () => choice(() => {
+      const cs = shuffle(['black','brown','red','yellow']);
+      S.cq = {prompt:'De flesta motstånd med temperaturband har samma värde. Vilket?', layout:'sw', right: cs.indexOf('brown'),
+        opts: cs.map(x => swOpt(x, fmtTc(C[x].tc))),
+        wrong: 'Brun, 100 ppm/K, är vanligast. Lägre värden är dyrare precisionsmotstånd.'};
+    }, {common: true})])(),
     // Gesäll: färg och ppm/K
     () => choice(() => {
       const c = rnd(TCS), k = C[c].tc;

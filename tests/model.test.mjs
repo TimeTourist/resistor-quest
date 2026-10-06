@@ -818,8 +818,8 @@ test('Toleransen följer skoltabellerna: orange, gul och grå frågas aldrig', (
   assert.doesNotMatch(t.g("scaleHTML('t', 'red')"), special, 'facitskalan');
 });
 
-test('Toleransen Gesäll: Vanligast, guld på fyra band och brun på fem', () => {
-  const t = atGrade('tol', 2), seen = new Set();
+test('Toleransen Lärling: Vanligast, guld på fyra band och brun på fem', () => {
+  const t = atGrade('tol', 1), seen = new Set();
   for (let i = 0; i < 400 && seen.size < 2; i++) {
     until(t, p => p.common);
     const n = /fyra/.test(t.$('#q .prompt').textContent) ? 4 : 5;
@@ -832,4 +832,19 @@ test('Toleransen Gesäll: Vanligast, guld på fyra band och brun på fem', () =>
   assert.equal(seen.size, 2, 'både fyra och fem band förekommer');
   answer(t, false);
   assert.match(t.$('#q').textContent, /±5 %.*±1 %/s, 'fel förklarar båda');
+});
+
+test('Temperaturen Lärling: Vanligast är brun 100 ppm/K', () => {
+  const t = atGrade('tc', 1);
+  until(t, p => p.common);
+  assert.match(t.$('#q .prompt').textContent, /De flesta motstånd med temperaturband/);
+  assert.equal(t.$$('#q [data-c]').length, 4);
+  assert.match(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent, /Brun/);
+  answer(t, false);
+  assert.match(t.$('#q').textContent, /100 ppm\/K/);
+});
+
+test('Vanligast finns inte längre på Toleransens Gesäll', () => {
+  const t = atGrade('tol', 2);
+  for (let i = 0; i < 150; i++) { t.g('next()'); assert.ok(!t.g('S.plan.common')); }
 });
