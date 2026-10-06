@@ -12,18 +12,18 @@
 :root{
   --bg:#e8edf0;--grid:rgba(31,111,178,.08);--surface:#fff;--ink:#1d2730;--muted:#566673;--line:#c8d1d8;
   --accent:#1f6fb2;--accent-ink:#fff;--ok:#24803a;--ok-bg:#e3f3e6;--bad:#b83227;--bad-bg:#f8e4e1;--tip-bg:#fbefcf;
-  --body:#dcc596;--lead:#98a1a8;--start-a:#e3f0fc;--start-b:#c4ddf5;--start-line:#1f6fb2;
+  --body:#dcc596;--lead:#98a1a8;--start-a:#e3f0fc;--start-b:#c4ddf5;--start-line:#1f6fb2;--k-odd:#f4edfc;--k-odd-line:#8a5cc7;--k-point:#fdf3e0;--k-point-line:#c98a12;--k-entry:#e4f4f1;--k-entry-line:#1f8a78;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
-    --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;
+    --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;--k-odd:#262038;--k-odd-line:#b38ff0;--k-point:#2e2717;--k-point-line:#e3b04a;--k-entry:#15302b;--k-entry-line:#5cc8b4;
   }
 }
 :root[data-theme="dark"]{
   --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
-  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;
+  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;--k-odd:#262038;--k-odd-line:#b38ff0;--k-point:#2e2717;--k-point-line:#e3b04a;--k-entry:#15302b;--k-entry-line:#5cc8b4;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -62,6 +62,13 @@ html,body{overflow-x:clip}
 .lvcard .state.done{background:var(--ok-bg)}
 .lvbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
 .lvbtns .primary{margin:0}
+.card.kind-odd{background:var(--k-odd);border-color:var(--k-odd-line)}
+.card.kind-point{background:var(--k-point);border-color:var(--k-point-line)}
+.card.kind-entry{background:var(--k-entry);border-color:var(--k-entry-line)}
+.kindtag{display:inline-block;margin:0 0 8px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--bg);color:var(--muted)}
+.kind-point .kindtag{background:var(--k-point-line);color:var(--surface)}
+.kind-entry .kindtag{background:var(--k-entry-line);color:var(--surface)}
+.kind-odd .oddhead svg{color:var(--k-odd-line)}
 .card.startcard{background:linear-gradient(165deg,var(--start-a),var(--start-b));border:2px solid var(--start-line);box-shadow:0 10px 28px rgba(31,111,178,.22)}
 .startflag{display:inline-flex;align-items:center;gap:8px;margin:0 0 10px;padding:5px 14px 5px 10px;border-radius:999px;background:var(--start-line);color:var(--surface);font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.15rem;letter-spacing:.06em;text-transform:uppercase}
 .startflag::before{content:'';width:0;height:0;border-left:11px solid currentColor;border-top:7px solid transparent;border-bottom:7px solid transparent}
@@ -566,9 +573,11 @@ const C = {
   gold:{n:'Guld',hex:'#c9a43a',m:0.1,t:5},
   silver:{n:'Silver',hex:'#b9bdc3',m:0.01,t:10},
   pink:{n:'Rosa',hex:'#f2a0bd',m:0.001},
-  // Finns inte på motstånd. Bara för Hitta felet.
+  // Finns inte på motstånd. Bara för Vilken ska bort?
   turq:{n:'Turkos',hex:'#16c2b8'},
-  lime:{n:'Limegrön',hex:'#a3e02a'}
+  lime:{n:'Limegrön',hex:'#a3e02a'},
+  olive:{n:'Olivgrön',hex:'#6f7a1d'},
+  sky:{n:'Himmelsblå',hex:'#7cc8f5'}
 };
 // Nyansvarianter: [standard, blekt, mörk/varm]
 const HX = {
@@ -578,7 +587,8 @@ const HX = {
   blue:['#1f5fbf','#3d70b5','#234894'], violet:['#7b3fa0','#9061a8','#672d7c'],
   grey:['#8a8a8a','#9b9994','#75767a'], white:['#f7f7f2','#e9e8e0','#fbfbf6'],
   gold:['#c9a43a','#b8932f','#a6883d'], silver:['#b9bdc3','#a8acb1','#c8cacd'], pink:['#f2a0bd','#f2a0bd','#f2a0bd'],
-  turq:['#16c2b8','#16c2b8','#16c2b8'], lime:['#a3e02a','#a3e02a','#a3e02a']
+  turq:['#16c2b8','#16c2b8','#16c2b8'], lime:['#a3e02a','#a3e02a','#a3e02a'],
+  olive:['#6f7a1d','#6f7a1d','#6f7a1d'], sky:['#7cc8f5','#7cc8f5','#7cc8f5']
 };
 const DIG = ['black','brown','red','orange','yellow','green','blue','violet','grey','white'];
 const BAND1 = DIG.slice(1);
@@ -611,7 +621,7 @@ const TOPIC_LINE = {
 };
 // Vad varje grad övar, för raden när man byter grad
 const GRADE_LINE = {
-  body:['vilket är inget motstånd?','vilken färg finns inte?','räkna banden','läsriktningen','peka ut banden'],
+  body:['räkna banden','vilket är inget motstånd?','vilken färg finns inte?','läsriktningen','peka ut banden'],
   ohm:['ohm-banden','en färg i taget','siffrorna och multiplikatorn','hela värdet med k och M','knappa in och bygg själv'],
   tol:['hitta toleransbandet','guld och silver','alla toleransfärger','vad värdet får vara','hela motståndet själv'],
   tc:['hitta temperaturbandet','vilka motstånd har det?','färgernas ppm/K','vilket är stabilast?','hela motståndet själv'],
@@ -775,6 +785,7 @@ function drawCard(lv, fresh){
   q.classList.toggle('bosscard', lv === 'ultra');
   // Startkortet har en egen färg, så att man ser att något börjar här
   q.classList.toggle('startcard', lv !== 'ultra' && unlocked(lv) && !cleared(lv));
+  q.classList.remove(...KINDS);
   q.innerHTML = levelCardHTML(lv, fresh);
   document.getElementById('more').hidden = true;
   updateScore();
@@ -1283,6 +1294,7 @@ function showExamCard(){
   const q = document.getElementById('q');
   let h;
   q.classList.toggle('bosscard', !S.exam);
+  q.classList.remove(...KINDS);
   if (!S.exam) {
     h = levelCardHTML('ultra');
   } else {
@@ -1356,7 +1368,7 @@ const hardFocus = () => S.plan && S.plan.fmt === 'hard' && S.focus && S.focus !=
 // Frågorna per ämne och grad. Varje grad ger en plan: frågetyp, format och för de nya frågetyperna en setup.
 // choice: flerval där frågan själv beskriver alternativen (S.cq). point: peka på ett band i motståndet.
 // Vilken ska bort? (odd): tre alternativ hör ihop och ett ska bort, och det är det man ska välja.
-const FAKE = ['turq','lime'];
+const FAKE = ['turq','lime','olive','sky'];
 const rnd4 = () => Math.floor(Math.random() * 4);
 // Rätt svar och tre andra, helst sådana som liknar det rätta
 function pick4(right, near, pool){
@@ -1413,14 +1425,24 @@ const SER_TOL = {E6:20, E12:10, E24:5, E48:2, E96:1};
 
 const GRADES = {
   body: [
-    // Nykomling: vilket är inget motstånd? (fel antal band)
+    // Nykomling: räkna banden. Svaret är alltid 4, 5 eller 6, de vanliga antalen.
+    () => choice(() => {
+      const n = rnd([4, 5, 6]);
+      S.n = n; S.q = genBands(n); S.style = variedStyle(S.q, false); S.moreOK = true;
+      const vals = [4, 5, 6], T = {start: .4, step: .35};
+      T.land = T.start + n * T.step + .1; T.total = T.land + .9;
+      S.cq = {prompt:'Hur många färgband har motståndet?', layout:'mc', right: vals.indexOf(n), anim: T,
+        res: () => svg(S.q, {style: S.style, mark: S.answered && !S.ok ? S.q.map((_, i) => [i, String(i + 1)]) : null, markKind: 'ok', markAnim: T}),
+        opts: vals.map(v => ({html: `${v} band`})), wrong: `Räkna färgbanden: det är ${n}.`};
+    }),
+    // Lärling: vilket är inget motstånd? (fel antal band)
     () => choice(() => {
       const right = rnd4(), odd = rnd([2, 7, 8]);
       const ns = [0,1,2,3].map(i => i === right ? odd : rnd([4, 5, 6]));
       // Tidslinjen för animeringen vid fel, i sekunder
       const T = {red: .5, redStep: .3};
       T.pop = T.red + odd * T.redStep + .7; T.green = T.pop + .7; T.greenStep = .16; T.total = T.green + 6 * T.greenStep + .6;
-      S.cq = {odd:true, anim: T, ns, right, layout:'r', prompt:'Ett av dem är inget motstånd.',
+      S.cq = {odd:true, anim: T, ns, right, layout:'r', prompt:'Ett av dem är inget motstånd. Räkna banden!',
         opts: ns.map((n, i) => {
           const b = i === right ? oddBands(n) : genBands(n), st = i === right ? oddStyle(n) : stdStyle(n);
           // Vid fel: det udda räknar sina band i rött och poppar, sedan räknar de andra i grönt
@@ -1434,7 +1456,7 @@ const GRADES = {
         }),
         wrong: `Ett motstånd har 3 till 6 färgband, oftast 4, 5 eller 6. Det här hade ${odd}.`};
     }),
-    // Lärling: vilken färg finns inte?
+    // Gesäll: vilken färg finns inte?
     // Vid fel: ringen runt den falska färgen blir röd, de tolv riktiga färgerna läggs ut och den falska hamnar bredvid med ✗.
     // Sedan poppar kortet och de andra får ✓.
     () => choice(() => {
@@ -1454,16 +1476,6 @@ const GRADES = {
         facit: () => `<div class="palstrip" aria-hidden="true">${REAL.map((c, j) =>
           `<span class="real sw mk" style="${swStyle(c)};animation-delay:${(T.strip + j * T.step).toFixed(2)}s"></span>`).join('')}<span class="fake mk" style="animation-delay:${T.fake.toFixed(2)}s"><span class="sw" style="background:${C[fake].hex}"></span>✗</span></div>`,
         wrong: `Färgerna är svart, brun, röd, orange, gul, grön, blå, violett, grå, vit, guld och silver. ${C[fake].n} finns inte.`};
-    }),
-    // Gesäll: räkna banden
-    () => choice(() => {
-      const n = rnd([4, 5, 6]);
-      S.n = n; S.q = genBands(n); S.style = variedStyle(S.q, false); S.moreOK = true;
-      const vals = [3, 4, 5, 6], T = {start: .4, step: .35};
-      T.land = T.start + n * T.step + .1; T.total = T.land + .9;
-      S.cq = {prompt:'Hur många färgband har motståndet?', layout:'mc', right: vals.indexOf(n), anim: T,
-        res: () => svg(S.q, {style: S.style, mark: S.answered && !S.ok ? S.q.map((_, i) => [i, String(i + 1)]) : null, markKind: 'ok', markAnim: T}),
-        opts: vals.map(v => ({html: `${v} band`})), wrong: `Räkna färgbanden: det är ${n}.`};
     }),
     // Mästare: läsriktningen
     () => ({type:'dir', fmt:'mc'}),
@@ -1716,6 +1728,7 @@ function calcRowHTML(b, at){
 // Banden får sina värden: siffrorna under och multiplikatorn ovanför, så att etiketterna inte krockar när banden sitter tätt
 const valueMarks = b => b.slice(0, nd(b)).map((c, j) => [j, String(C[c].d)]).concat([[nd(b), fmtMult(C[b[nd(b)]].m), 'top']]);
 // Ingen Nästa-knapp: rätt svar går vidare själv, efter fel trycker man var som helst på kortet
+const KINDS = ['kind-odd', 'kind-point', 'kind-entry', 'kind-mc'];
 const topHTML = txt => `<div class="qtop"><p class="prompt">${txt}</p></div>`;
 function render(){
   updateScore();
@@ -1792,6 +1805,11 @@ function render(){
     }
   }
   h += lessonHTML();
+  // Kortets färg och en rad om vad man ska göra, efter typ av svar
+  const kind = S.cq && S.cq.odd ? 'odd' : S.type === 'point' ? 'point' : S.plan && S.plan.fmt === 'hard' ? 'entry' : 'mc';
+  q.classList.remove(...KINDS); q.classList.add('kind-' + kind);
+  const tag = {odd: '', point: 'Peka på bandet', entry: S.type === 'read' ? 'Knappa in svaret' : 'Bygg med färgerna', mc: 'Välj rätt svar'}[kind];
+  if (tag) h = `<p class="kindtag">${tag}</p>` + h;
   q.innerHTML = h;
   // Allt om motståndet efter svar. Vid nästa fråga ligger det kvar som Allt om förra motståndet tills man svarat.
   const more = document.getElementById('more');

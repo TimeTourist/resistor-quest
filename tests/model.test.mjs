@@ -75,10 +75,12 @@ test('Progress sparas under fargkoden2-', () => {
 });
 
 for (const topic of TOPICS) {
-  test(`${topic}: Nykomling är Vilken ska bort?, rätt poppar kortet och tre blir gröna`, () => {
-    const t = atGrade(topic, 0);
+  // Motståndet börjar med att räkna banden, och Vilken ska bort? kommer på Lärling
+  const odd = topic === 'body' ? 1 : 0;
+  test(`${topic}: ${['Nykomling', 'Lärling'][odd]} är Vilken ska bort?, rätt poppar kortet och tre blir gröna`, () => {
+    const t = atGrade(topic, odd);
     for (let i = 0; i < 20; i++) {
-      t.g(`S.grade['${topic}'] = 0; S.up = 0; next()`);
+      t.g(`S.grade['${topic}'] = ${odd}; S.up = 0; next()`);
       assert.match(t.$('#q').textContent, /Vilken ska bort\?/);
       assert.equal(t.$$('[data-c]').length, 4);
       const right = t.g('S.cq.right');
@@ -89,9 +91,9 @@ for (const topic of TOPICS) {
     }
   });
   test(`${topic}: Vilken ska bort? fel: ditt kort grönt med röd ram, det udda poppar`, () => {
-    const t = atGrade(topic, 0);
+    const t = atGrade(topic, odd);
     for (let i = 0; i < 20; i++) {
-      t.g('next()');
+      t.g(`S.grade['${topic}'] = ${odd}; S.down = 0; next()`);
       const right = t.g('S.cq.right');
       answer(t, false);
       const picked = t.g('S.pickC');
@@ -118,8 +120,8 @@ test('Det rätta svaret får aldrig klassen bad', () => {
   }
 });
 
-test('Motståndet Lärling: den felaktiga färgen är aldrig en riktig färg och aldrig rosa', () => {
-  const t = atGrade('body', 1);
+test('Motståndet Gesäll: den felaktiga färgen är aldrig en riktig färg och aldrig rosa', () => {
+  const t = atGrade('body', 2);
   const real = new Set(t.g("Object.keys(C).filter(k => !FAKE.includes(k))"));
   for (let i = 0; i < 60; i++) {
     t.g('next()');
@@ -129,8 +131,8 @@ test('Motståndet Lärling: den felaktiga färgen är aldrig en riktig färg och
   }
 });
 
-test('Motståndet Nykomling: det udda har 2, 7 eller 8 band', () => {
-  const t = atGrade('body', 0);
+test('Motståndet Lärling: det udda har 2, 7 eller 8 band', () => {
+  const t = atGrade('body', 1);
   for (let i = 0; i < 40; i++) {
     t.g('next()');
     const ns = t.g('S.cq.ns');
@@ -286,7 +288,7 @@ test('Ingen Nästa-knapp: efter fel svar fortsätter man med ett tryck på korte
 });
 
 test('Efter fel går det att trycka på svarsknapparna och bilden för att gå vidare', () => {
-  for (const [topic, g, sel] of [['body', 0, '[data-c]'], ['ohm', 3, '[data-c]'], ['ohm', 4, '[data-slot],[data-field]'], ['body', 3, '[data-dir]'], ['e', 3, '[data-sr]']]) {
+  for (const [topic, g, sel] of [['body', 1, '[data-c]'], ['ohm', 3, '[data-c]'], ['ohm', 4, '[data-slot],[data-field]'], ['body', 3, '[data-dir]'], ['e', 3, '[data-sr]']]) {
     const t = atGrade(topic, g);
     let n = 0;
     for (let i = 0; i < 40 && n < 3; i++) {
@@ -333,10 +335,10 @@ test('Resistansens Gesäll: etiketterna under banden har plats och går inte i v
   }
 });
 
-test('Motståndet Lärling fel: de 12 färgerna läggs ut, den falska får ✗ och poppar, de andra får ✓', () => {
-  const t = atGrade('body', 1);
+test('Motståndet Gesäll fel: de 12 färgerna läggs ut, den falska får ✗ och poppar, de andra får ✓', () => {
+  const t = atGrade('body', 2);
   for (let i = 0; i < 15; i++) {
-    t.g('S.grade.body = 1; next()');
+    t.g('S.grade.body = 2; next()');
     const right = t.g('S.cq.right'), fake = t.g('S.cq.fake'), name = t.g(`C['${fake}'].n`);
     answer(t, false);
     const odd = t.$(`[data-c="${right}"]`);
@@ -351,10 +353,10 @@ test('Motståndet Lärling fel: de 12 färgerna läggs ut, den falska får ✗ o
   }
 });
 
-test('Motståndet Gesäll fel: banden räknas i grönt och rätt svar studsar', () => {
-  const t = atGrade('body', 2);
+test('Motståndet Nykomling fel: banden räknas i grönt och rätt svar studsar', () => {
+  const t = atGrade('body', 0);
   for (let i = 0; i < 10; i++) {
-    t.g('S.grade.body = 2; next()');
+    t.g('S.grade.body = 0; next()');
     const n = t.g('S.n'), right = t.g('S.cq.right');
     answer(t, false);
     assert.equal(t.$$('#q .res .mk.ok').length, n);
@@ -653,7 +655,7 @@ test('Allt om förra motståndet ligger kvar vid nästa fråga', () => {
 });
 
 test('Vid fel måste man se hela animeringen: tryck före slutet räknas inte', () => {
-  const t = atGrade('body', 0);
+  const t = atGrade('body', 1);
   t.g('S.instant = false');
   t.g(`S.grade.body = 0; next()`); answer(t, false);
   t.g('reveal()');
@@ -679,10 +681,10 @@ test('Fingret visas varje gång spelet väntar efter fel, aldrig efter rätt', (
   assert.equal(t.$('#cont'), null);
 });
 
-test('Motståndet Nykomling fel: det udda räknar sina band i rött och poppar, de andra räknar i grönt', () => {
-  const t = atGrade('body', 0);
+test('Motståndet Lärling fel: det udda räknar sina band i rött och poppar, de andra räknar i grönt', () => {
+  const t = atGrade('body', 1);
   for (let i = 0; i < 15; i++) {
-    t.g('S.grade.body = 0; next()');
+    t.g('S.grade.body = 1; next()');
     const right = t.g('S.cq.right'), ns = t.g('S.cq.ns');
     answer(t, false);
     const odd = t.$(`[data-c="${right}"]`);
