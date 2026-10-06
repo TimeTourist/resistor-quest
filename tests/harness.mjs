@@ -4,8 +4,7 @@ import { readFileSync } from 'node:fs';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 // Laddar spelet i jsdom. storage fylls i localStorage innan scriptet körs.
-// start: sidan öppnar på startkortet. De flesta tester vill börja på en fråga, så utan start svarar harnessen rätt
-// på startfrågan först (bara när spelaren har sparade framsteg, en ny spelare ska se kortet).
+// start: sidan står kvar på startsidan. Utan start öppnas spelkortet direkt (se nedan).
 export function load({ storage = {}, url = 'http://localhost/', instant = true, audio = null, start = false } = {}) {
   const errors = [];
   const dom = new JSDOM(html, {
@@ -19,7 +18,9 @@ export function load({ storage = {}, url = 'http://localhost/', instant = true, 
   const w = dom.window, doc = w.document;
   // Utan animeringar och väntan: svaret visas direkt och rätt svar väntar på Nästa
   if (instant) w.eval('S.instant = true');
-  if (!start) w.eval("if (S.view && S.view !== 'ultra' && !S.firstVisit && S.kick) goTopic(S.view)");
+  // De flesta tester vill börja på en fråga: utan start öppnas spelkortet för ämnet man var på,
+  // utan nycklar och med snabbkollen gjord. Med start står man på startsidan som en spelare gör.
+  if (!start) w.eval("if (S.screen === 'grid' && S.topic !== 'ultra') { S.keys = []; S.seen = TOPICS.slice(); openTopic(S.topic) }");
   return { w, doc, errors, g: expr => w.eval(expr), $: s => doc.querySelector(s), $$: s => [...doc.querySelectorAll(s)] };
 }
 

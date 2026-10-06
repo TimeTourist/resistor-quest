@@ -44,11 +44,7 @@ test('Kortet har en egen färg och en rad om vad man ska göra, per typ av svar'
   assert.match(h.$('#q .kindtag').textContent, /Knappa in|Bygg/);
 });
 
-test('Kortet: startkortet har ingen typfärg', () => {
-  const t = atGrade('ohm', 2);
-  t.g("showLevelCard('ohm')");
-  assert.equal([...t.$('#q').classList].filter(c => c.startsWith('kind-')).length, 0);
-});
+
 
 test('dev.html: Motståndets katalog har den nya ordningen', () => {
   const html = readFileSync(new URL('../dev.html', import.meta.url), 'utf8');

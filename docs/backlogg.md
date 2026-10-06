@@ -18,6 +18,8 @@ Sammanställt 2026-10-06 när sessionen avslutades. Spelet ligger i `index.html`
 
 ## Erbjudet men inte bestämt
 
+- **Ohm-flervalen som multimetern.** (Idé från användaren, 2026-10-06.) Visa alla flerval med ohm-värden som den gamla multimeterkomponenten (`meterLcd`: LCD-display med mätspetsar) i stället för vanliga knappar. Gäller bland annat Siffror och nollor på Resistansens Mästare.
+
 - **Visa i dev.html ska öppna exakt den frågetypen på raden.**
   - I dag öppnar Visa bara rätt grad, och grader med flera frågetyper slumpar vilken typ som visas. Till exempel visar "Ordna värdena" ibland en peka-fråga.
   - Det kräver en koppling mellan raderna i dev.html och frågetyperna i spelet.
