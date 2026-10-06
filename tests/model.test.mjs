@@ -71,7 +71,8 @@ test('Progress sparas under fargkoden2-', () => {
   assert.equal(JSON.parse(t.w.localStorage.getItem('fargkoden2-grade')).body, 1);
 });
 
-for (const topic of TOPICS) {
+// E-serierna börjar med vad E12 betyder, och Vilken ska bort? ligger på Mästare (eserier.test.mjs)
+for (const topic of TOPICS.filter(t => t !== 'e')) {
   // Motståndet börjar med att räkna banden, och Vilken ska bort? kommer på Lärling
   const odd = topic === 'body' ? 1 : 0;
   test(`${topic}: ${['Nykomling', 'Lärling'][odd]} är Vilken ska bort?, rätt poppar kortet och tre blir gröna`, () => {
