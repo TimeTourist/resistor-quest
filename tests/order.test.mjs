@@ -106,12 +106,16 @@ test('Ordna: flygturen är spänning, rätt eller fel syns och hörs först när
   assert.ok(box().classList.contains('fly'), 'på väg');
   assert.ok(!box().classList.contains('ok') && !box().classList.contains('bad'));
   assert.deepEqual(Array.from(t.g('S.played')), ['whoosh']);
+  // Man kan klicka på nästa medan den första flyger
   clickKey(t, 'brown');
-  assert.equal(t.$('#q [data-oslot="brown"] .osw'), null, 'inga nya klick medan en färg flyger');
-  await new Promise(r => setTimeout(r, 1300));
+  assert.ok(t.$('#q [data-oslot="brown"].fly .osw'), 'nästa är också på väg');
+  clickKey(t, 'orange');
+  assert.equal(t.$('#q [data-oslot="orange"] .osw'), null, 'fel färg sätter sig inte');
+  await new Promise(r => setTimeout(r, 1900));
   assert.ok(box().classList.contains('ok'));
   assert.ok(!box().classList.contains('fly'));
-  assert.deepEqual(Array.from(t.g('S.played')), ['whoosh', 'blip']);
+  assert.ok(t.$('#q [data-oslot="brown"]').classList.contains('ok'));
+  assert.deepEqual(Array.from(t.g('S.played')).filter(x => x !== 'whoosh'), ['blip', 'blip', 'thud']);
 });
 
 test('Ordna: ibland låtsas ett rätt val flyga mot fel låda och vänder', () => {
@@ -188,4 +192,16 @@ test('Peka på siffra, Gesäll: samma fråga men utan siffrorna under banden; mu
     else assert.equal(t.$('#q .prompt').textContent, 'Peka på multiplikatorn.');
   }
   assert.deepEqual([...roles].sort(), ['digit', 'mult']);
+});
+
+test('Ordna: snabba klick, raden blir klar och frågan avgörs först när alla har landat', async () => {
+  const t = atGrade('ohm', 1);
+  until(t, isOrder('d'));
+  t.g('S.instant = false; S.ord.fakeRate = 0');
+  for (const k of Array.from(t.g('S.ord.keys'))) clickKey(t, k);
+  assert.equal(t.g('S.answered'), false, 'inte förrän de har landat');
+  await new Promise(r => setTimeout(r, 1000));
+  assert.equal(t.$$('#q .obox.ok').length, 10);
+  assert.equal(t.g('S.ok'), true);
+  t.g('stopTimer(); clearBar()');
 });

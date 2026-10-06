@@ -90,7 +90,7 @@ html,body{overflow-x:clip}
 .ochip{width:46px;height:46px;border-radius:10px;border:2px solid var(--line);cursor:pointer;padding:0;position:relative}
 .ochip.gone{visibility:hidden}
 .ochip.hint{box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--ok),0 0 14px var(--ok)}
-.ofloat{position:fixed;z-index:60;border-radius:10px;border:2px solid var(--line);pointer-events:none}
+.ofloat{position:absolute;z-index:60;border-radius:10px;border:2px solid var(--line);pointer-events:none}
 .ordnote{margin:6px 0 0;padding:8px 12px;border-radius:10px;background:var(--k-order-line);color:var(--surface);font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.25rem;text-align:center}
 .ochip.cheat::after{left:2px;top:1px}
 .kindtag{display:inline-block;margin:0 0 8px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--bg);color:var(--muted)}
@@ -1496,7 +1496,7 @@ const ORDER_SETS = {
   m: {keys: ['silver','gold','black','brown','red','orange','yellow','green','blue'], lab: c => fmtMult(C[c].m), prompt: 'Klicka på multiplikatorerna från minst till störst.',
     wrong: 'Silver ×0,01, guld ×0,1, svart ×1, brun ×10, röd ×100, orange ×1k, gul ×10k, grön ×100k, blå ×1M.'}
 };
-const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ S.ord = {set, keys: ORDER_SETS[set].keys, pool: shuffle(ORDER_SETS[set].keys.slice()), placed: {}, round: 1, missed: false}; }});
+const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ S.ord = {set, keys: ORDER_SETS[set].keys, pool: shuffle(ORDER_SETS[set].keys.slice()), placed: {}, landed: new Set(), away: new Set(), inflight: 0, round: 1, missed: false}; }});
 
 const GRADES = {
   body: [
@@ -1794,8 +1794,8 @@ function render(){
   } else if (S.type === 'order') {
     const o = S.ord, O = ORDER_SETS[o.set], P = o.placed, want = o.keys.find(k => !P[k]);
     h += `${topHTML(O.prompt)}${o.round === 2 ? '<p class="ordnote">Nästan! Du får ett sista försök – utan hjälp.</p>' : ''}<div class="ordrow ord-${S.ord.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
-      `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${k === o.flying && P[k] ? ' fly' : P[k] ? ' ok' : ''}" data-oslot="${k}">${P[k] ? `<b class="osw" style="${swStyle(k)}"></b>` : ''}</i></div>`).join('')}</div>
-      <div class="opool">${o.pool.map(k => `<button class="ochip${P[k] || o.away === k ? ' gone' : ''}${o.hint === k ? ' hint' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${C[k].n}" style="${swStyle(k)}"${P[k] || S.answered ? ' disabled' : ''}></button>`).join('')}</div>`;
+      `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${P[k] ? (o.landed.has(k) ? ' ok' : ' fly') : ''}" data-oslot="${k}">${P[k] ? `<b class="osw" style="${swStyle(k)}"></b>` : ''}</i></div>`).join('')}</div>
+      <div class="opool">${o.pool.map(k => `<button class="ochip${P[k] || o.away.has(k) ? ' gone' : ''}${o.hint === k ? ' hint' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${C[k].n}" style="${swStyle(k)}"${P[k] || S.answered ? ' disabled' : ''}></button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
     const right = S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}${cheat(right === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
@@ -2426,38 +2426,55 @@ document.getElementById('q').addEventListener('click', e => {
 // Fel färg landar i lådan som står på tur, blir röd, skakar och flyger tillbaka. Sedan skakar den rätta färgen med en grön ring.
 // Utan fel är frågan rätt. Med fel i första försöket flyger alla tillbaka och man får ett sista försök, utan ledtråd
 // förrän man gör fel igen. Färgerna ligger kvar i samma ordning. Fel i sista försöket gör frågan fel, men raden byggs klart.
+// Man kan klicka snabbt: flera färger kan vara i luften samtidigt. Rätt eller fel avgörs vid klicket men visas vid landningen.
+// Lådorna och knapparna uppdateras på plats, så att en ny klickning inte avbryter de som flyger.
 const FLY_MS = 650, FAKE_MS = 1150, HINT_MS = 2600;
 const calmOrder = () => S.instant || reduceMotion();
+const oslot = k => document.querySelector(`#q [data-oslot="${k}"]`);
+const ochip = k => document.querySelector(`#q [data-ord="${k}"]`);
+// Knapparna efter läget: borta om färgen sitter i en låda eller flyger, grön ledtråd, testlägets pil
+function syncChips(){
+  const o = S.ord, want = o.keys.find(k => !o.placed[k]);
+  o.keys.forEach(k => {
+    const c = ochip(k); if (!c) return;
+    const gone = !!o.placed[k] || o.away.has(k);
+    c.classList.toggle('gone', gone); c.disabled = !!o.placed[k] || S.answered;
+    c.classList.toggle('hint', o.hint === k);
+    c.classList.toggle('cheat', TEST_MODE && !S.answered && k === want);
+  });
+}
 function orderPick(btn){
   const o = S.ord;
-  if (S.answered || S.busy || !o || o.flying) return;
+  if (S.answered || S.busy || !o || o.reset) return;
   const k = btn.dataset.ord, want = o.keys.find(x => !o.placed[x]);
-  if (o.placed[k]) return;
+  if (o.placed[k] || o.away.has(k)) return;
   if (k !== want) { orderMiss(btn, k, want); return; }
   o.placed[k] = 'ok'; o.hint = null;
   const empty = o.keys.filter(x => !o.placed[x]);
   o.decoy = empty.length && Math.random() < (o.fakeRate ?? .2) ? rnd(empty) : null;
-  const from = btn.getBoundingClientRect(), calm = calmOrder();
-  o.flying = calm ? null : k;
-  render();
-  const box = () => document.querySelector(`#q [data-oslot="${k}"]`);
+  const from = btn.getBoundingClientRect(), calm = calmOrder(), decoy = o.decoy;
+  const box = oslot(k);
+  box.classList.add('fly');
+  box.innerHTML = `<b class="osw" style="${swStyle(k)}"></b>`;
+  syncChips();
+  o.inflight++;
   const land = () => {
     if (S.ord !== o) return;
-    o.flying = null;
-    const b = box();
+    o.inflight--; o.landed.add(k);
     // Bara lådan som just landade studsar. De som redan ligger still rör sig inte.
-    if (b) { b.classList.remove('fly'); b.classList.add('ok', 'landnow'); }
-    sfx.blip(Object.keys(o.placed).length);
-    if (o.keys.every(x => o.placed[x])) orderDone(b);
+    document.querySelectorAll('#q .obox.landnow').forEach(b => b.classList.remove('landnow'));
+    box.classList.remove('fly'); box.classList.add('ok', 'landnow');
+    sfx.blip(o.landed.size);
+    orderCheck(box);
   };
   if (calm) { land(); return; }
   sfx.whoosh();
-  const sw = box()?.querySelector('.osw'), dur = o.decoy ? FAKE_MS : FLY_MS;
-  if (sw && sw.animate) {
+  const sw = box.querySelector('.osw'), dur = decoy ? FAKE_MS : FLY_MS;
+  if (sw.animate) {
     const to = sw.getBoundingClientRect();
     if (to.width) {
       const start = `translate(${from.left - to.left}px,${from.top - to.top}px) scale(${from.width / to.width})`;
-      const d = o.decoy && document.querySelector(`#q [data-oslot="${o.decoy}"]`)?.getBoundingClientRect();
+      const d = decoy && oslot(decoy)?.getBoundingClientRect();
       // Mot den falska lådan och nästan ner i den, sedan en sväng till rätt låda
       const frames = d ? [{transform: start}, {transform: `translate(${d.left - to.left}px,${d.top - to.top + 10}px)`, offset: .55, easing: 'ease-in-out'},
           {transform: `translate(${d.left - to.left}px,${d.top - to.top - 26}px)`, offset: .72}, {transform: 'none'}]
@@ -2473,49 +2490,57 @@ function orderMiss(btn, k, want){
   o.missed = true; o.decoy = null;
   const done = () => {
     if (S.ord !== o) return;
-    o.flying = null; o.away = null; o.hint = want;
-    render();
+    o.away.delete(k); o.inflight--;
+    // Ledtråden gäller färgen som står på tur nu, om den inte redan är vald
+    const now = o.keys.find(x => !o.placed[x]);
+    o.hint = now || null;
+    syncChips();
     clearTimeout(o.hintT);
-    o.hintT = setTimeout(() => { if (S.ord === o && o.hint === want) { o.hint = null; document.querySelector(`#q [data-ord="${want}"]`)?.classList.remove('hint'); } }, HINT_MS);
+    o.hintT = setTimeout(() => { if (S.ord === o && o.hint === now) { o.hint = null; syncChips(); } }, HINT_MS);
+    orderCheck(null);
   };
+  o.inflight++; o.away.add(k);
   if (calmOrder()) { sfx.thud(); done(); return; }
   const from = btn.getBoundingClientRect();
-  o.flying = k; o.away = k;
-  render();
-  const boxEl = document.querySelector(`#q [data-oslot="${want}"]`), to = boxEl.getBoundingClientRect();
+  syncChips();
+  const boxEl = oslot(want), to = boxEl.getBoundingClientRect();
   const f = document.createElement('b');
   f.className = 'ofloat'; f.setAttribute('aria-hidden', 'true');
-  f.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px;${swStyle(k)}`;
+  // Placeras på sidan, inte på skärmen, så att den följer med om man skrollar
+  f.style.cssText = `left:${from.left + scrollX}px;top:${from.top + scrollY}px;width:${from.width}px;height:${from.height}px;${swStyle(k)}`;
   document.body.appendChild(f);
   const dx = to.left + to.width / 2 - (from.left + from.width / 2), dy = to.top + to.height / 2 - (from.top + from.height / 2), sc = to.width / from.width;
   const at = (x = 0) => `translate(${dx + x}px,${dy}px) scale(${sc})`;
   sfx.whoosh();
-  f.animate([{transform: 'none'}, {transform: `translate(${dx / 2}px,${dy / 2 - 40}px)`, offset: .5}, {transform: at()}], {duration: FLY_MS, easing: 'cubic-bezier(.35,.1,.4,1)', fill: 'forwards'});
+  f.animate?.([{transform: 'none'}, {transform: `translate(${dx / 2}px,${dy / 2 - 40}px)`, offset: .5}, {transform: at()}], {duration: FLY_MS, easing: 'cubic-bezier(.35,.1,.4,1)', fill: 'forwards'});
   setTimeout(() => {
+    if (S.ord !== o) { f.remove(); return; }
     sfx.thud();
     boxEl.classList.add('bad', 'landnow');
-    f.animate([{transform: at()}, {transform: at(-6)}, {transform: at(6)}, {transform: at(-4)}, {transform: at(3)}, {transform: at()}], {duration: 420, fill: 'forwards'});
+    f.animate?.([{transform: at()}, {transform: at(-6)}, {transform: at(6)}, {transform: at(-4)}, {transform: at(3)}, {transform: at()}], {duration: 420, fill: 'forwards'});
     setTimeout(() => {
-      boxEl.classList.remove('bad', 'landnow');
-      f.animate([{transform: at()}, {transform: 'none'}], {duration: 420, easing: 'ease-in-out', fill: 'forwards'});
+      boxEl.classList.remove('bad');
+      if (!o.placed[want]) boxEl.classList.remove('landnow');
+      f.animate?.([{transform: at()}, {transform: 'none'}], {duration: 420, easing: 'ease-in-out', fill: 'forwards'});
       setTimeout(() => { f.remove(); done(); }, 420);
     }, 520);
   }, FLY_MS);
 }
-// Raden är klar: utan fel är frågan rätt, annars ett sista försök (eller fel om det var det sista)
-function orderDone(lastBox){
+// När allt har landat: utan fel är frågan rätt, annars ett sista försök (eller fel om det var det sista)
+function orderCheck(lastBox){
   const o = S.ord;
-  if (!o.missed || o.round === 2) { S.lastTap = lastBox; finish(!o.missed); return; }
+  if (o.inflight || !o.keys.every(x => o.placed[x])) return;
+  if (!o.missed || o.round === 2) { S.lastTap = lastBox || oslot(o.keys[o.keys.length - 1]); finish(!o.missed); return; }
   const restart = () => {
     if (S.ord !== o) return;
     // Rutorna där färgerna satt, så att de kan flyga tillbaka till sina knappar
-    const was = Object.fromEntries(o.keys.map(x => [x, document.querySelector(`#q [data-oslot="${x}"] .osw`)?.getBoundingClientRect()]));
-    o.round = 2; o.placed = {}; o.missed = false; o.hint = null; o.flying = null;
+    const was = Object.fromEntries(o.keys.map(x => [x, oslot(x)?.querySelector('.osw')?.getBoundingClientRect()]));
+    o.round = 2; o.placed = {}; o.landed = new Set(); o.missed = false; o.hint = null; o.reset = false;
     render();
     if (calmOrder()) return;
     sfx.whoosh();
     o.keys.forEach((x, i) => {
-      const chip = document.querySelector(`#q [data-ord="${x}"]`), r = was[x];
+      const chip = ochip(x), r = was[x];
       if (!chip || !r || !chip.animate) return;
       const c = chip.getBoundingClientRect();
       chip.animate([{transform: `translate(${r.left - c.left}px,${r.top - c.top}px) scale(${r.width / c.width})`}, {transform: 'none'}],
@@ -2523,7 +2548,7 @@ function orderDone(lastBox){
     });
   };
   if (calmOrder()) { restart(); return; }
-  o.flying = 'reset';
+  o.reset = true;
   setTimeout(restart, 700);
 }
 function pickBand(i){
