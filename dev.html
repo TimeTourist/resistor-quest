@@ -84,7 +84,7 @@ td.acts a,td.acts button{padding:2px 6px;font-size:12px}
   </section>
 </main>
 <script>
-// Översikt över spelets frågetyper. Katalogen nedan beskriver index2.html och uppdateras när spelet ändras.
+// Översikt över spelets frågetyper. Katalogen nedan beskriver index.html och uppdateras när spelet ändras.
 // Dina ändringar sparas i webbläsaren. "Generera prompt" skriver ut det som skiljer sig från katalogen.
 const TABS = [
   {id:'body', name:'Motståndet'}, {id:'ohm', name:'Resistansen'}, {id:'tol', name:'Toleransen'},
@@ -219,7 +219,7 @@ function render(){
       <td>${ta('right', x.right)}</td><td>${ta('wrong', x.wrong)}</td>
       <td><select data-f="status" aria-label="Status">${STATUS.concat(STATUS.includes(x.status) ? [] : [x.status]).map(s => `<option${s === x.status ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select></td>
       <td>${ta('comment', x.comment)}</td>
-      <td class="acts">${g === IDEA ? '' : `<a class="btn show" target="fargkoden" href="index2.html?test=true&topic=${tab}${tab === 'ultra' ? '' : `&grade=${g}`}" title="Öppna spelet här">Visa</a>`}<button class="del" title="Ta bort">✕</button></td>
+      <td class="acts">${g === IDEA ? '' : `<a class="btn show" target="fargkoden" href="index.html?test=true&topic=${tab}${tab === 'ultra' ? '' : `&grade=${g}`}" title="Öppna spelet här">Visa</a>`}<button class="del" title="Ta bort">✕</button></td>
     </tr>`).join('');
   }).join('');
 }
@@ -272,7 +272,7 @@ function genPrompt(){
     if (lines.length) out.push(`## ${t.name}\n${lines.join('\n')}`);
   }
   if (!out.length) return 'Inga ändringar.';
-  return 'Ändringar från dev.html för Färgkoden. Uppdatera index2.html så att spelet följer dem, ' +
+  return 'Ändringar från dev.html för Färgkoden. Uppdatera index.html så att spelet följer dem, ' +
     'och uppdatera katalogen i dev.html så att den beskriver det nya spelet. Fråga om något är oklart.\n\n' + out.join('\n\n');
 }
 

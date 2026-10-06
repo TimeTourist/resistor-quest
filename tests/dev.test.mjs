@@ -15,7 +15,7 @@ function dev(storage = {}) {
 const edit = (d, el, val) => { el.value = val; el.dispatchEvent(new d.w.Event('input', { bubbles: true })); };
 
 test('Förhandsvisning: ?test=true&topic=ohm&grade=2 öppnar Resistansens Gesäll och stannar där', () => {
-  const t = load({ url: 'http://localhost/index2.html?test=true&topic=ohm&grade=2' });
+  const t = load({ url: 'http://localhost/index.html?test=true&topic=ohm&grade=2' });
   assert.equal(t.g('S.topic'), 'ohm');
   assert.equal(t.g('S.grade.ohm'), 2);
   assert.equal(t.g('S.type'), 'point');
@@ -25,7 +25,7 @@ test('Förhandsvisning: ?test=true&topic=ohm&grade=2 öppnar Resistansens Gesäl
 });
 
 test('Förhandsvisning: utan testläge ignoreras topic och grade', () => {
-  const t = load({ url: 'http://localhost/index2.html?topic=ohm&grade=2' });
+  const t = load({ url: 'http://localhost/index.html?topic=ohm&grade=2' });
   assert.equal(t.g('S.topic'), 'body');
   assert.equal(t.g('S.grade.ohm'), 0);
 });
@@ -85,5 +85,5 @@ test('dev.html: Visa-länken öppnar spelet på rätt ämne och grad', () => {
   const d = dev();
   d.$('[data-tab="ohm"]').click();
   const a = d.$('tr[data-id="ohm-peka"] a.show');
-  assert.match(a.getAttribute('href'), /index2\.html\?test=true&topic=ohm&grade=2$/);
+  assert.match(a.getAttribute('href'), /index\.html\?test=true&topic=ohm&grade=2$/);
 });

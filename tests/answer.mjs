@@ -9,6 +9,12 @@ export function until(t, pred, max = 800) {
   throw new Error('hittade ingen sådan fråga');
 }
 
+// Fortsätt efter svar: ett tryck var som helst på kortet
+export const cont = t => t.$('#q').click();
+
+// SVG-element har ingen click(), så klicket skickas som ett event
+export const tap = (t, el) => el.dispatchEvent(new t.w.MouseEvent('click', { bubbles: true }));
+
 // Svarar på aktuell fråga som en spelare, rätt eller fel
 export function answer(t, correct = true) {
   const { g, $$ } = t, type = g('S.type'), fmt = g('S.plan.fmt');
@@ -17,7 +23,14 @@ export function answer(t, correct = true) {
     assert.ok(btn, `ingen knapp ${sel}`);
     btn.click();
   };
-  if (type === 'dir') return pickBy('[data-dir]', 'dir', g("S.ambig ? 'none' : S.style.flip ? 'right' : 'left'"));
+  if (type === 'choice') return pickBy('[data-c]', 'c', g('S.cq.right'));
+  if (type === 'point') {
+    const right = g('S.pointAt');
+    const el = $$('[data-band]').find(b => (b.dataset.band === String(right)) === correct);
+    assert.ok(el, 'inget band att peka på');
+    return tap(t, el);
+  }
+  if (type === 'dir') return pickBy('[data-dir]', 'dir', g("S.style.flip ? 'right' : 'left'"));
   if (type === 'series') return pickBy('[data-sr]', 'sr', g('S.sr.answer'));
   if (fmt === 'mc' && type === 'read')
     return pickBy('[data-pick]', 'pick', g("S.focus + ':' + S.mc[S.focus].findIndex(x => mcEq(x, mcTruth(S.focus)))"));
@@ -26,7 +39,7 @@ export function answer(t, correct = true) {
     if (typeof r === 'number') return pickBy('[data-vpick]', 'vpick', r);
     return g("S.focus === 'k'") ? pickBy('[data-kpick]', 'kpick', r) : pickBy('[data-tpick]', 'tpick', r);
   }
-  if (fmt === 'hard' && type === 'read' && g('S.level') !== 'ultra') {
+  if (fmt === 'hard' && type === 'read') {
     const fs = Array.from(g('entryFields()'));
     fs.forEach((f, j) => {
       const wrong = !correct && j === 0;
@@ -40,7 +53,7 @@ export function answer(t, correct = true) {
         btn.click();
       }
     });
-    return t.$('#main').click();
+    return t.$('#submit').click();
   }
   if (fmt === 'hard' && type === 'build') {
     const ask = Array.from(g('S.askSlots ? [...S.askSlots] : [...Array(S.n).keys()]'));
@@ -52,5 +65,5 @@ export function answer(t, correct = true) {
     });
     return;
   }
-  throw new Error(`answer: ${type}/${fmt} stöds inte än`);
+  throw new Error(`answer: ${type}/${fmt} stöds inte`);
 }
