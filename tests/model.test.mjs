@@ -805,8 +805,10 @@ test('Fel tre gånger i rad tar ner en grad och stapeln visar det', () => {
 });
 
 test('Toleransen följer skoltabellerna: orange, gul och grå frågas aldrig', () => {
-  const t = atGrade('tol', 2);
   const special = /Orange|\bGul\b|Grå|0,05|0,02|0,01/i;
+  const l = atGrade('tol', 1);
+  for (let i = 0; i < 40; i++) { l.g('next()'); assert.doesNotMatch(l.$('#q').textContent, special, 'Lärling'); }
+  const t = atGrade('tol', 2);
   for (let i = 0; i < 60; i++) {
     t.g('next()');
     if (t.g('S.type') === 'order') continue;
@@ -814,4 +816,20 @@ test('Toleransen följer skoltabellerna: orange, gul och grå frågas aldrig', (
     assert.ok(!['orange','yellow','grey'].includes(t.g('S.q[4]')), 'det markerade bandet');
   }
   assert.doesNotMatch(t.g("scaleHTML('t', 'red')"), special, 'facitskalan');
+});
+
+test('Toleransen Gesäll: Vanligast, guld på fyra band och brun på fem', () => {
+  const t = atGrade('tol', 2), seen = new Set();
+  for (let i = 0; i < 400 && seen.size < 2; i++) {
+    until(t, p => p.common);
+    const n = /fyra/.test(t.$('#q .prompt').textContent) ? 4 : 5;
+    assert.match(t.$('#q .prompt').textContent, /De flesta motstånd med (fyra|fem) band/);
+    const right = t.$$('#q [data-c]')[t.g('S.cq.right')].textContent;
+    assert.match(right, n === 4 ? /Guld/ : /Brun/);
+    assert.equal(t.$$('#q [data-c]').length, 4);
+    seen.add(n);
+  }
+  assert.equal(seen.size, 2, 'både fyra och fem band förekommer');
+  answer(t, false);
+  assert.match(t.$('#q').textContent, /±5 %.*±1 %/s, 'fel förklarar båda');
 });
