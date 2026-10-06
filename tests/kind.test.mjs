@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 import { readFileSync } from 'node:fs';
 import { atGrade } from './harness.mjs';
-import { until } from './answer.mjs';
+import { answer, until } from './answer.mjs';
 
 test('Motståndet: Räkna banden är Nykomling, med valen 4, 5 och 6', () => {
   const t = atGrade('body', 0);
@@ -33,8 +33,8 @@ test('Kortet har en egen färg och en rad om vad man ska göra, per typ av svar'
   const cases = [['body', 1, 'odd', /Vilken ska bort/], ['ohm', 2, 'point', /Peka/], ['ohm', 3, 'mc', /Välj/], ['tol', 3, 'mc', /Välj/]];
   for (const [topic, g, kind, tag] of cases) {
     const t = atGrade(topic, g);
-    // Gesäll i Resistansen blandar peka och ordna
-    until(t, p => kind !== 'point' || p.type === 'point');
+    // Gesäll i Resistansen blandar peka och ordna, Mästare flerval och bygg
+    until(t, p => kind === 'point' ? p.type === 'point' : kind === 'mc' ? p.type === 'choice' : true);
     assert.ok(t.$('#q').classList.contains('kind-' + kind), `${topic} ${g}: ${t.$('#q').className}`);
     assert.match(t.$('#q .kindtag, #q .oddhead').textContent, tag);
     assert.equal(t.$$('#q [class*="kind-"]').length, 0);
@@ -68,4 +68,15 @@ test('Resistansen Nykomling: frågan säger att klammern visar banden som ger oh
       assert.equal(c.querySelector('.bracket text').textContent, want, `kort ${j}`);
     });
   }
+});
+
+test('Toleransens Nykomling: vid fel står antalet band i hörnet på det udda kortet', () => {
+  const t = atGrade('tol', 0);
+  t.g('next()');
+  const right = t.g('S.cq.right');
+  answer(t, false);
+  const badges = t.$$('#q .badge');
+  assert.equal(badges.length, 1);
+  assert.ok(t.$(`[data-c="${right}"] .badge.bad`));
+  assert.match(badges[0].textContent, /^[456] band$/);
 });

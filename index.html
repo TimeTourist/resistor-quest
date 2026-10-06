@@ -71,6 +71,7 @@ html,body{overflow-x:clip}
 .oslot{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
 .oslot span{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.05rem;line-height:1;white-space:nowrap}
 .ord-m .oslot span{font-size:.78rem}
+.ord-t .oslot span{font-size:.7rem;letter-spacing:-.02em}
 .bracket text .hl{fill:var(--ink);font-weight:800;font-size:16px;text-decoration:underline}
 .bslot{cursor:pointer}
 .bslot rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
@@ -515,7 +516,8 @@ th{color:var(--muted);font-weight:500}
   <section class="card" id="q" aria-live="polite"></section>
   <section class="more" id="more" aria-label="Allt om motståndet" hidden></section>
 
-  <details>
+  <!-- Rullgardinerna med info är gömda: spelet förklarar själv. Ta bort hidden för att visa dem igen. -->
+  <details hidden>
     <summary>Om ämnen och grader</summary>
     <p class="gnote">Färgkoden lär dig läsa av och bygga motstånd med fyra, fem eller sex färgband. Kartan högst upp är själv ett motstånd: varje färgband är ett ämne, och lågan längst ut är Eldprovet. Tryck på ett band för att läsa om ämnet.</p>
     <p class="gnote">Varje ämne har fem grader: Nykomling, Lärling, Gesäll, Mästare och Stormästare. <b>3 rätt i rad</b> tar dig upp en grad och 3 fel i rad ner en. Bandet på kartan fylls för varje grad du klarar. När du når Mästare låses nästa ämne upp, och Stormästare ger ett ✓. Eldprovet är alltid öppet.</p>
@@ -529,7 +531,7 @@ th{color:var(--muted);font-weight:500}
     </ul>
   </details>
 
-  <details class="guide">
+  <details class="guide" hidden>
     <summary>Guide: så hittar du läsriktningen</summary>
     <p class="gnote">Varje tips är märkt med var det kommer ifrån. <span class="tag std">Standard</span> betyder att det står i IEC 60062:2016, standarden för färgkoden. <span class="tag pra">Praxis</span> är vanligt hos tillverkare men inget krav. <span class="tag tum">Tumregel</span> är ett knep som oftast fungerar men kan slå fel.</p>
 
@@ -564,12 +566,12 @@ th{color:var(--muted);font-weight:500}
     <p class="gnote">Källor: IEC 60062:2016 avsnitt 3 (färgkod, bandbredd, placering, TK-märkning och färgtabell) och IEC 60063 (E-serierna).</p>
   </details>
 
-  <details id="refColors">
+  <details id="refColors" hidden>
     <summary>Visa färgkoden</summary>
     <div class="tbl"><table id="ref"></table></div>
   </details>
 
-  <details id="refE">
+  <details id="refE" hidden>
     <summary>Visa standardvärden</summary>
     <div class="seg eseg"><div role="group" aria-label="E-serie" id="eSeg"></div></div>
     <div class="ehelp">
@@ -1478,14 +1480,16 @@ const spacedStyle = (n = 4) => ({body:'var(--body)', shape:'bone', pal:0, xs: SP
 const roleLabel = (n, i) => { const r = roleOf(n, i); return r === 'digit' ? String(i + 1) : r === 'mult' ? '×' : r === 'tol' ? '±' : 'TK'; };
 const ringed = (at, cls = 'accent') => () => svg(S.q, {style: S.style, ring: [[at, cls]], label: 'Motstånd med ett markerat band'});
 // Vilken ska bort? med markerade band: tre har rätt band markerat, ett har fel
-const ringOdd = (target, nOf, prompt, wrong) => () => choice(() => {
+// count: vid fel står antalet band i hörnet på det udda kortet, eftersom bandets plats beror på det
+const ringOdd = (target, nOf, prompt, wrong, {count = false} = {}) => () => choice(() => {
   const right = rnd4();
   S.cq = {odd:true, prompt, layout:'r', right, wrong, opts: [0,1,2,3].map(i => {
     const n = nOf(), b = genBands(n), tgt = target(b);
     const at = i === right ? rnd([...Array(n).keys()].filter(j => j !== tgt)) : tgt;
     // Vid fel visar det udda kortet var markeringen skulle ha suttit
     return {draw: () => svg(b, {style: stdStyle(n), label: 'Motstånd med ett markerat band',
-      ring: i === right && S.answered && !S.ok ? [[at, 'bad'], [tgt, 'ok']] : [[at, 'accent']]})};
+      ring: i === right && S.answered && !S.ok ? [[at, 'bad'], [tgt, 'ok']] : [[at, 'accent']]}),
+      badge: () => count && i === right && S.answered && !S.ok && {text: `${n} band`, kind: 'bad', at: .3}};
   })};
 });
 const ohmTxt = x => x.toLocaleString('sv-SE') + ' Ω';
@@ -1537,7 +1541,10 @@ const ORDER_SETS = {
   d: {keys: DIG, lab: c => String(C[c].d), prompt: 'Varje siffra har en färg. Klicka på färgerna i nummerordning.',
     wrong: 'Svart 0, brun 1, röd 2, orange 3, gul 4, grön 5, blå 6, violett 7, grå 8, vit 9.'},
   m: {keys: ['silver','gold','black','brown','red','orange','yellow','green','blue'], lab: c => fmtMult(C[c].m), prompt: 'Klicka på multiplikatorerna från minst till störst.',
-    wrong: 'Silver ×0,01, guld ×0,1, svart ×1, brun ×10, röd ×100, orange ×1k, gul ×10k, grön ×100k, blå ×1M.'}
+    wrong: 'Silver ×0,01, guld ×0,1, svart ×1, brun ×10, röd ×100, orange ×1k, gul ×10k, grön ×100k, blå ×1M.'},
+  t: {keys: ['silver','gold','red','brown','green','blue','violet','orange','yellow','grey'], lab: c => num(C[c].t) + '%',
+    prompt: 'Klicka på toleransfärgerna från störst till minst tolerans.',
+    wrong: 'Silver ±10 %, guld ±5 %, röd ±2 %, brun ±1 %, grön ±0,5 %, blå ±0,25 %, violett ±0,1 %, orange ±0,05 %, gul ±0,02 %, grå ±0,01 %.'}
 };
 const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ S.ord = {set, keys: ORDER_SETS[set].keys, pool: shuffle(ORDER_SETS[set].keys.slice()), placed: {}, landed: new Set(), away: new Set(), inflight: 0, round: 1, missed: false}; }});
 
@@ -1632,7 +1639,8 @@ const GRADES = {
     // Gesäll: peka på multiplikatorn, peka på en siffra utan värdena under banden, eller ordna multiplikatorerna
     () => rnd([pointPlan(() => ['mult']), pointPlan(k => k === 3 ? ['d1','d2','d3'] : ['d1','d2'], {labels: false}), orderPlan('m')])(),
     // Mästare: siffror och nollor till ohm, med k och M, på 4, 5 eller 6 band. Bara klammern som stöd.
-    () => choice(() => {
+    // Eller bygg värdet med paletten: fem band, sitter aldrig vänt.
+    () => rnd([() => choice(() => {
       const n = rnd([4, 5, 6]), three = n > 4;
       const base = three ? rnd(E24.map(x => x * 10).concat(E96)) : rnd(E24), mi = Math.floor(Math.random() * (three ? 6 : 7));
       const ds = String(base).split('').map(Number);
@@ -1656,12 +1664,12 @@ const GRADES = {
         opts: vals.map(x => ({html: fmtVal(x)})),
         facit: () => `<div class="calcrow" aria-hidden="true">${tok(String(base), T.eq)}${mi ? tok('0'.repeat(mi), T.eq + .5, 'zeros') : ''}${tok(`= ${ohmTxt(v)}`, T.eq + (mi ? 1 : .5))}${v >= 1000 ? tok(`= ${fmtVal(v)}`, T.eq + 1.6, 'pre') : ''}</div>`,
         wrong: `${base} och ${zeros} = ${ohmTxt(v)}${v >= 1000 ? ` = ${fmtVal(v)}` : ''}.`};
-    }),
-    // Stormästare: fem band, guld och silver som multiplikator, knappa in eller bygg, kan sitta vänt
-    () => ({type: rnd(['read','build']), fmt:'hard', focus:'v', n: 5, varied:true, flip:true})
+    }), () => ({type:'build', fmt:'hard', focus:'v', n: 5, varied:true})])(),
+    // Stormästare: fem band, guld och silver som multiplikator, knappa in under banden, kan sitta vänt
+    () => ({type:'read', fmt:'hard', focus:'v', n: 5, varied:true, flip:true})
   ],
   tol: [
-    ringOdd(b => nd(b) + 1, () => rnd([4, 5, 6]), 'Toleransbandet är markerat.', 'Toleransbandet sitter i slutet, lite för sig självt. På sex band är det näst sist.'),
+    ringOdd(b => nd(b) + 1, () => rnd([4, 5, 6]), 'Toleransbandet är markerat.', 'Toleransbandet sitter i slutet, lite för sig självt. På sex band är det näst sist.', {count: true}),
     // Lärling: guld och silver
     () => choice(() => {
       const c = rnd(['gold','silver']), t = C[c].t;
@@ -1676,8 +1684,8 @@ const GRADES = {
           opts: cs.map(x => swOpt(x, fmtTol(C[x].t))), wrong: 'Guld är ±5 % och silver ±10 %.'};
       }
     }),
-    // Gesäll: alla toleransfärger
-    () => choice(() => {
+    // Gesäll: alla toleransfärger, eller ordna dem
+    () => rnd([() => choice(() => {
       const c = rnd(TOL), t = C[c].t;
       if (Math.random() < .5) {
         S.n = 5; S.q = genBands(5); S.q[4] = c; S.style = stdStyle(5); S.moreOK = true;
@@ -1689,7 +1697,7 @@ const GRADES = {
         S.cq = {prompt:`Vilken färg betyder ${fmtTol(t)}?`, layout:'sw', right: cs.indexOf(c),
           opts: cs.map(x => swOpt(x, fmtTol(C[x].t))), wrong: `${fmtTol(t)} är ${C[c].n.toLowerCase()}.`, facit: () => scaleHTML('t', c)};
       }
-    }),
+    }), orderPlan('t')])(),
     // Mästare: vad får värdet vara?
     () => choice(() => {
       S.n = 4; S.q = genBands(4); S.q[3] = rnd(['gold','silver','brown','red']); S.style = stdStyle(4); S.moreOK = true;

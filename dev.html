@@ -149,14 +149,14 @@ const CATALOG = {
       'Som Ordna värdena. Raden: Silver ×0,01, guld ×0,1 …'),
     r('ohm-mastare', 3, 'Siffror och nollor', 'Hur stor är resistansen? 4–6 band, bara klammern som stöd.', 'Flerval', STD,
       'Banden får sina värden (multiplikatorn ovanför), sedan byggs talet: 47 · 00 = 4 700 Ω = 4,7 kΩ.'),
+    r('ohm-bygg', 3, 'Bygg värdet', 'Bygg motståndet för ett värde med färgpaletten. Fem band, sitter aldrig vänt.', 'Palett', STD,
+      'Beräkningsraden.'),
     r('ohm-knappa', 4, 'Knappa in värdet', 'Fem band, kan sitta vänt. En ruta under varje band (även toleransen). Markeringen börjar längst till vänster; tryck på ett band och skriv dess siffra, eller välj multiplikatorn under fliken ×. Efter varje inmatning hoppar markeringen till närmaste lediga åt höger, annars vänster. Rättas när siffrorna plus multiplikatorn är ifyllda. Ingen ledtråd om läsriktningen.', 'Knappsats under banden', STD,
-      'Felaktiga rutor blir röda och visar rätt värde, banden ringas in, multiplikatorn står ovanför och beräkningsraden byggs upp.'),
-    r('ohm-bygg', 4, 'Bygg värdet', 'Bygg motståndet för ett värde med färgpaletten. Fem band.', 'Palett', STD,
-      'Beräkningsraden.')
+      'Felaktiga rutor blir röda och visar rätt värde, banden ringas in, multiplikatorn står ovanför och beräkningsraden byggs upp.')
   ],
   tol: [
     r('tol-ring', 0, 'Fel band markerat', 'Toleransbandet är markerat på fyra motstånd. På ett sitter markeringen fel.', VSB, POP,
-      'Röd ring på fel band och grön ring där toleransen sitter. Raden med regeln.', 'behöver animering'),
+      'Röd ring på fel band och grön ring där toleransen sitter, och antalet band i hörnet (4 band). Raden med regeln.', 'behöver animering'),
     r('tol-gs-farg', 1, 'Guld/silver → tolerans', 'Vilken tolerans har det markerade bandet (guld eller silver)?', 'Flerval', STD,
       'Bara raden: Guld är ±5 % och silver ±10 %.', 'behöver animering'),
     r('tol-gs-tol', 1, 'Tolerans → guld/silver', 'Vilken färg betyder ±5 %?', 'Färgval', STD,
@@ -165,6 +165,9 @@ const CATALOG = {
       'Toleransskalan (utan animering) och raden.', 'behöver animering'),
     r('tol-alla-tol', 2, 'Tolerans → färg', 'Vilken färg betyder ±2 %?', 'Färgval', STD,
       'Toleransskalan (utan animering) och raden.', 'behöver animering'),
+    r('tol-ordna', 2, 'Ordna värdena', 'Klicka på toleransfärgerna från störst till minst tolerans: ±10 % till ±0,01 %. Precis som Ordna värdena i Resistansen, med sista försök.', 'Alla färger som knappar',
+      'Som Ordna värdena.',
+      'Som Ordna värdena. Raden: Silver ±10 %, guld ±5 % …'),
     r('tol-intervall', 3, 'Intervall', 'Mellan vilka värden får resistansen ligga? Fyra band.', 'Flerval (text)', STD,
       'Bara raden med gränserna.', 'behöver animering'),
     r('tol-knappa', 4, 'Knappa in hela', 'Värde och tolerans, 4 eller 5 band, kan sitta vänt.', 'Knappsats', STD,

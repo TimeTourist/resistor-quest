@@ -218,3 +218,14 @@ test('Ordna: fel färg flyger till sin egen låda, blir röd där och flyger til
   assert.ok(!t.$('#q [data-oslot="red"]').classList.contains('bad'));
   assert.equal(t.$('#q [data-oslot="red"] .osw'), null);
 });
+
+test('Ordna toleransen: Gesäll, tio lådor från ±10 % till ±0,01 %, och fel visar raden', () => {
+  const t = atGrade('tol', 2);
+  until(t, isOrder('t'));
+  assert.match(t.$('#q .prompt').textContent, /toleransfärgerna/);
+  assert.deepEqual(t.$$('#q .oslot span').map(s => s.textContent),
+    ['10%', '5%', '2%', '1%', '0,5%', '0,25%', '0,1%', '0,05%', '0,02%', '0,01%']);
+  assert.equal(t.$$('#q [data-ord]').length, 10);
+  answer(t, true);
+  assert.equal(t.g('S.ok'), true);
+});

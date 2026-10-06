@@ -183,7 +183,7 @@ test('Resistansen: klammern, fyra band till och med Mästare, fem band på Storm
     const t = atGrade('ohm', g), ns = new Set();
     for (let i = 0; i < 40; i++) {
       t.g(`S.grade.ohm = ${g}; next()`);
-      if (t.g('S.type') === 'order') continue;
+      if (['order', 'build'].includes(t.g('S.type'))) continue;
       ns.add(t.g('S.n'));
       assert.ok(t.$('#q .res .bracket'), `grad ${g} har klammer`);
       if (g === 3) assert.ok(!['gold', 'silver'].includes(t.g('S.q[nd(S.q)]')));
@@ -292,7 +292,7 @@ test('Ingen Nästa-knapp: efter fel svar fortsätter man med ett tryck på korte
 });
 
 test('Efter fel går det att trycka på svarsknapparna och bilden för att gå vidare', () => {
-  for (const [topic, g, sel] of [['body', 1, '[data-c]'], ['ohm', 3, '[data-c]'], ['ohm', 4, '[data-slot],[data-field]'], ['body', 3, '[data-dir]'], ['e', 3, '[data-sr]']]) {
+  for (const [topic, g, sel] of [['body', 1, '[data-c]'], ['ohm', 3, '[data-c]'], ['ohm', 3, '[data-slot]'], ['body', 3, '[data-dir]'], ['e', 3, '[data-sr]']]) {
     const t = atGrade(topic, g);
     let n = 0;
     for (let i = 0; i < 40 && n < 3; i++) {
@@ -589,7 +589,7 @@ test('Testläge: rätt svar har en grön pil, i vanligt läge syns ingen', () =>
   };
   for (const topic of ['body', 'ohm', 'tol', 'tc', 'e']) for (let g = 0; g < 5; g++) check(topic, g);
   // Rätt svar enligt pilen ger rätt
-  tt.g("S.topic = 'ohm'; S.grade.ohm = 3; next()");
+  do tt.g("S.topic = 'ohm'; S.grade.ohm = 3; next()"); while (tt.g('S.type') !== 'choice');
   tt.$('#q .cheat').click();
   assert.equal(tt.g('S.ok'), true);
   const t = atGrade('ohm', 3);
@@ -601,6 +601,7 @@ test('Resistansen Mästare fel: banden får sina värden och talet byggs upp', (
   const t = atGrade('ohm', 3);
   for (let i = 0; i < 15; i++) {
     t.g('S.grade.ohm = 3; next()');
+    if (t.g('S.type') === 'build') continue;
     const k = t.g('nd(S.q)'), right = t.g('S.cq.right');
     answer(t, false);
     assert.equal(t.$$('#q .res .mk.ok').length, k + 1, 'siffrorna och multiplikatorn');
@@ -627,11 +628,13 @@ test('Resistansen Gesäll fel: markeringen vandrar i läsordning och landar på 
   }
 });
 
-test('Resistansen Stormästare fel: talet byggs upp, och vid avläsning får banden sina värden', () => {
+test('Resistansen Mästare och Stormästare fel: talet byggs upp, och vid avläsning får banden sina värden', () => {
   const t = atGrade('ohm', 4);
   const types = new Set();
-  for (let i = 0; i < 20; i++) {
-    t.g('S.grade.ohm = 4; next()');
+  for (let i = 0; i < 40; i++) {
+    const g = i % 2 ? 3 : 4;
+    t.g(`S.grade.ohm = ${g}; next()`);
+    if (g === 3 && t.g('S.type') !== 'build') continue;
     types.add(t.g('S.type'));
     answer(t, false);
     const row = t.$('#q .calcrow').textContent.replace(/\s/g, '');
@@ -741,8 +744,8 @@ test('Allt om motståndet finns kvar efter svar på en fråga med ett motstånd'
 test('Beroenderegeln: frågorna per ämne och grad använder rätt sorts frågor', () => {
   const kinds = {
     body: [['choice'], ['choice'], ['choice'], ['dir'], ['point']],
-    ohm: [['choice'], ['choice', 'order', 'point'], ['point', 'order'], ['choice'], ['read', 'build']],
-    tol: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
+    ohm: [['choice'], ['choice', 'order', 'point'], ['point', 'order'], ['choice', 'build'], ['read']],
+    tol: [['choice'], ['choice'], ['choice', 'order'], ['choice'], ['read', 'build']],
     tc: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
     e: [['choice'], ['choice'], ['choice'], ['series'], ['series']]
   };
@@ -752,7 +755,8 @@ test('Beroenderegeln: frågorna per ämne och grad använder rätt sorts frågor
       t.g('next()');
       assert.ok(kinds[topic][g].includes(t.g('S.type')), `${topic} ${g}: ${t.g('S.type')}`);
       const fmt = t.g('S.plan.fmt');
-      if (g < 4) assert.notEqual(fmt, 'hard', `${topic} ${g} ska inte vara svår variant`);
+      // Bygg värdet på Resistansens Mästare använder paletten från den svåra varianten, men sitter aldrig vänt
+      if (g < 4 && !(topic === 'ohm' && t.g('S.type') === 'build')) assert.notEqual(fmt, 'hard', `${topic} ${g} ska inte vara svår variant`);
       else if (topic !== 'body' && topic !== 'e') assert.equal(fmt, 'hard');
       // Vända motstånd först på Stormästare (riktningsfrågan undantagen)
       if (g < 4 && t.g('S.type') !== 'dir') assert.ok(!t.g('S.style && S.style.flip'), `${topic} ${g} vänt`);
