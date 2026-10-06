@@ -25,19 +25,7 @@ Sammanställt 2026-10-06 när sessionen avslutades. Spelet ligger i `index.html`
 - **Visa i dev.html ska öppna exakt den frågetypen på raden.**
   - I dag öppnar Visa bara rätt grad, och grader med flera frågetyper slumpar vilken typ som visas. Till exempel visar "Ordna värdena" ibland en peka-fråga.
   - Det kräver en koppling mellan raderna i dev.html och frågetyperna i spelet.
-- **Statusraden under kartan.** Ska den bort nu när stapeln finns?
-- **Fler startfrågor per ämne.** Flera uppsättningar så att det inte alltid är samma, till exempel inte alltid kycklingen.
-- **Blandat över alla ämnen.** Uppskjutet.
 - **Städa grenar.** `amnen-och-grader` (lokalt och på GitHub) och `nivamodell-och-facit` (på GitHub) är sammanslagna eller gamla och kan tas bort.
-
-## Att kontrollera
-
-- **Ljuden har aldrig provlyssnats.** De är skapade med Web Audio, men webbläsartesterna spelar inget ljud. Gäller:
-  - krossat glas och knak på startkortet och Eldprovet
-  - svep, stigande ton och dovt ljud i Ordna
-  - fanfaren och felljudet när man byter grad i stapeln
-- **Visa-panelen i claude.ai-artifacten.** Den fungerar lokalt men är inte provad i claude.ai.
-- **Stapeln på startkortet täcker kartan.** Medan kortet är framme går det inte att trycka på kartan genom stapeln. Ändra om det är i vägen.
 
 ## Kända småsaker
 
