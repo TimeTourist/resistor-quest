@@ -706,6 +706,27 @@ const unlocked = t => { if (t === 'ultra') return true; const i = TOPICS.indexOf
 const cleared = t => t !== 'ultra' && S.done[t] >= 5;
 const inExam = () => S.topic === 'ultra';
 const isMix = t => cleared(t);
+// Nycklar som sitter i ett lås (ämnet är upplåsbart men inte öppnat) och ämnen där snabbkollen är gjord.
+// En ny spelare har nyckeln i Motståndets lås. En spelare med framsteg från före nycklarna får inga nycklar,
+// och snabbkollen räknas som gjord i ämnen där spelaren har framsteg.
+S.keys = []; S.seen = []; S.flying = []; S.arriving = []; S.streaks = {};
+S.screen = 'grid'; S.open = null; S.cover = null; S.fresh = null; S.keyWin = null;
+(() => {
+  if (S.pin) { S.seen = TOPICS.slice(); return; }
+  try {
+    const k = localStorage.getItem('fargkoden2-keys'), s = localStorage.getItem('fargkoden2-seen');
+    S.keys = k != null ? JSON.parse(k).filter(t => TOPICS.includes(t) && unlocked(t)) : S.firstVisit ? ['body'] : [];
+    S.seen = s != null ? JSON.parse(s).filter(t => TOPICS.includes(t)) : TOPICS.filter(t => S.done[t] > 0 || S.grade[t] > 0);
+  } catch(e) { S.keys = []; S.seen = []; }
+})();
+const saveKeys = () => { save('fargkoden2-keys', JSON.stringify(S.keys)); save('fargkoden2-seen', JSON.stringify(S.seen)); };
+// Ett ämne blir upplåsbart: nyckeln hamnar i låset och flyger dit nästa gång startsidan visas
+function grantKey(t){
+  if (!TOPICS.includes(t) || S.pin || S.keys.includes(t)) return;
+  S.keys.push(t); S.flying.push(t); saveKeys();
+}
+// Minikortets läge på startsidan
+const tileState = t => t === 'ultra' ? 'exam' : !unlocked(t) ? 'locked' : S.keys.includes(t) ? 'key' : cleared(t) ? 'done' : 'open';
 // Stegen. done är antalet klarade grader (0–5) och minskar aldrig. Golvet är Nykomling, taket Stormästare.
 function ladder(s, ok){
   let {g, up, down, done} = s, moved = null;
@@ -1351,11 +1372,13 @@ const examEffect = t => { const x = S.exam.score[t]; return !x ? 0 : x.ok >= 4 ?
 function applyExam(){
   if (S.exam.applied) return;
   S.exam.applied = true; S.exam.before = {...S.done};
+  const was = TOPICS.filter(unlocked);
   TOPICS.forEach(t => {
     const d = examEffect(t);
     if (d > S.done[t]) S.done[t] = d;
     if (Math.min(d, MAX) > S.grade[t]) S.grade[t] = Math.min(d, MAX);
   });
+  TOPICS.filter(t => unlocked(t) && !was.includes(t)).forEach(grantKey);
   saveProgress();
 }
 function showExamCard(){
@@ -1979,7 +2002,7 @@ function finish(ok){
     if (r.done > before) S.mapGrow = {lv: t, from: before};
     saveProgress();
     const nx = TOPICS[TOPICS.indexOf(t) + 1];
-    if (nx && before < UNLOCK_AT && r.done >= UNLOCK_AT) S.unlockedNow = nx;
+    if (nx && before < UNLOCK_AT && r.done >= UNLOCK_AT) { S.unlockedNow = nx; grantKey(nx); }
     if (S.moved === 'top') { S.goldNow = t; S.mix.streak = 0; }
   }
   if (S.instant || reduceMotion()) { reveal(); return; }
