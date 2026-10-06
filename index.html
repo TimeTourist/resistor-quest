@@ -291,8 +291,6 @@ html,body{overflow-x:clip}
 .scale span{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:40px;padding:5px 4px;border:1px solid var(--line);border-radius:8px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.05rem;color:var(--muted)}
 .scale span.on{border:2px solid var(--ink);color:var(--ink);font-weight:700;background:var(--bg)}
 .scale .sw{width:22px;height:14px;border-radius:3px}
-.egrid span.on{border-color:var(--ok);background:var(--ok-bg);color:var(--ink)}
-.q .egrid,#q .egrid{margin-top:14px}
 @media (prefers-reduced-motion:no-preference){
   .anim .a{animation:ain .5s ease-out both}
   @keyframes ain{from{opacity:0;transform:translateY(6px)}}
@@ -430,8 +428,6 @@ p.epre{margin:0}
 .meterfb{margin:10px 0}
 .meterfb>p:first-child{margin:0 0 6px}
 .meterfb .gnote{margin:6px 0 0}
-.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
-.egrid span{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.2rem;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
 .edial{display:block;width:100%;max-width:330px;height:auto;margin:0 auto;overflow:visible}
 .eruler{display:block;width:100%;height:auto;overflow:visible}
 .ering{fill:none;stroke:var(--line);stroke-width:10}
@@ -2000,8 +1996,16 @@ const GRADES = {
         S.cq = {prompt:`Vilken serie hör till ${fmtTol(t)}?`, layout:'mc', right: ss.indexOf(s), opts: ss.map(x => ({html: x})), wrong: line};
       }
     }, {eq: 'serietol'})])(),
-    // Mästare: vilken serie, med värdet utskrivet
-    () => ({type:'series', fmt:'mc', showVal:true}),
+    // Mästare: vilket värde finns inte i E12 (värdena faller ner på linjalen), eller vilken serie med värdet utskrivet
+    () => rnd([() => choice(() => {
+      const right = rnd4(), pool = shuffle(E12.slice()).slice(0, 4);
+      let odd; do { odd = 11 + Math.floor(Math.random() * 89); } while (E24.includes(odd));
+      const vals = [0,1,2,3].map(i => Math.round((i === right ? odd : pool[i]) / 10 * rnd([1, 10, 100, 1000, 10000]) * 100) / 100);
+      const marks = [0,1,2,3].map(i => ({v: i === right ? odd : pool[i], ok: i !== right}));
+      S.cq = {odd:true, prompt:'Tre av värdena finns i E12.', layout:'mc', right, opts: vals.map(v => ({html: fmtVal(v)})),
+        after: () => rulerSVG(12, {marks}),
+        wrong: `Titta på de två första siffrorna: ${odd} hamnar mellan prickarna och finns inte i E12. De andra landar på en prick.`};
+    }, {eq: 'e12'}), () => ({type:'series', fmt:'mc', showVal:true})])(),
     // Stormästare: vilken serie, utan hjälp
     () => ({type:'series', fmt:'mc', showVal:false})
   ]
@@ -2175,7 +2179,7 @@ function choiceHTML(){
   const pd = i => why && i === Q.right ? ` style="${Q.anim.pop != null ? `--pd:${Q.anim.pop.toFixed(2)}s;` : ''}${Q.anim.land != null ? `animation-delay:${Q.anim.land.toFixed(2)}s` : ''}"` : '';
   const opts = Q.opts.map((o, i) => `<button class="opt${cls}${mk(i)}${cheat(i === Q.right)}${why && Q.anim.land != null && i === Q.right ? ' land' : ''}" data-c="${i}"${pd(i)}${disAttr()}>${o.draw ? o.draw() : o.html}${badge(o)}${done && o.ann ? `<small class="ann">${o.ann}</small>` : ''}</button>`).join('');
   return `${Q.odd ? `<p class="oddhead">${BALLOON}Vilken ska bort?<span>Tre hör ihop, en ska bort.</span></p>` : ''}${topHTML(Q.prompt)}${Q.res ? `<div class="res">${Q.res()}</div>` : ''}
-    <div class="${grid}">${opts}</div>${done && !S.ok && Q.facit ? Q.facit() : ''}`;
+    <div class="${grid}">${opts}</div>${done && Q.after && !inExam() ? `<div class="res after">${Q.after()}</div>` : ''}${done && !S.ok && Q.facit ? Q.facit() : ''}`;
 }
 
 const close = (a,b) => Math.abs(a-b) < 1e-6 * Math.max(1, Math.abs(b));

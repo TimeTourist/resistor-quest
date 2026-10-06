@@ -728,7 +728,7 @@ test('Beroenderegeln: frågorna per ämne och grad använder rätt sorts frågor
     ohm: [['choice'], ['choice', 'order', 'point'], ['point', 'order'], ['choice', 'build'], ['read']],
     tol: [['choice'], ['choice'], ['choice', 'order'], ['choice'], ['read', 'build']],
     tc: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
-    e: [['choice'], ['choice'], ['choice'], ['series'], ['series']]
+    e: [['choice'], ['choice'], ['choice'], ['choice', 'series'], ['series']]
   };
   for (const topic of TOPICS) for (let g = 0; g < 5; g++) {
     const t = atGrade(topic, g);

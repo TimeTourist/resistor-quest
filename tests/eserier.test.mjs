@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { atGrade } from './harness.mjs';
+import { atGrade, golden } from './harness.mjs';
 import { answer, until } from './answer.mjs';
 
 // Ritar en sträng från spelet i en div, så att man kan räkna element
@@ -121,4 +121,42 @@ test('E-seriernas Gesäll blandar staplarna med serie ↔ tolerans', () => {
   const t = atGrade('e', 2), seen = new Set();
   for (let i = 0; i < 60; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
   assert.deepEqual([...seen].sort(), ['serietol', 'staplar']);
+});
+
+test('E-seriernas Mästare: Inte i E12, värdena faller ner på linjalen, både rätt och fel', () => {
+  for (const ok of [false, true]) {
+    const t = atGrade('e', 3);
+    until(t, p => p.eq === 'e12');
+    assert.equal(t.$$('#q .eruler').length, 0, 'ingen linjal före svaret');
+    answer(t, ok);
+    assert.equal(t.$$('#q .eruler').length, 1);
+    assert.equal(t.$$('#q .emark').length, 4);
+    assert.equal(t.$$('#q .emark.bad').length, 1);
+    assert.equal(t.$$('#q .egrid').length, 0, 'rutnätet är borta');
+  }
+});
+
+test('E-seriernas Mästare blandar Inte i E12 med Vilken serie', () => {
+  const t = atGrade('e', 3), seen = new Set();
+  for (let i = 0; i < 60; i++) { t.g('next()'); seen.add(t.g('S.plan.eq') || t.g('S.type')); }
+  assert.deepEqual([...seen].sort(), ['e12', 'series']);
+});
+
+test('Gyllene E-serierna: blandat spelar alla nya frågor utan fel', () => {
+  const t = golden('e');
+  for (let i = 0; i < 40; i++) { t.g('next()'); answer(t, i % 2 === 0); }
+  assert.deepEqual(t.errors, []);
+});
+
+test('E-seriernas Mästare: Inte i E12 är Vilken ska bort?, det udda poppar och tre blir gröna', () => {
+  for (const ok of [true, false]) {
+    const t = atGrade('e', 3);
+    until(t, p => p.eq === 'e12');
+    assert.match(t.$('#q').textContent, /Vilken ska bort\?/);
+    const right = t.g('S.cq.right');
+    answer(t, ok);
+    assert.ok(t.$(`[data-c="${right}"]`).classList.contains('gone'));
+    assert.equal(t.$$('#q .opt.ok').length, 3);
+    assert.equal(t.$$('#q .opt.bad').length, 0);
+  }
 });
