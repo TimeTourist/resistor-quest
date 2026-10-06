@@ -17,7 +17,9 @@ test('Startfrågan: ämneskortet har ingen Spela-knapp utan en lätt fråga med 
   // Bara bilder på valen, ingen text. Namnet finns för skärmläsare.
   const chicken = opts.find(b => b.getAttribute('aria-label') === 'Kyckling');
   assert.ok(chicken, 'kycklingen har en etikett för skärmläsare');
-  assert.equal(chicken.textContent.trim(), '🐔');
+  assert.ok(chicken.querySelector('svg.pic'), 'en bild, inte ett tecken');
+  assert.equal(chicken.textContent.trim(), '');
+  assert.equal(opts.filter(b => b.querySelector('svg.pic')).length, 3, 'kyckling, bil och ankare är bilder');
   assert.ok(opts.every(b => !/[a-zåäö]/i.test(b.textContent)), 'ingen text på valen');
 });
 

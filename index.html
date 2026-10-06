@@ -246,7 +246,7 @@ html,body{overflow-x:clip}
 .kickopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .kopt{font:inherit;font-size:1rem;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:12px 10px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-align:center}
 .kopt:hover{border-color:var(--accent)}
-.kopt .emo{font-size:2.4rem;line-height:1}
+.kopt svg.pic{width:58px;height:58px;max-width:none}
 .kopt svg{width:100%;max-width:150px;height:auto}
 .kopt.bad{border-color:var(--bad);background:var(--bad-bg);cursor:default;opacity:.75}
 .kopt.ok{border-color:var(--ok);background:var(--ok-bg)}
@@ -900,12 +900,28 @@ function showLevelCard(lv, fresh = false){
 // Startfrågan på ämneskortet: en lätt, riktig fråga i stället för en Spela-knapp.
 // Rätt svar krossar kortet och ämnet börjar. Fel svar visar ämnets rad och animering, och man får försöka igen. Trappan påverkas inte.
 // Första valet är det rätta.
-// Bara bilden syns. Namnet läses upp av skärmläsare.
-const emo = (e, label) => ({html: `<span class="emo" aria-hidden="true">${e}</span>`, label});
+// Ritade bilder i stället för emoji, så att de ser likadana ut och har färg överallt. Namnet läses upp av skärmläsare.
+const pic = (body, label) => ({html: `<svg class="pic" viewBox="0 0 64 64" aria-hidden="true">${body}</svg>`, label});
+const CHICKEN = `<path d="M24 50l-2 9M33 51l1 8" stroke="#e8902a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M13 36q-7-5-4-15q5 6 10 8" fill="#fff" stroke="#3a2f28" stroke-width="2" stroke-linejoin="round"/>
+  <ellipse cx="30" cy="38" rx="19" ry="14" fill="#fff" stroke="#3a2f28" stroke-width="2"/>
+  <path d="M21 37q8 9 17 0" fill="none" stroke="#3a2f28" stroke-width="2" stroke-linecap="round"/>
+  <path d="M36 13q1-7 5-3q2-7 6-1q4-4 5 3z" fill="#e23b2e"/>
+  <circle cx="43" cy="22" r="10" fill="#fff" stroke="#3a2f28" stroke-width="2"/>
+  <path d="M52 20l9 3l-9 4z" fill="#f2b51b" stroke="#c98a12" stroke-width="1"/>
+  <path d="M49 29q3 6-1 8q-4-2-1-7z" fill="#e23b2e"/>
+  <circle cx="46" cy="20" r="2" fill="#1b1b1b"/>`;
+const CAR = `<path d="M5 42q0-9 9-10l8-10q2-3 6-3h11q4 0 6 3l7 10q10 1 10 10v5H5z" fill="#e23b2e" stroke="#7a1a12" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M25 23h6v9H18zM35 23h4q2 0 3 2l5 7H35z" fill="#bfe3f7" stroke="#7a1a12" stroke-width="1.5" stroke-linejoin="round"/>
+  <rect x="55" y="37" width="5" height="3" rx="1" fill="#ffd34d"/>
+  <circle cx="18" cy="47" r="7" fill="#222"/><circle cx="18" cy="47" r="3" fill="#c4c4c4"/>
+  <circle cx="47" cy="47" r="7" fill="#222"/><circle cx="47" cy="47" r="3" fill="#c4c4c4"/>`;
+const ANCHOR = `<g fill="none" stroke="#3a78c4" stroke-width="5" stroke-linecap="round"><circle cx="32" cy="10" r="5"/><path d="M32 15v40M22 24h20M11 37q3 18 21 18q18 0 21-18"/></g>
+  <path d="M5 40l7-9l5 10zM59 40l-7-9l-5 10z" fill="#3a78c4"/>`;
 const KICK = {
   body: {q: 'Välj motståndet', opts: [
     {html: () => svg(genBands(4), {style: stdStyle(4), label: 'Motstånd'}), label: 'Motstånd'},
-    emo('🐔', 'Kyckling'), emo('🚗', 'Bil'), emo('⚓', 'Ankare')]},
+    pic(CHICKEN, 'Kyckling'), pic(CAR, 'Bil'), pic(ANCHOR, 'Ankare')]},
   ohm: {q: 'Vilken enhet har resistans?', opts: [{html: '<b>Ω</b> ohm'}, {html: 'kg'}, {html: '°C'}, {html: 'km/h'}]},
   tol: {q: 'Ett motstånd på 100 Ω ±10 %. Vilket mätvärde är okej?', opts: [{html: '104 Ω'}, {html: '150 Ω'}, {html: '200 Ω'}, {html: '3 Ω'}]},
   tc: {q: 'Vad händer med resistansen när motståndet blir varmt?', opts: [{html: 'Den ändras lite'}, {html: 'Den blir noll'}, {html: 'Motståndet byter färg'}, {html: 'Den blir tusen gånger större'}]},
