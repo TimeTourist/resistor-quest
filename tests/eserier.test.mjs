@@ -160,3 +160,19 @@ test('E-seriernas Mästare: Inte i E12 är Vilken ska bort?, det udda poppar och
     assert.equal(t.$$('#q .opt.bad').length, 0);
   }
 });
+
+test('Vilken serie: fel svar visar linjalen för serien som toleransen pekar ut, med värdet markerat', () => {
+  const t = atGrade('e', 4);
+  for (let i = 0; i < 12; i++) {
+    t.g("S.grade.e = 4; S.down = 0; next()");
+    assert.equal(t.$$('#q .eruler').length, 0, 'ingen linjal före svaret');
+    answer(t, false);
+    assert.equal(t.$$('#q .eruler').length, 1);
+    assert.equal(t.$$('#q .emark').length, 1);
+    const ser = t.g('TOL_SER[bandsTol(S.sr.bands)]'), inSer = t.g('seriesOf(S.sr.m3)').includes(ser);
+    assert.equal(t.$$('#q .emark.ok').length, inSer ? 1 : 0, ser);
+    assert.match(t.$('#q .eruler').getAttribute('aria-label'), new RegExp(ser + '$'));
+  }
+  t.g('next()'); answer(t, true);
+  assert.equal(t.$$('#q .eruler').length, 0, 'rätt svar visar ingen linjal');
+});

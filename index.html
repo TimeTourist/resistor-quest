@@ -2075,7 +2075,7 @@ function render(){
     const full = S.plan.showVal ? `<p class="big">${fmtVal(S.sr.v)} ${fmtTol(bandsTol(S.sr.bands))}</p>` : '';
     h += `${topHTML('Vilken E-serie hör motståndet hemma i?')}${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
 
-      <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}${cheat(k === S.sr.answer)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>`;
+      <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}${cheat(k === S.sr.answer)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>${S.answered && !S.ok && !inExam() ? seriesRuler() : ''}`;
   } else if (S.type === 'order') {
     const o = S.ord, O = ORDER_SETS[o.set], P = o.placed, want = o.keys.find(k => !P[k]);
     h += `${topHTML(O.prompt)}${o.round === 2 ? '<p class="ordnote">Nästan! Du får ett sista försök – utan hjälp.</p>' : ''}<div class="ordrow ord-${S.ord.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
@@ -3221,6 +3221,11 @@ function etolRows(n, [big, right, small]){
   const v = eVals(n), picked = S.cq.tols[S.pickC];
   const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${rulerSVG(n, {tol: t})}</div>`;
   return `<div class="etrows">${row(big, `för stor: staplarna krockar, ${v[0]} Ω kan vara ${v[1]} Ω`)}${row(right, 'lagom: staplarna möts ungefär kant i kant')}${row(small, 'för liten: glapp mellan värdena')}</div>`;
+}
+// Vilken serie, fel svar: linjalen för serien som toleransen pekar ut, och var värdet hamnar
+function seriesRuler(){
+  const r = S.sr, ser = TOL_SER[bandsTol(r.bands)];
+  return `<div class="res after">${rulerSVG(+ser.slice(1), {marks: [{v: r.m3 / 10, ok: seriesOf(r.m3).includes(ser)}]})}</div>`;
 }
 function seriesOf(m3){
   const out = [];
