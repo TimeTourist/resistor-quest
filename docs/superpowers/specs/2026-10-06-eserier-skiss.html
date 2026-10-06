@@ -1,0 +1,318 @@
+<title>E-serierna, skiss</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Samma färger och typsnitt som spelet. En kolumn med ett spelkort per grad, i spelets ordning. */
+:root{
+  --bg:#e8edf0;--grid:rgba(31,111,178,.08);--surface:#fff;--ink:#1d2730;--muted:#566673;--line:#c8d1d8;
+  --accent:#1f6fb2;--accent-ink:#fff;--ok:#24803a;--ok-bg:#e3f3e6;--bad:#b83227;--bad-bg:#f8e4e1;--warn:#c98a12;--warn-bg:#fdf3e0;
+  --bar:#1f6fb2;--bar2:#5b93c9;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;--text:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
+    --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--warn:#e7b04a;--warn-bg:#3a3117;
+    --bar:#5aa6e6;--bar2:#3a77ad;color-scheme:dark
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
+  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--warn:#e7b04a;--warn-bg:#3a3117;
+  --bar:#5aa6e6;--bar2:#3a77ad;color-scheme:dark
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{overflow-x:clip}
+body{margin:0;color:var(--ink);background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;font:16px/1.5 var(--text)}
+main{max-width:720px;margin:0 auto;padding-block:24px 56px;padding-inline:16px;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(2rem,7vw,2.6rem);line-height:1;margin:0}
+.lead{color:var(--muted);margin:6px 0 0;max-width:60ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 18px 20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 2px 0 var(--line)}
+.tag{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.grade{font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.note{font-size:.85rem;color:var(--muted)}
+.prompt{font-family:var(--display);font-weight:600;font-size:1.6rem;line-height:1.15;margin:0;text-wrap:balance}
+.fig{display:flex;justify-content:center}
+.fig svg{width:100%;height:auto;display:block;overflow:visible}
+.fig.dial svg{max-width:330px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.opts.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.opts.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:480px){.opts.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+button{font:inherit;color:inherit}
+.opt{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:500;text-align:center;min-height:48px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:focus-visible,.chip:focus-visible,.ghost:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.opt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+.opt:disabled{cursor:default}
+.line{margin:0;padding:10px 12px;border-radius:10px;background:var(--warn-bg);font-size:.95rem}
+.line.ok{background:var(--ok-bg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;cursor:pointer;font-weight:600;font-size:.9rem}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ghost{border:1px dashed var(--line);background:none;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:.9rem;color:var(--muted)}
+.play{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+svg text{font-family:var(--text);fill:var(--ink)}
+svg .mut{fill:var(--muted)}
+.trows{display:flex;flex-direction:column;gap:6px}
+.trow{border-radius:10px;padding:4px 6px 0;border:2px solid transparent}
+.trow.pick{border-color:var(--accent)}
+.trow h3{margin:0;font-size:.9rem;font-weight:600;display:flex;gap:8px;align-items:baseline}
+.trow h3 span{font-weight:400;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<main>
+  <header>
+    <h1>E-serierna, skiss</h1>
+    <p class="lead">Klockan för de första graderna, sedan rullas den ut till en linjal när toleransen kommer in. Svara på frågorna, både rätt och fel visar bilden. Knapparna märkta <em>skiss</em> finns bara här.</p>
+  </header>
+
+  <section class="card" id="c0">
+    <div class="tag"><span class="grade">Nykomling</span><span class="note">byter plats med Lärling</span></div>
+    <p class="prompt">Vad betyder 12 i E12?</p>
+    <div class="fig dial"><svg id="d0" viewBox="-40 -40 380 380" role="img" aria-label="Klockan med E12"></svg></div>
+    <div class="opts" id="o0"></div>
+    <p class="line" id="l0" hidden></p>
+    <div class="row"><span class="play">Skiss:</span>
+      <button class="chip" data-s="6" aria-pressed="false">E6</button>
+      <button class="chip" data-s="12" aria-pressed="true">E12</button>
+      <button class="chip" data-s="24" aria-pressed="false">E24</button>
+      <span class="note">serierna dubblas: varannan timme, varje timme, varje halvtimme</span>
+    </div>
+  </section>
+
+  <section class="card" id="c1">
+    <div class="tag"><span class="grade">Lärling</span><span class="note">ny</span></div>
+    <p class="prompt">Vilken serie är det här?</p>
+    <div class="fig dial"><svg id="d1" viewBox="-40 -40 380 380" role="img" aria-label="Klockan med prickar"></svg></div>
+    <div class="opts four" id="o1"></div>
+    <p class="line" id="l1" hidden></p>
+    <div class="row"><button class="ghost" id="n1">Ny fråga</button></div>
+  </section>
+
+  <section class="card" id="c2">
+    <div class="tag"><span class="grade">Gesäll</span><span class="note">klockan rullas ut när man kommer hit</span></div>
+    <p class="prompt">Vilken tolerans är E12 gjord för?</p>
+    <div class="fig"><svg id="d2" viewBox="-30 0 660 175" role="img" aria-label="Klockan som rullas ut till en linjal"></svg></div>
+    <div class="row"><span class="play">Skiss:</span><button class="ghost" id="roll">Rulla ihop till klockan</button></div>
+    <div class="opts three" id="o2"></div>
+    <p class="line" id="l2" hidden></p>
+    <div class="trows" id="t2" hidden></div>
+  </section>
+
+  <section class="card" id="c3">
+    <div class="tag"><span class="grade">Mästare</span><span class="note">gamla Nykomling, nu med linjalen som facit</span></div>
+    <p class="prompt">Tre av värdena finns i E12. Vilket är udda?</p>
+    <div class="opts four" id="o3"></div>
+    <div class="fig"><svg id="d3" viewBox="-30 -10 660 120" role="img" aria-label="Linjalen med E12" hidden></svg></div>
+    <p class="line" id="l3" hidden></p>
+    <div class="row"><button class="ghost" id="n3">Ny fråga</button></div>
+  </section>
+
+  <section class="card">
+    <div class="tag"><span class="grade">Stormästare</span></div>
+    <p class="prompt">Vilken serie hör motståndet till?</p>
+    <p class="note" style="margin:0">Som i dag. Vid fel visas linjalen för den rätta serien med värdet utmärkt.</p>
+  </section>
+</main>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const SER = {
+  6: [10,15,22,33,47,68],
+  12: [10,12,15,18,22,27,33,39,47,56,68,82],
+  24: [10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91],
+  48: [100,105,110,115,121,127,133,140,147,154,162,169,178,187,196,205,215,226,237,249,261,274,287,301,316,332,348,365,383,402,422,442,464,487,511,536,562,590,619,649,681,715,750,787,825,866,909,953].map(x => x / 10)
+};
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pos = v => Math.log10(v / 10);           // 10 → 0, 100 → 1
+const lab = v => String(v).replace('.', ',');
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const el = (tag, at = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); if (parent) parent.appendChild(e); return e; };
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+// Klockan: ett varv är 10 till 100. Prickarna sitter där värdena hamnar på en logaritmisk skala.
+const C = 150, R = 118;
+const onDial = (s, r = R) => [C + r * Math.sin(2 * Math.PI * s), C - r * Math.cos(2 * Math.PI * s)];
+function drawDial(svg, n, {labels = true, count = false, ticks = true} = {}){
+  svg.innerHTML = '';
+  el('circle', {cx: C, cy: C, r: R, fill: 'none', stroke: css('--line'), 'stroke-width': 10}, svg);
+  if (ticks) for (let i = 0; i < 24; i++) { const [x1, y1] = onDial(i / 24, R - 16), [x2, y2] = onDial(i / 24, R - (i % 2 ? 22 : 26));
+    el('line', {x1, y1, x2, y2, stroke: css('--line'), 'stroke-width': 2}, svg); }
+  const mid = el('text', {x: C, y: C - 4, 'text-anchor': 'middle', 'font-size': 30, 'font-weight': 700, style: 'font-family:var(--display)'}, svg);
+  mid.textContent = labels ? `E${n}` : '?';
+  const sub = el('text', {x: C, y: C + 20, 'text-anchor': 'middle', 'font-size': 12, class: 'mut'}, svg);
+  sub.textContent = labels ? 'ett varv = 10 till 100' : '';
+  // Pilen vid 12-slaget: efter 82 kommer 100 och ett nytt varv
+  if (labels) { const t = el('text', {x: C, y: -24, 'text-anchor': 'middle', 'font-size': 11, class: 'mut'}, svg); t.textContent = '100 = nytt varv, ×10'; }
+  SER[n].forEach((v, i) => {
+    const [x, y] = onDial(pos(v)), g = el('g', {}, svg);
+    el('circle', {cx: x, cy: y, r: n > 24 ? 4 : n > 12 ? 6 : 8, fill: css('--accent')}, g);
+    if (labels && n <= 24) {
+      const [lx, ly] = onDial(pos(v), R + (n > 12 ? 22 : 26));
+      const t = el('text', {x: lx, y: ly + 4, 'text-anchor': 'middle', 'font-size': n > 12 ? 11 : 14, 'font-weight': 600}, g);
+      t.textContent = lab(v);
+    }
+    if (count) {
+      const [cx, cy] = onDial(pos(v), R - 36);
+      const t = el('text', {x: cx, y: cy + 4, 'text-anchor': 'middle', 'font-size': n > 12 ? 9 : 12, fill: css('--ok'), 'font-weight': 700}, g);
+      t.textContent = i + 1;
+    }
+    if (!reduce) g.animate([{opacity: 0, transform: 'scale(.4)'}, {opacity: 1, transform: 'none'}],
+      {duration: 260, delay: i * (n > 12 ? 70 : 140), fill: 'backwards', easing: 'cubic-bezier(.3,1.6,.5,1)', transformOrigin: `${x}px ${y}px`});
+    g.style.transformBox = 'fill-box'; g.style.transformOrigin = 'center';
+  });
+}
+
+function quiz(box, opts, right, onDone){
+  box.innerHTML = '';
+  opts.forEach((o, i) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.innerHTML = o; b.type = 'button';
+    b.onclick = () => { [...box.children].forEach((x, j) => { x.disabled = true; if (j === right) x.classList.add('ok'); }); if (i !== right) b.classList.add('bad'); onDone(i === right, i); };
+    box.appendChild(b);
+  });
+}
+function say(p, ok, html){ p.hidden = false; p.className = 'line' + (ok ? ' ok' : ''); p.innerHTML = html; }
+
+// Nykomling
+const d0 = document.getElementById('d0');
+function startC0(){
+  d0.innerHTML = ''; drawDialEmpty(d0);
+  const right = '12 värden på varje varv';
+  const opts = shuffle([right, '±12 % tolerans', 'Värden upp till 12 kΩ', '12 färgband']);
+  quiz(document.getElementById('o0'), opts, opts.indexOf(right), ok => {
+    drawDial(d0, 12, {count: true});
+    say(document.getElementById('l0'), ok, (ok ? 'Rätt! ' : '') + 'E12 har 12 värden på ett varv, från 10 till 82. Sedan kommer 100 och samma värden igen med en nolla till: 120, 150, 180 …');
+  });
+}
+function drawDialEmpty(svg){
+  el('circle', {cx: C, cy: C, r: R, fill: 'none', stroke: css('--line'), 'stroke-width': 10}, svg);
+  const t = el('text', {x: C, y: C + 10, 'text-anchor': 'middle', 'font-size': 34, 'font-weight': 700, style: 'font-family:var(--display)'}, svg); t.textContent = 'E12';
+}
+document.querySelectorAll('#c0 .chip').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#c0 .chip').forEach(x => x.setAttribute('aria-pressed', x === b));
+  drawDial(d0, +b.dataset.s, {count: +b.dataset.s <= 12});
+});
+startC0();
+
+// Lärling
+const d1 = document.getElementById('d1');
+function startC1(){
+  const n = [6, 12, 24][Math.floor(Math.random() * 3)];
+  drawDial(d1, n, {labels: false});
+  const opts = ['E6','E12','E24','E48'];
+  document.getElementById('l1').hidden = true;
+  quiz(document.getElementById('o1'), opts, opts.indexOf('E' + n), ok => {
+    drawDial(d1, n, {count: n <= 12});
+    say(document.getElementById('l1'), ok, (ok ? 'Rätt! ' : '') + `${n} prickar på varvet, alltså E${n}.` + (n === 24 ? ' En prick på varje halvtimme.' : n === 6 ? ' En prick varannan timme.' : ' En prick på varje timme.'));
+  });
+}
+document.getElementById('n1').onclick = startC1;
+startC1();
+
+// Linjalen: klockan utrullad. W är varvets längd.
+const X0 = 0, W = 600, LY = 90;
+const onLine = s => [X0 + W * s, LY];
+function rulerBase(svg, y = LY){
+  el('line', {x1: X0, y1: y, x2: X0 + W, y2: y, stroke: css('--line'), 'stroke-width': 6, 'stroke-linecap': 'round'}, svg);
+}
+// Gesäll: rullar ut
+const d2 = document.getElementById('d2');
+let rolled = 0, rollAnim = null;
+const RR = 68, RC = [300, 90];
+function drawRoll(t){
+  d2.innerHTML = '';
+  const e = t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+  // Från cirkel till linje: varje punkt glider från sin plats på cirkeln till sin plats på linjen
+  const at = s => { const cx = RC[0] + RR * Math.sin(2 * Math.PI * s), cy = RC[1] - RR * Math.cos(2 * Math.PI * s);
+    const [lx, ly] = onLine(s); return [cx + (lx - cx) * e, cy + (ly - cy) * e]; };
+  let dpath = ''; for (let i = 0; i <= 120; i++) { const [x, y] = at(i / 120); dpath += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1); }
+  el('path', {d: dpath, fill: 'none', stroke: css('--line'), 'stroke-width': 6, 'stroke-linecap': 'round'}, d2);
+  SER[12].concat([100]).forEach(v => {
+    const [x, y] = at(v === 100 ? 1 : pos(v));
+    el('circle', {cx: x, cy: y, r: 6, fill: v === 100 ? css('--muted') : css('--accent')}, d2);
+    const t = el('text', {x, y: y - 14, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 600, opacity: e}, d2); t.textContent = lab(v);
+  });
+}
+function roll(to){
+  cancelAnimationFrame(rollAnim);
+  const from = rolled, t0 = performance.now(), dur = reduce ? 1 : 1400;
+  const step = now => { const k = Math.min(1, (now - t0) / dur); rolled = from + (to - from) * k; drawRoll(rolled); if (k < 1) rollAnim = requestAnimationFrame(step); };
+  rollAnim = requestAnimationFrame(step);
+  document.getElementById('roll').textContent = to ? 'Rulla ihop till klockan' : 'Rulla ut till linjalen';
+}
+document.getElementById('roll').onclick = () => roll(rolled > .5 ? 0 : 1);
+drawRoll(0); setTimeout(() => roll(1), 600);
+
+// Toleransstaplar: varannan stapel på en egen rad så att krock och glapp syns
+function tolRow(t, title, sub, picked){
+  const wrap = document.createElement('div'); wrap.className = 'trow' + (picked ? ' pick' : '');
+  wrap.innerHTML = `<h3>${title}<span>${sub}</span></h3>`;
+  const svg = el('svg', {viewBox: '-30 0 660 78', role: 'img', 'aria-label': title});
+  const y0 = 50, vals = SER[12].concat([100]);
+  rulerBase(svg, y0);
+  const bars = vals.map((v, i) => {
+    const a = Math.max(0, pos(v * (1 - t / 100))), b = Math.min(1, pos(v * (1 + t / 100)));
+    const y = i % 2 ? 20 : 30;
+    const r = el('rect', {x: X0 + W * a, y, width: Math.max(2, W * (b - a)), height: 9, rx: 3, fill: i % 2 ? css('--bar2') : css('--bar'), opacity: .85}, svg);
+    if (!reduce) r.animate([{transform: 'scaleX(0)'}, {transform: 'none'}], {duration: 380, delay: i * 50, fill: 'backwards'});
+    r.style.transformBox = 'fill-box'; r.style.transformOrigin = 'center';
+    return [a, b];
+  });
+  for (let i = 0; i < bars.length - 1; i++) {
+    const over = bars[i][1] - bars[i + 1][0];
+    if (Math.abs(over) < .03) continue;
+    const lo = Math.min(bars[i][1], bars[i + 1][0]), hi = Math.max(bars[i][1], bars[i + 1][0]);
+    el('rect', {x: X0 + W * lo, y: y0 - 4, width: W * (hi - lo), height: 8, rx: 2, fill: over > 0 ? css('--bad') : css('--warn')}, svg);
+  }
+  vals.forEach(v => { const x = X0 + W * pos(v);
+    el('circle', {cx: x, cy: y0, r: 4, fill: v === 100 ? css('--muted') : css('--ink')}, svg);
+    const tx = el('text', {x, y: y0 + 20, 'text-anchor': 'middle', 'font-size': 11}, svg); tx.textContent = lab(v); });
+  wrap.appendChild(svg);
+  return wrap;
+}
+function startC2(){
+  const opts = ['±20 %', '±10 %', '±1 %'];
+  quiz(document.getElementById('o2'), opts, 1, (ok, i) => {
+    const t2 = document.getElementById('t2'); t2.hidden = false; t2.innerHTML = '';
+    t2.append(
+      tolRow(20, '±20 %', 'för stor: staplarna krockar, 10 Ω kan vara 12 Ω', i === 0),
+      tolRow(10, '±10 %', 'lagom: staplarna möts ungefär kant i kant', i === 1),
+      tolRow(1, '±1 %', 'för liten: glapp mellan värdena', i === 2));
+    say(document.getElementById('l2'), ok, (ok ? 'Rätt! ' : '') + 'E12 är gjord för ±10 %. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.');
+  });
+}
+startC2();
+
+// Mästare: värdena hittas på linjalen, det udda hamnar mellan prickarna
+const d3 = document.getElementById('d3');
+const NOT24 = [14,17,19,21,23,25,26,28,29,31,32,34,35,37,38,41,42,44,45,46,48,49,52,53,54,55,57,58,59,61,63,64,65,66,67,69,71,72,73,74,76,77,78,79,81,83,84,85,86,87,88,89];
+const fmtV = (b, m) => { const v = b * m / 10; return v >= 1000 ? lab(v / 1000) + ' kΩ' : lab(v) + ' Ω'; };
+function startC3(){
+  const ins = shuffle(SER[12].slice()).slice(0, 3), odd = NOT24[Math.floor(Math.random() * NOT24.length)];
+  const items = shuffle(ins.map(b => [b, true]).concat([[odd, false]])).map(([b, ok]) => [b, ok, [1, 10, 100, 1000][Math.floor(Math.random() * 4)]]);
+  d3.hidden = true; document.getElementById('l3').hidden = true;
+  quiz(document.getElementById('o3'), items.map(([b, , m]) => fmtV(b, m)), items.findIndex(x => !x[1]), ok => {
+    d3.hidden = false; d3.innerHTML = '';
+    rulerBase(d3, 70);
+    SER[12].concat([100]).forEach(v => { const x = X0 + W * pos(v);
+      el('circle', {cx: x, cy: 70, r: 5, fill: v === 100 ? css('--muted') : css('--accent')}, d3);
+      const t = el('text', {x, y: 92, 'text-anchor': 'middle', 'font-size': 11, class: 'mut'}, d3); t.textContent = lab(v); });
+    items.forEach(([b, good, m], i) => {
+      const x = X0 + W * pos(b), g = el('g', {}, d3);
+      el('line', {x1: x, y1: 20, x2: x, y2: 62, stroke: good ? css('--ok') : css('--bad'), 'stroke-width': 2, 'stroke-dasharray': good ? '' : '4 3'}, g);
+      const t = el('text', {x, y: 14, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 700, fill: good ? css('--ok') : css('--bad')}, g);
+      t.textContent = good ? '✓ ' + lab(b) : '✗ ' + lab(b);
+      if (!reduce) g.animate([{opacity: 0, transform: 'translateY(-14px)'}, {opacity: 1, transform: 'none'}], {duration: 360, delay: 200 + i * 260, fill: 'backwards'});
+    });
+    say(document.getElementById('l3'), ok, (ok ? 'Rätt! ' : '') + `Ta bort nollorna och prefixet: ${lab(odd)} hamnar mellan prickarna och finns inte i E12. De andra landar på en prick.`);
+  });
+}
+document.getElementById('n3').onclick = startC3;
+startC3();
+</script>
