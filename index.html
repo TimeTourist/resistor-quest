@@ -371,19 +371,8 @@ html,body{overflow-x:clip}
 .chips{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 0;padding:0;list-style:none;font-size:.95rem}
 .dir{margin-top:10px!important;font-size:.95rem;color:var(--muted)}
 .chips li{display:flex;align-items:center;gap:6px}
-details{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
-summary{cursor:pointer;font-weight:600}
-details+details{margin-top:12px}
-details[hidden]{display:none}
-.guide h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.35rem;margin:18px 0 6px}
-.guide ul{margin:0;padding-left:0;list-style:none;display:grid;gap:10px}
-.guide li{line-height:1.5}
 .gnote.center{text-align:center;margin-top:2px}
 .gnote{color:var(--muted);font-size:.92rem;margin:10px 0}
-.ex{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 16px}
-.ex figure{margin:0}
-.ex svg{width:100%;max-width:340px;height:auto;display:block}
-.ex figcaption{font-size:.88rem;color:var(--muted);line-height:1.4}
 .ghost{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
 .ghost:hover:not(:disabled){border-color:var(--accent)}
 .ghost:disabled{opacity:.5;cursor:default}
@@ -441,21 +430,8 @@ p.epre{margin:0}
 .meterfb{margin:10px 0}
 .meterfb>p:first-child{margin:0 0 6px}
 .meterfb .gnote{margin:6px 0 0}
-.tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.02em;padding:1px 7px;border-radius:999px;margin-right:6px;vertical-align:1px;border:1px solid}
-.tag.std{color:var(--accent);border-color:var(--accent)}
-.tag.pra{color:var(--ok);border-color:var(--ok)}
-.tag.tum{color:var(--muted);border-color:var(--muted)}
-.eseg{margin-top:12px}
-.eseg>div{flex-wrap:wrap}
-.ehelp{margin-top:12px;font-size:.95rem}
-.ehelp p{margin:0 0 10px}
-.enote{color:var(--muted);font-size:.92rem;margin:10px 0}
 .egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
 .egrid span{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.2rem;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
-.tbl{overflow-x:auto}
-table{border-collapse:collapse;width:100%;margin-top:10px;font-size:.92rem}
-th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-th{color:var(--muted);font-weight:500}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){
   .res.turn svg{animation:turn .45s ease-out}
@@ -635,82 +611,6 @@ th{color:var(--muted);font-weight:500}
     </div>
   </section>
 
-  <!-- Rullgardinerna med info är gömda: spelet förklarar själv. Ta bort hidden för att visa dem igen. -->
-  <details hidden>
-    <summary>Om ämnen och grader</summary>
-    <p class="gnote">Färgkoden lär dig läsa av och bygga motstånd med fyra, fem eller sex färgband. Kartan högst upp är själv ett motstånd: varje färgband är ett ämne, och lågan längst ut är Eldprovet. Tryck på ett band för att läsa om ämnet.</p>
-    <p class="gnote">Varje ämne har fem grader: Nykomling, Lärling, Gesäll, Mästare och Stormästare. <b>3 rätt i rad</b> tar dig upp en grad och 3 fel i rad ner en. Bandet på kartan fylls för varje grad du klarar. När du når Mästare låses nästa ämne upp, och Stormästare ger ett ✓. Eldprovet är alltid öppet.</p>
-    <ul class="lvlist">
-      <li><b>Motståndet:</b> hur ett motstånd ser ut. Antal band, vilka färger som finns och åt vilket håll man läser.</li>
-      <li><b>Resistansen:</b> färgernas siffror, multiplikatorn och hela värdet med k och M.</li>
-      <li><b>Toleransen:</b> toleransbandets färger och hur mycket värdet får avvika.</li>
-      <li><b>Temperaturen:</b> det sjätte bandet, som säger hur mycket värdet ändras per grad.</li>
-      <li><b>E-serierna:</b> standardvärdena som motstånd säljs i.</li>
-      <li><b>Eldprovet:</b> 20 frågor, fyra från varje ämne, i svåraste varianten. Provet kan bara höja: 3 av 4 rätt ger Mästare i ämnet och 4 av 4 klarar det.</li>
-    </ul>
-  </details>
-
-  <details class="guide" hidden>
-    <summary>Guide: så hittar du läsriktningen</summary>
-    <p class="gnote">Varje tips är märkt med var det kommer ifrån. <span class="tag std">Standard</span> betyder att det står i IEC 60062:2016, standarden för färgkoden. <span class="tag pra">Praxis</span> är vanligt hos tillverkare men inget krav. <span class="tag tum">Tumregel</span> är ett knep som oftast fungerar men kan slå fel.</p>
-
-    <h3>Vad standarden säger</h3>
-    <ul>
-      <li><span class="tag std">Standard</span> Första bandet ska, där det går, sitta närmast motståndets ände. Banden ska placeras och ha sådana avstånd att de inte kan läsas fel.<div class="ex" data-ex="s-first"></div></li>
-      <li><span class="tag std">Standard</span> Toleransbandet ska vara minst 1,5 gånger så brett som de andra banden.<div class="ex" data-ex="s-wide"></div></li>
-      <li><span class="tag std">Standard</span> Guld, silver och rosa används bara som multiplikator eller tolerans, aldrig som siffra. De kan alltså aldrig vara första bandet.<div class="ex" data-ex="s-metal"></div></li>
-      <li><span class="tag std">Standard</span> Tre band betyder två siffror och en multiplikator. Att toleransbandet saknas betyder ±20 %.<div class="ex" data-ex="s-three"></div></li>
-      <li><span class="tag std">Standard</span> På sex band är toleransbandet (det femte) det enda breda. Äldre utgåvor föreskrev i stället att det sjätte bandet skulle vara brett. Det ändrades 2016 eftersom det förvirrade, så äldre motstånd kan ha ett brett sjätte band.<div class="ex" data-ex="s-six"></div></li>
-      <li><span class="tag std">Standard</span> Temperaturkoefficienten kan också märkas med ett avbrutet sjätte band, eller med prickar mellan banden när motståndet är för kort för ett helt band.<div class="ex" data-ex="s-tcr"></div></li>
-      <li><span class="tag std">Standard</span> Ett band får ha ett oavsiktligt avbrott så länge minst två tredjedelar syns från varje vinkel.<div class="ex" data-ex="s-chip"></div></li>
-      <li><span class="tag std">Standard</span> Rosa betyder ×0,001 och infördes 2016. Det är ovanligt och finns inte med i spelet.<div class="ex" data-ex="s-pink"></div></li>
-    </ul>
-
-    <h3>Vad man brukar se i praktiken</h3>
-    <ul>
-      <li><span class="tag pra">Praxis</span> Ett lite större mellanrum före toleransbandet. Det är mycket vanligt men står inte som krav i standarden, och billiga motstånd kan ha jämnt avstånd.<div class="ex" data-ex="p-gap"></div></li>
-      <li><span class="tag pra">Praxis</span> Fyra band med guld (±5 %) eller silver (±10 %) som tolerans är det vanligaste för vanliga motstånd. Då pekar metallbandet direkt ut slutet.<div class="ex" data-ex="p-metal4"></div></li>
-      <li><span class="tag pra">Praxis</span> Fem band används för precisionsmotstånd, oftast med brun (±1 %) eller röd (±2 %) tolerans. Då finns inget metallband att gå efter, och bredd och mellanrum blir viktigare.<div class="ex" data-ex="p-five"></div></li>
-      <li><span class="tag pra">Praxis</span> Kroppsfärgen är inte standardiserad. Beige eller ljusbrun kropp är vanligt på kolfilmsmotstånd och blå på metallfilmsmotstånd, men det finns många undantag.<div class="ex" data-ex="p-body"></div></li>
-    </ul>
-
-    <h3>Knep när ledtrådarna inte räcker</h3>
-    <ul>
-      <li><span class="tag tum">Tumregel</span> Första bandet kan inte vara svart, eftersom ett värde inte börjar med en nolla. Ser du svart i ena änden kan det inte vara början.<div class="ex" data-ex="t-black"></div></li>
-      <li><span class="tag tum">Tumregel</span> Läs åt båda hållen och välj den läsning som ger ett standardvärde: E24 för fyra band och E96 för fem band (standardserierna kommer från IEC 60063). Det fungerar ofta men inte alltid. Brun–svart–röd–röd är 1 kΩ ±2 %, men läst baklänges blir det röd–röd–svart–brun, 22 Ω ±1 %, och båda är standardvärden.<div class="ex" data-ex="t-eser"></div></li>
-      <li><span class="tag tum">Tumregel</span> Guld kan också vara multiplikator. 4,7 Ω ±5 % är gul–violett–guld–guld, så då sitter guld på två platser i samma ände.<div class="ex" data-ex="t-goldmult"></div></li>
-      <li><span class="tag tum">Tumregel</span> Läs i dagsljus. Brun, röd och orange är lätta att blanda ihop i gult lampljus, liksom blå, violett och grå. Ett motstånd som blivit för varmt kan också ha missfärgade band.<div class="ex" data-ex="t-light"></div></li>
-      <li><span class="tag tum">Tumregel</span> Är du osäker, mät med en multimeter. Mät helst motståndet när det inte sitter i en krets, eftersom andra komponenter annars påverkar mätvärdet.<div class="ex" data-ex="t-meter"></div></li>
-    </ul>
-    <p class="gnote">Källor: IEC 60062:2016 avsnitt 3 (färgkod, bandbredd, placering, TK-märkning och färgtabell) och IEC 60063 (E-serierna).</p>
-  </details>
-
-  <details id="refColors" hidden>
-    <summary>Visa färgkoden</summary>
-    <div class="tbl"><table id="ref"></table></div>
-  </details>
-
-  <details id="refE" hidden>
-    <summary>Visa standardvärden</summary>
-    <div class="seg eseg"><div role="group" aria-label="E-serie" id="eSeg"></div></div>
-    <div class="ehelp">
-      <p><b>Varför just de här talen?</b> E-serierna är byggda så att toleranserna täcker varandra utan glapp. I E6 täcker 10 Ω ±20 % allt från 8 till 12 Ω, och nästa värde, 15 Ω ±20 %, tar vid vid 12 Ω. Fler värden per dekad ger mindre steg mellan värdena och tillåter därför en snävare tolerans:</p>
-      <div class="tbl"><table>
-        <thead><tr><th>Serie</th><th>Värden per dekad</th><th>Steg</th><th>Tolerans</th></tr></thead>
-        <tbody>
-          <tr><td>E6</td><td>6</td><td>ca 47 %</td><td>±20 %</td></tr>
-          <tr><td>E12</td><td>12</td><td>ca 21 %</td><td>±10 %</td></tr>
-          <tr><td>E24</td><td>24</td><td>ca 10 %</td><td>±5 %</td></tr>
-          <tr><td>E48</td><td>48</td><td>ca 4,9 %</td><td>±2 %</td></tr>
-          <tr><td>E96</td><td>96</td><td>ca 2,4 %</td><td>±1 %</td></tr>
-        </tbody>
-      </table></div>
-      <p>Varje värde är det förra gånger samma faktor (ungefär 1,47 i E6), så stegen är lika stora i procent. Några E24-värden avviker lite från den regeln av historiska skäl, till exempel 3,3 och 4,7.</p>
-      <p><b>Lär dig lager för lager.</b> E6: 10, 15, 22, 33, 47, 68. E12 lägger till ett värde mellan varje: 12, 18, 27, 39, 56, 82. E24 lägger till ett till mellan varje: 11, 13, 16, 20, 24, 30, 36, 43, 51, 62, 75, 91. E48 och E96 lär sig ingen utantill, dem slår man upp.</p>
-    </div>
-    <p class="enote" id="eNote"></p>
-    <div class="egrid" id="eGrid"></div>
-  </details>
   <div class="testbar" hidden>
     <span>Test</span>
     <button id="tGive">Lås upp nästa ämne</button>
@@ -2993,13 +2893,6 @@ document.getElementById('tReset').addEventListener('click', () => {
   renderGrid();
 });
 
-document.getElementById('ref').innerHTML =
-  '<thead><tr><th>Färg</th><th>Siffra</th><th>Multiplikator</th><th>Tolerans</th><th>Temp.koeff.</th></tr></thead><tbody>' +
-  DIG.concat(['gold','silver']).map(k => {
-    const c = C[k];
-    return `<tr><td><span class="sw" style="${swStyle(k)};vertical-align:-4px;margin-right:8px"></span>${c.n}</td><td>${c.d ?? ''}</td><td>${fmtMult(c.m)}</td><td>${c.t ? fmtTol(c.t) : ''}</td><td>${c.tc ? fmtTc(c.tc) : ''}</td></tr>`;
-  }).join('') + '</tbody>';
-
 // Multimeter: visar ett värde inom toleransen
 function meterRead(v, tol){
   return v * (1 + (Math.random()*2 - 1) * tol / 100 * 0.9);
@@ -3206,48 +3099,6 @@ function compareValues(vIn, vTrue){
   ];
 }
 
-// Exempel i guiden
-function exStyle(n, o = {}){
-  const st = n === 3
-    ? {body:'var(--body)', shape:'bone', pal:0, xs:[98,128,158], w:[13,13,13], flip:false, cues:[]}
-    : stdStyle(n);
-  return Object.assign(st, o);
-}
-const eq = n => Array(n).fill(n === 4 ? 13 : 12);
-const EX = {
-  's-first': [[['brown','black','red','gold'], exStyle(4, {xs:[86,108,130,222]}), 'Banden börjar nära vänster ände. Brun–svart–röd–guld = 1 kΩ ±5 %.']],
-  's-wide': [[['red','yellow','white','orange','brown'], exStyle(5), 'Det breda bruna bandet är toleransen. Röd–gul–vit–orange–brun = 249 kΩ ±1 % (exemplet i IEC 60062).']],
-  's-metal': [[['violet','green','yellow','gold'], exStyle(4, {flip:true}), 'Guldet sitter till vänster, så motståndet ska vändas. Violett–grön–gul–guld = 750 kΩ ±5 % (exemplet i IEC 60062).']],
-  's-three': [[['blue','grey','red'], exStyle(3), 'Inget toleransband. Blå–grå–röd = 6,8 kΩ ±20 % (exemplet i IEC 60062).']],
-  's-six': [
-    [['red','yellow','white','orange','brown','red'], exStyle(6), 'Enligt 2016: femte bandet (tolerans) är brett. 249 kΩ ±1 %, 50 ppm/K.'],
-    [['red','yellow','white','orange','brown','red'], exStyle(6, {w:[11,11,11,11,11,16.5], wideIdx:5}), 'Äldre utgåvor: sjätte bandet (TK) är brett. Samma värde.']
-  ],
-  's-tcr': [[['red','yellow','white','orange','brown','red'], exStyle(6, {interrupt:5}), 'Sjätte bandet är avbrutet. Det betyder fortfarande 50 ppm/K.']],
-  's-chip': [[['yellow','violet','red','gold'], exStyle(4, {chip:1}), 'Violett har ett litet avbrott men räknas som helt. Gul–violett–röd–guld = 4,7 kΩ ±5 %.']],
-  's-pink': [[['yellow','violet','pink','gold'], exStyle(4), 'Så märks 47 mΩ ±5 %: gul–violett–rosa–guld, alltså 47 × 0,001 Ω.']],
-  'p-gap': [[['yellow','violet','red','gold'], exStyle(4, {w:eq(4)}), 'Lika breda band, men större mellanrum före guldet. 4,7 kΩ ±5 %.']],
-  'p-metal4': [[['brown','black','orange','silver'], exStyle(4), 'Brun–svart–orange–silver = 10 kΩ ±10 %.']],
-  'p-five': [[['brown','black','black','red','brown'], exStyle(5), 'Brun–svart–svart–röd–brun = 10 kΩ ±1 %. Brun i båda ändar, så bredd och mellanrum avgör. Baklänges skulle det bli 120 Ω ±1 %.']],
-  'p-body': [
-    [['red','red','brown','gold'], exStyle(4, {body:'#dcc596'}), 'Beige kolfilm: röd–röd–brun–guld = 220 Ω ±5 %.'],
-    [['brown','black','black','brown','brown'], exStyle(5, {body:'#5f93d6'}), 'Blå metallfilm: brun–svart–svart–brun–brun = 1 kΩ ±1 %.']
-  ],
-  't-black': [[['brown','black','black'], exStyle(3, {flip:true}), 'Svart till vänster kan inte vara början, så det läses från höger. Brun–svart–svart = 10 Ω ±20 %.']],
-  't-eser': [[['brown','black','red','red'], exStyle(4, {xs:[100,140,180,220], w:eq(4), body:'#d4b07f'}), 'Inga ledtrådar alls. Från vänster 1 kΩ ±2 %, från höger 22 Ω ±1 %. Båda finns i E24, så här behövs en multimeter.']],
-  't-goldmult': [[['yellow','violet','gold','gold'], exStyle(4), 'Gul–violett–guld–guld = 4,7 Ω ±5 %. Guldet närmast mitten är multiplikatorn.']],
-  't-light': [
-    [['brown','red','orange','gold'], exStyle(4), 'I dagsljus: brun–röd–orange–guld = 12 kΩ ±5 %.'],
-    [['brown','red','orange','gold'], exStyle(4, {tint:true}), 'Samma motstånd i gult lampljus (simulerat). Banden flyter ihop.']
-  ]
-};
-document.querySelectorAll('[data-ex]').forEach(el => {
-  const id = el.dataset.ex;
-  if (id === 't-meter') { el.innerHTML = '<figure><figcaption>Exempel: ett motstånd märkt 10 kΩ ±1 % ska mäta mellan 9,9 och 10,1 kΩ. Visar mätaren 9,93 kΩ stämmer det.</figcaption></figure>'; return; }
-  el.innerHTML = (EX[id] || []).map(([b, st, cap]) =>
-    `<figure>${svg(b, {style:st, label:'Exempel: ' + b.map(k => C[k].n).join(', ')})}<figcaption>${cap}</figcaption></figure>`).join('');
-});
-
 // Standardvärdetabell (E-serier)
 const E48 = E96.filter((_, i) => i % 2 === 0);
 const E12 = E24.filter((_, i) => i % 2 === 0);
@@ -3347,26 +3198,6 @@ function seriesWhy(){
       : `${mantTxt(r.m3)} finns inte i någon standardserie, så värdet är inte standard.`)
     : `${fmtTol(tol)} hör till ${ser}, och ${mantTxt(r.m3)} finns i ${ser}.`;
 }
-let eSel = 'E24';
-try { const e = localStorage.getItem('fargkoden-eser'); if (e && ESER[e]) eSel = e; } catch(e) {}
-function renderE(){
-  const [vals, tol] = ESER[eSel];
-  document.getElementById('eSeg').innerHTML = Object.keys(ESER).map(k =>
-    `<button data-eser="${k}" aria-pressed="${k === eSel}">${k}</button>`).join('');
-  const ex = vals[Math.floor(vals.length*0.6)] / (vals[0] >= 100 ? 100 : 10);
-  document.getElementById('eNote').textContent =
-    `${eSel} har ${vals.length} värden per dekad och hör ihop med ±${tol} %. Varje värde finns i alla dekader, till exempel ${fmtVal(ex)}, ${fmtVal(ex*10)}, ${fmtVal(ex*100)} och ${fmtVal(ex*1000)}.`;
-  const dec = vals[0] >= 100 ? 2 : 1;
-  document.getElementById('eGrid').innerHTML = vals.map(v =>
-    `<span>${(v / (dec === 2 ? 100 : 10)).toFixed(dec).replace('.', ',')}</span>`).join('');
-}
-document.getElementById('eSeg').addEventListener('click', e => {
-  const b = e.target.closest('[data-eser]');
-  if (!b) return;
-  eSel = b.dataset.eser; save('fargkoden-eser', eSel); renderE();
-});
-renderE();
-
 // Sidan öppnar på startsidan. Förhandsvisningen från dev.html går direkt till spelkortet.
 renderGrid();
 if (S.pin) openTopic(S.pin.topic);
