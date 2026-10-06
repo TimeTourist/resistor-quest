@@ -47,7 +47,7 @@ Tryck på … / Välj ett ämne …        Tryck på … / Välj …
 - Överst: spelets namn med de fem färgbanden och ljudknappen till höger.
 - Under namnet en rad som ändras efter läget:
   - Med en nyckel i ett lås: "**Tryck på Motståndet** för att vrida om nyckeln och låsa upp."
-  - Annars: "Lär dig läsa motstånd. **Välj ett ämne.** Når du Mästare flyger nyckeln till nästa."
+  - Annars: "Lär dig läsa motstånd. **Välj ett ämne.**"
 - Rullgardinerna med info finns inte med (de är redan gömda).
 - I testläge ligger testraden under rutnätet som i dag.
 
@@ -67,8 +67,8 @@ Kortet har fyra lägen, och ett femte för Eldprovet:
 
 | Läge | Utseende | Foten | Ett tryck |
 |---|---|---|---|
-| **Låst** | Vit bakgrund, dimma som driver, två kedjor i kryss och ett hänglås med nyckelhål i mitten. Bara ikonen och namnet syns, tydligt ovanför dimman. Raden om ämnet visas inte, den kommer på omslaget. Läget står på en etikett längst ner. | "Låst · nyckeln finns på Mästare i Resistansen" | Kortet skakar och foten säger en stund "Klara Mästare i Resistansen först, så får du nyckeln." |
-| **Nyckel i låset** | Som låst, men nyckeln sitter i nyckelhålet och skakar till med jämna mellanrum. Nyckelhålet, ramen och etiketten lyser i ämnets färg. | "Tryck för att låsa upp" | Nyckeln vrids om och låset öppnas (se D). |
+| **Låst** | Vit bakgrund, dimma som driver, två kedjor i kryss och ett hänglås med nyckelhål i mitten. Namn och rad syns svagt genom dimman. | Ingen text. Låset säger att det är låst, och att man får nycklar genom att spela är en känd trop. | Kortet skakar. |
+| **Nyckel i låset** | Som låst, men nyckeln sitter i nyckelhålet och skakar till med jämna mellanrum. Nyckelhålet och ramen lyser i ämnets färg. | Ingen text. Raden under namnet säger vad man ska göra. | Nyckeln vrids om och låset öppnas (se D). |
 | **Öppet** | Ämnets färger fullt ut. Stapeln i miniformat: fem grader, tre fack var, aktuell grad inramad. | "Gesäll · 1 av 3 rätt i rad · fortsätt", eller "Nytt · börja med en snabbkoll" innan man gjort snabbkollen | Zoomar till spelkortet: omslaget första gången, annars spelsidan. |
 | **Klart** | Guld med ett glanssvep som går över kortet. | "Klart ✓ · rekord 7 i rad" och etiketten "Spela blandat" | Zoomar till spelkortet i blandat läge. |
 | **Eldprovet** | Glödande bakgrund (som i dag) och en eld som flämtar. | Etiketten "Alltid öppet", eller "Pågår · fråga 7 av 20" | Zoomar till Eldprovets kort. |
@@ -203,7 +203,7 @@ Med `prefers-reduced-motion` sker allt direkt: ingen zoom, ingen vändning, nyck
 - **Nya tester:**
   - Första besöket: allt låst, nyckel i Motståndet. Ett tryck öppnar Motståndet och visar omslaget.
   - Snabbkollen: fel svar låter en försöka igen, rätt svar vänder till spelsidan, och omslaget visas inte nästa gång (även efter omladdning).
-  - Mästare ger en nyckel i nästa lås som sparas. Ett tryck på ett låst kort utan nyckel ger förklaringen.
+  - Mästare ger en nyckel i nästa lås som sparas. Ett tryck på ett låst kort utan nyckel skakar kortet och öppnar inget.
   - Eldprovet som låser upp två ämnen ger två nycklar.
   - Minimera och öppna samma ämne: samma fråga och samma antal i rad. Ett annat ämne emellan: ny fråga på den sparade graden.
   - Rutnätet: sex kort i fast ordning med rätt läge och rätt fot.

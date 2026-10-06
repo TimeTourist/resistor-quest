@@ -96,11 +96,7 @@ button{font:inherit;color:inherit}
 /* Låst: dimma, kedjor och ett hänglås med nyckelhål */
 .tile.locked{border-color:var(--line);background:var(--surface)}
 .locked .ticon{background:var(--line);color:var(--muted)}
-/* Låst: ikonen och namnet syns tydligt ovanför dimman, läget står på en etikett längst ner */
-.locked .thead,.locked .tfoot{position:relative;z-index:4}
-.locked .tstate{justify-self:start;padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
-.tile.haskey .tstate{background:var(--c);color:var(--ci);border-color:var(--c)}
-.locked .tstate.why{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.locked .thead,.locked .tline{opacity:.5}
 .fog{position:absolute;inset:-30%;pointer-events:none;
   background:radial-gradient(closest-side at 30% 35%,var(--fog),transparent),radial-gradient(closest-side at 70% 65%,var(--fog),transparent),radial-gradient(closest-side at 50% 50%,var(--fog),transparent 120%);
   opacity:.8;transition:opacity 1s ease}
@@ -109,7 +105,6 @@ button{font:inherit;color:inherit}
 .padlock{position:absolute;left:50%;top:54%;width:62px;margin:-36px 0 0 -31px;transition:transform .8s cubic-bezier(.5,0,.9,.6) .45s,opacity .8s .45s;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
 .m2 .padlock{width:48px;margin:-28px 0 0 -24px}
 .padlock .shackle{transition:transform .35s ease .1s}
-.tstate.why{color:var(--bad)}
 @media (prefers-reduced-motion:no-preference){
   .tile.nope{animation:nope .4s ease-in-out}
   @keyframes nope{25%{transform:translateX(-7px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
@@ -278,7 +273,7 @@ button{font:inherit;color:inherit}
     <li><b>Första besöket:</b> allt är låst och nyckeln sitter i Motståndets lås och skakar. Ett tryck vrider om den: låset faller, dimman lättar och omslaget öppnas.</li>
     <li><b>Mitt i spelet:</b> tryck på Resistansen. Första gången vänds kortet fram som ett omslag med ämnets animering och en lätt fråga som låser upp ämnet. Svarar du rätt vänds kortet till spelsidan, och omslaget kommer aldrig tillbaka. Minimera och öppna igen: du fortsätter där du var.</li>
     <li>Svara rätt tills du når Mästare (eller tryck <i>Ett rätt kvar till Mästare</i>). Kortet zoomar ut och nyckeln flyger in i Toleransens lås, där den skakar tills du trycker på kortet.</li>
-    <li>Motståndet är klarat (guld) och spelar blandat med svit. Eldprovet går att starta när som helst. Ett låst kort skakar och säger vad som krävs.</li>
+    <li>Motståndet är klarat (guld) och spelar blandat med svit. Eldprovet går att starta när som helst. Ett låst kort skakar.</li>
     <li>Mobil 1 kolumn visar din ordning: öppna först, sedan låsta, Eldprovet och klarade sist. Frågorna är bara exempel.</li>
   </ul>
 </div>
@@ -392,13 +387,9 @@ function tileHTML(id){
   if (st.s === 'done') return `<button class="tile done" data-id="${id}" style="${vars(id)}">${head}
     <span class="tfoot"><span class="tstate">Klart ✓ · rekord ${st.best} i rad</span><span class="chip">Spela blandat</span></span></button>`;
   if (st.s === 'locked') {
-    const why = st.why ? ' why' : '';
+    // Ingen text om upplåsning: låset och nyckeln säger det själva
     const key = S.keys.includes(id);
-    const txt = st.why || (key ? 'Tryck för att låsa upp' : `Låst · nyckeln finns på Mästare i ${TT[prevOf(id)].name}`);
-    // Bara ikonen och namnet: beskrivningen visas på omslaget när ämnet är upplåst
-    return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${id}" style="${vars(id)}"${key ? ` aria-label="${t.name}: tryck för att vrida om nyckeln"` : ''}>
-      <span class="thead"><span class="ticon">${icon(id)}</span><span class="tname">${t.name}</span></span>
-      <span class="tfoot"><span class="tstate${why}">${txt}</span></span>
+    return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${id}" style="${vars(id)}" aria-label="${t.name}: ${key ? 'tryck för att vrida om nyckeln' : 'låst'}">${head}
       <span class="fog"></span>${chains()}${PADLOCK}${key ? `<span class="inkey${S.arriving === id ? ' arriving' : ''}">${KEY(t.c)}</span>` : ''}</button>`;
   }
   return `<button class="tile open${S.fresh === id ? ' fresh' : ''}" data-id="${id}" style="${vars(id)}">${head}
@@ -412,7 +403,7 @@ function renderGrid(){
   $('#grid').innerHTML = order.map(tileHTML).join('');
   const k = S.keys.find(x => x !== S.arriving);
   $('#lead').innerHTML = k ? `<b>Tryck på ${TT[k].name}</b> för att vrida om nyckeln och låsa upp.`
-    : 'Lär dig läsa motstånd. <b>Välj ett ämne.</b> Når du Mästare flyger nyckeln till nästa.';
+    : 'Lär dig läsa motstånd. <b>Välj ett ämne.</b>';
 }
 
 // Frågorna i skissen: bara exempel. Vilken siffra är det markerade bandet?
@@ -601,10 +592,8 @@ $('#app').addEventListener('click', e => {
   const id = tile.dataset.id;
   if (id !== 'exam' && S[id].s === 'locked') {
     if (S.keys.includes(id)) { unlockTile(tile); return; }
-    S[id].why = `Klara Mästare i ${TT[prevOf(id)].name} först, så får du nyckeln.`;
-    renderGrid();
-    const t = $(`#grid [data-id="${id}"]`); t.classList.add('nope');
-    clearTimeout(S[id].whyT); S[id].whyT = setTimeout(() => { S[id].why = null; if (!ov) renderGrid(); }, 2600);
+    // Låst utan nyckel: kortet skakar bara
+    tile.classList.remove('nope'); void tile.offsetWidth; tile.classList.add('nope');
     return;
   }
   openPlay(id);

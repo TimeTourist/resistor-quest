@@ -20,10 +20,8 @@
   - Knappen: **Byt ämne**
   - Omslagets etikett: **Snabbkoll**
   - Raden med nyckel: "**Tryck på {ämne}** för att vrida om nyckeln och låsa upp."
-  - Raden annars: "Lär dig läsa motstånd. **Välj ett ämne.** Når du Mästare flyger nyckeln till nästa."
-  - Foten för ett låst kort: "Låst · nyckeln finns på Mästare i {föregående}"
-  - Foten med nyckel: "Tryck för att låsa upp"
-  - Låst kort efter tryck: "Klara Mästare i {föregående} först, så får du nyckeln."
+  - Raden annars: "Lär dig läsa motstånd. **Välj ett ämne.**"
+  - Låsta kort, med eller utan nyckel, har ingen text om upplåsning. Ett tryck på ett låst kort utan nyckel skakar bara kortet.
   - Foten för ett öppet kort: "{Grad} · {n} av 3 rätt i rad · fortsätt", eller "Nytt · börja med en snabbkoll"
   - Foten för ett klart kort: "Klart ✓ · rekord {n} i rad" och etiketten "Spela blandat"
   - Eldprovets etikett: "Alltid öppet", eller "Pågår · fråga {i} av 20"
@@ -52,7 +50,7 @@
 - Använder: `unlocked(t)`, `cleared(t)`, `save(k, v)`, `S.firstVisit`, `S.pin`, `TOPICS`
 - Skapar:
   - `S.keys: string[]`, `S.seen: string[]`, `S.flying: string[]`, `S.arriving: string[]`, `S.streaks: {[topic]: {up, down}}`
-  - `S.screen: 'grid' | 'play'`, `S.open: string | null`, `S.cover: string | null`, `S.fresh: string | null`, `S.why: {t, txt} | null`, `S.keyWin: string | null`
+  - `S.screen: 'grid' | 'play'`, `S.open: string | null`, `S.cover: string | null`, `S.fresh: string | null`, `S.keyWin: string | null`
   - `saveKeys(): void`, `grantKey(t: string): void`
   - `tileState(t): 'locked' | 'key' | 'open' | 'done' | 'exam'`
 
@@ -146,7 +144,7 @@ Direkt efter raden `const isMix = t => cleared(t);` i `index.html`:
 // En ny spelare har nyckeln i Motståndets lås. En spelare med framsteg från före nycklarna får inga nycklar,
 // och snabbkollen räknas som gjord i ämnen där spelaren har framsteg.
 S.keys = []; S.seen = []; S.flying = []; S.arriving = []; S.streaks = {};
-S.screen = 'grid'; S.open = null; S.cover = null; S.fresh = null; S.why = null; S.keyWin = null;
+S.screen = 'grid'; S.open = null; S.cover = null; S.fresh = null; S.keyWin = null;
 (() => {
   if (S.pin) { S.seen = TOPICS.slice(); return; }
   try {
@@ -272,21 +270,20 @@ test('Minikorten: namn, rad om ämnet och läget i foten', () => {
   assert.match(tile('ohm').textContent, /Gesäll · 0 av 3 rätt i rad · fortsätt/);
   assert.equal(tile('ohm').querySelectorAll('.gb .cells i.full').length, 6, 'två klarade grader i ministapeln');
   assert.ok(tile('tol').classList.contains('locked'));
-  assert.match(tile('tol').textContent, /Låst · nyckeln finns på Mästare i Resistansen/);
   assert.ok(tile('tol').querySelector('.padlock .kh'), 'hänglås med nyckelhål');
   assert.ok(tile('tol').querySelector('.fog') && tile('tol').querySelector('.chains'));
-  assert.match(tile('tol').querySelector('.tname').textContent, /Toleransen/);
-  assert.equal(tile('tol').querySelector('.tline'), null, 'ingen beskrivning bakom låset');
+  assert.match(tile('tol').textContent, /Toleransen/);
+  assert.equal(tile('tol').querySelector('.tfoot'), null, 'ingen text om upplåsning');
   assert.match(tile('ultra').textContent, /Alltid öppet/);
   assert.ok(tile('ultra').querySelector('svg.fire'));
 });
 
-test('Ett låst kort skakar och säger vad som krävs, och öppnar inget', () => {
+test('Ett låst kort skakar, utan text, och öppnar inget', () => {
   const t = load({ start: true, storage: { 'fargkoden2-topic': 'ohm', 'fargkoden2-done': JSON.stringify({ body: 3 }), ...SEEN } });
   open(t, 'tol');
   const tile = t.$('#grid [data-id="tol"]');
-  assert.match(tile.textContent, /Klara Mästare i Resistansen först, så får du nyckeln\./);
   assert.ok(tile.classList.contains('nope'));
+  assert.equal(tile.querySelector('.tfoot'), null);
   assert.equal(t.g('S.screen'), 'grid');
 });
 
@@ -738,31 +735,24 @@ function tileHTML(t){
   if (state === 'open') return `<button class="tile open${fresh}" data-id="${t}" style="${lookVars(t)}">${head}
     <span class="tfoot">${miniBar(t)}<span class="tstate">${S.seen.includes(t) ? `${GRADE_NAME[S.grade[t]]} · ${tileUp(t)} av 3 rätt i rad · fortsätt` : 'Nytt · börja med en snabbkoll'}</span></span>
     ${fresh ? '<span class="newflag">Nytt!</span>' : ''}</button>`;
-  // Låst, med eller utan nyckel i låset. Bara ikonen och namnet: raden om ämnet visas på omslaget när det är upplåst.
-  const key = state === 'key', prev = TOPICS[TOPICS.indexOf(t) - 1], why = S.why && S.why.t === t ? S.why.txt : null;
-  const foot = why || (key ? 'Tryck för att låsa upp' : `Låst · nyckeln finns på Mästare i ${topicName(prev)}`);
-  const flying = S.flying.includes(t) || S.arriving.includes(t);
-  return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${t}" style="${lookVars(t)}" aria-label="${topicName(t)}: ${key ? 'tryck för att vrida om nyckeln' : 'låst'}">
-    <span class="thead"><span class="ticon">${topicIcon(t)}</span><span class="tname">${topicName(t)}</span></span>
-    <span class="tfoot"><span class="tstate${why ? ' why' : ''}">${foot}</span></span>
+  // Låst, med eller utan nyckel i låset. Ingen text om upplåsning: låset och nyckeln säger det själva.
+  const key = state === 'key', flying = S.flying.includes(t) || S.arriving.includes(t);
+  return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${t}" style="${lookVars(t)}" aria-label="${topicName(t)}: ${key ? 'tryck för att vrida om nyckeln' : 'låst'}">${head}
     <span class="fog"></span>${chainsSVG()}${PADLOCK_SVG}${key ? `<span class="inkey${flying ? ' arriving' : ''}">${keySVG(TOPIC_LOOK[t].c)}</span>` : ''}</button>`;
 }
 function renderLead(){
   const k = S.keys.find(t => !S.flying.includes(t) && !S.arriving.includes(t));
   document.getElementById('lead').innerHTML = k ? `<b>Tryck på ${topicName(k)}</b> för att vrida om nyckeln och låsa upp.`
-    : 'Lär dig läsa motstånd. <b>Välj ett ämne.</b> Når du Mästare flyger nyckeln till nästa.';
+    : 'Lär dig läsa motstånd. <b>Välj ett ämne.</b>';
 }
 function renderGrid(){
   document.getElementById('grid').innerHTML = ORDER.map(tileHTML).join('');
   renderLead();
 }
-// Låst ämne utan nyckel: kortet skakar och säger en stund vad som krävs
+// Låst ämne utan nyckel: kortet skakar
 function lockedTap(t){
-  S.why = {t, txt: `Klara Mästare i ${topicName(TOPICS[TOPICS.indexOf(t) - 1])} först, så får du nyckeln.`};
-  renderGrid();
-  document.querySelector(`#grid [data-id="${t}"]`).classList.add('nope');
-  clearTimeout(S.whyT);
-  S.whyT = setTimeout(() => { S.why = null; if (S.screen === 'grid') renderGrid(); }, 2600);
+  const tile = document.querySelector(`#grid [data-id="${t}"]`);
+  tile.classList.remove('nope'); void tile.offsetWidth; tile.classList.add('nope');
 }
 document.getElementById('grid').addEventListener('click', e => {
   const tile = e.target.closest('.tile');
@@ -816,7 +806,7 @@ function openTopic(lv){
   if (S.screen === 'play' && S.open === lv) return;
   const tile = S.screen === 'grid' && document.querySelector(`#grid [data-id="${lv}"]`), from = tile ? tile.getBoundingClientRect() : null;
   if (S.fresh === lv) S.fresh = null;
-  S.screen = 'play'; S.open = lv; S.keyWin = null; S.why = null;
+  S.screen = 'play'; S.open = lv; S.keyWin = null;
   showScreen(); updateHead();
   goTopic(lv);
   if (from) zoomIn(from);
@@ -1238,7 +1228,6 @@ test('Första besöket: nyckeln sitter i Motståndets lås och raden säger vad 
   assert.ok(tile.classList.contains('haskey'));
   assert.ok(tile.querySelector('.inkey svg'), 'nyckeln sitter i låset');
   assert.ok(!tile.querySelector('.inkey').classList.contains('arriving'));
-  assert.match(tile.textContent, /Tryck för att låsa upp/);
   assert.match(t.$('#lead').textContent, /Tryck på Motståndet för att vrida om nyckeln och låsa upp\./);
 });
 
