@@ -1,0 +1,634 @@
+<title>Färgkoden skiss</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Skiss: startsidan är ett rutnät av ämneskort. Ett öppet kort zoomas till spelkortet och minimeras tillbaka. */
+:root{
+  --bg:#e8edf0;--grid:rgba(31,111,178,.07);--surface:#fff;--ink:#1d2730;--muted:#566673;--line:#c8d1d8;
+  --accent:#1f6fb2;--accent-ink:#fff;--ok:#24803a;--ok-bg:#e3f3e6;--bad:#b83227;--bad-bg:#f8e4e1;
+  --fog:rgba(214,222,228,.92);--lock:#7d8791;--lock-dark:#4f5860;--frame:#1d2730;--body:#dcc596;--lead:#98a1a8;
+  --fresh:#8fe25f;--ripe:#2a9b48;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;--text:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121a20;--grid:rgba(90,166,230,.06);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
+  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;
+  --fog:rgba(38,50,60,.92);--lock:#8c96a0;--lock-dark:#4a535b;--frame:#000;--lead:#7d878e;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121a20;--grid:rgba(90,166,230,.06);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
+  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;
+  --fog:rgba(38,50,60,.92);--lock:#8c96a0;--lock-dark:#4a535b;--frame:#000;--lead:#7d878e;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;padding-inline:16px;background:var(--bg);color:var(--ink);font:15px/1.5 var(--text)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Verktygsraden för skissen, utanför själva spelet */
+.tools{max-width:1000px;margin:16px auto 0;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:.9rem}
+.tools .tag{font-family:var(--display);font-weight:700;font-size:1.1rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface);font-weight:600}
+.tbtn{border:1px dashed var(--line);background:none;border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--muted)}
+.tbtn:hover{border-color:var(--accent);color:var(--ink)}
+
+.stage{display:flex;justify-content:center;padding-block:14px 12px}
+.app{position:relative;width:100%;max-width:1000px;min-height:720px;padding:28px;border:1px solid var(--line);border-radius:22px;overflow:hidden;
+  background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+.stage.m2 .app,.stage.m1 .app{max-width:390px;height:780px;min-height:0;overflow-y:auto;padding:22px 14px;border:10px solid var(--frame);border-radius:42px}
+.app.busy{overflow:hidden}
+
+/* Startsidan */
+.top{display:flex;align-items:center;gap:12px}
+.brand{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(2rem,6vw,2.8rem);line-height:1;display:flex;align-items:center;gap:10px}
+.brandbands{display:inline-flex;gap:3px}
+.brandbands b{width:6px;height:.75em;border-radius:1px;display:block}
+.menu{margin-left:auto;display:flex;gap:8px}
+.round{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;padding:0}
+.round svg{width:22px;height:22px}
+.lead{margin:10px 0 20px;color:var(--muted);font-size:1rem;max-width:56ch}
+.lead b{color:var(--ink)}
+.m2 .lead,.m1 .lead{font-size:.92rem;margin-bottom:14px}
+
+.grid{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.m2 .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.m1 .grid{grid-template-columns:1fr;gap:10px}
+
+/* Minikorten */
+.tile{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:8px;min-height:196px;padding:16px;text-align:left;cursor:pointer;
+  border:2px solid var(--c);border-radius:16px;background:color-mix(in srgb,var(--c) 10%,var(--surface));transition:transform .2s,box-shadow .2s}
+.tile:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.14)}
+.m2 .tile{min-height:178px;padding:12px;gap:6px;border-radius:14px}
+.m1 .tile{min-height:0;padding:12px 14px}
+.tpat{position:absolute;inset:0;background-image:var(--pat);pointer-events:none}
+.thead{position:relative;display:flex;align-items:center;gap:10px}
+.ticon{flex:none;width:42px;height:42px;border-radius:11px;background:var(--c);color:var(--ci);display:grid;place-items:center}
+.ticon svg{width:30px;height:30px}
+.m2 .ticon{width:34px;height:34px}.m2 .ticon svg{width:24px;height:24px}
+.tname{font-family:var(--display);font-weight:700;font-size:1.7rem;line-height:1;text-wrap:balance}
+.m2 .tname{font-size:1.35rem}
+.tline{position:relative;color:var(--muted);font-size:.92rem;line-height:1.35}
+.m2 .tline{font-size:.8rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tfoot{position:relative;margin-top:auto;display:grid;gap:5px}
+.tstate{font-size:.85rem;font-weight:600}
+.m2 .tstate{font-size:.75rem}
+.chip{display:inline-block;justify-self:start;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:999px;background:var(--c);color:var(--ci)}
+
+/* Stapeln: fem grader med tre fack var, samma komponent som i spelet */
+.gb{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.gb .cells{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;height:12px}
+.gb i{display:block;border-radius:2px;border:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent);background:var(--surface)}
+.gb i.on{background:var(--fresh);border-color:#6cc43c}
+.gb i.full{background:var(--ripe);border-color:var(--ripe)}
+.gb .cur .cells{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
+.gb span{display:block;text-align:center;font-size:.68rem;color:var(--muted);margin-top:4px;white-space:nowrap}
+.gb .cur span{color:var(--ink);font-weight:700}
+.gb.big{gap:7px}.gb.big .cells{height:18px}
+@media (prefers-reduced-motion:no-preference){
+  .gb i.pop{animation:cellpop .45s ease-out}
+  @keyframes cellpop{40%{transform:scaleY(1.7);box-shadow:0 0 14px var(--fresh)}}
+  .gb.up{animation:quake .5s linear}
+  @keyframes quake{20%{transform:translate(-6px,2px) rotate(-1deg)}40%{transform:translate(6px,-2px) rotate(1deg)}60%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}}
+}
+
+/* Låst: dimma, kedjor och ett hänglås med nyckelhål */
+.tile.locked{border-color:var(--line);background:var(--surface)}
+.locked .ticon{background:var(--line);color:var(--muted)}
+.locked .thead,.locked .tline{opacity:.5}
+.fog{position:absolute;inset:-30%;pointer-events:none;
+  background:radial-gradient(closest-side at 30% 35%,var(--fog),transparent),radial-gradient(closest-side at 70% 65%,var(--fog),transparent),radial-gradient(closest-side at 50% 50%,var(--fog),transparent 120%);
+  opacity:.8;transition:opacity 1s ease}
+@media (prefers-reduced-motion:no-preference){.fog{animation:drift 7s ease-in-out infinite alternate}@keyframes drift{to{transform:translate(8%,-6%) scale(1.08)}}}
+.chains{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transition:transform .9s ease-in .25s,opacity .9s ease-in .25s}
+.padlock{position:absolute;left:50%;top:54%;width:62px;margin:-36px 0 0 -31px;transition:transform .8s cubic-bezier(.5,0,.9,.6) .45s,opacity .8s .45s;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+.m2 .padlock{width:48px;margin:-28px 0 0 -24px}
+.padlock .shackle{transition:transform .35s ease .1s}
+.tstate.why{color:var(--bad)}
+.locked .tstate{opacity:.75}
+@media (prefers-reduced-motion:no-preference){
+  .tile.nope{animation:nope .4s ease-in-out}
+  @keyframes nope{25%{transform:translateX(-7px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+}
+.tile.opening .shackle{transform:translateY(-12px)}
+.tile.opening .padlock{transform:translateY(160px) rotate(25deg);opacity:0}
+.tile.opening .chains{transform:translateY(60px);opacity:0}
+.tile.opening .fog{opacity:0}
+
+/* Nytt ämne: färgen tänds */
+.tile.fresh{animation:lightup 1.4s ease-out}
+@keyframes lightup{0%{filter:saturate(0) brightness(1.1);box-shadow:0 0 0 0 var(--c)}50%{box-shadow:0 0 0 10px color-mix(in srgb,var(--c) 30%,transparent)}100%{filter:none;box-shadow:0 0 0 0 transparent}}
+.newflag{position:absolute;top:10px;right:10px;font-family:var(--display);font-weight:700;font-size:.95rem;letter-spacing:.05em;text-transform:uppercase;background:var(--c);color:var(--ci);border-radius:999px;padding:2px 10px}
+
+/* Klarat: guld */
+.tile.done{border-color:#b8860b;color:#3a2a00;background:linear-gradient(150deg,#fff1b0,#e8b923 55%,#c8961a)}
+.done .tline{color:#5a4300}
+.done .ticon{background:#3a2a00;color:#f2c94c}
+.done .tpat{opacity:.5}
+.done::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);background-size:250% 100%;background-position:130% 0}
+@media (prefers-reduced-motion:no-preference){.done::after{animation:shine 4s ease-in-out infinite}@keyframes shine{0%,60%{background-position:130% 0}100%{background-position:-30% 0}}}
+.done .chip{background:#3a2a00;color:#f2c94c}
+
+/* Eldprovet */
+.tile.exam{border:0;color:#ffe8d2;background:radial-gradient(120% 95% at 70% 115%,#ff9a3c,#d9381e 42%,#2a1712 86%)}
+.exam .tline{color:#ffd6b0;max-width:62%}
+.exam .ticon{background:rgba(0,0,0,.35);color:#ffb347}
+.exam .chip{background:#ffe8d2;color:#2a1712}
+.fire{position:absolute;right:8px;bottom:6px;width:92px;height:auto;filter:drop-shadow(0 0 16px rgba(255,170,60,.75));pointer-events:none}
+.m2 .fire{width:64px}
+.m1 .fire{width:70px}
+@media (prefers-reduced-motion:no-preference){
+  .fire .f1{transform-origin:60px 136px;animation:flick 1.6s ease-in-out infinite alternate}
+  .fire .f2{transform-origin:60px 136px;animation:flick 1.1s ease-in-out infinite alternate-reverse}
+  .fire .f3{transform-origin:60px 134px;animation:flick .8s ease-in-out infinite alternate}
+  @keyframes flick{0%{transform:scale(1,1) skewX(0)}35%{transform:scale(.96,1.06) skewX(2deg)}70%{transform:scale(1.03,.96) skewX(-2deg)}100%{transform:scale(.98,1.04) skewX(1deg)}}
+}
+
+/* Nyckeln */
+.ghost{position:fixed;z-index:100;width:70px;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
+.ghost svg,.inkey svg{display:block;width:100%;height:auto}
+/* Nyckeln sitter i nyckelhålet och skakar tills man trycker på kortet */
+.inkey{position:absolute;left:calc(50% - 64px);top:calc(54% - 2px);width:70px;z-index:3;pointer-events:none;transform-origin:92% 50%;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
+.m2 .inkey{left:calc(50% - 50px);width:54px}
+.inkey.arriving{visibility:hidden}
+@media (prefers-reduced-motion:no-preference){
+  .inkey{animation:rattle 1.6s ease-in-out infinite}
+  @keyframes rattle{0%,55%,100%{transform:none}60%{transform:rotate(-8deg)}65%{transform:rotate(7deg)}70%{transform:rotate(-5deg)}75%{transform:rotate(4deg)}80%{transform:rotate(-2deg)}}
+  .tile.turning .inkey{animation:turnkey .4s ease-in forwards}
+  @keyframes turnkey{to{transform:rotateX(80deg)}}
+}
+.tile.haskey{box-shadow:0 0 0 3px var(--c),0 0 26px color-mix(in srgb,var(--c) 60%,transparent)}
+.tile.haskey .kh{fill:var(--c)}
+.tile.haskey .tstate{opacity:1;color:var(--ink)}
+.tile.opening .inkey{opacity:0;transition:opacity .3s .3s}
+
+/* Spelkortet: ämnet förstorat */
+.play{position:absolute;z-index:20;display:flex;flex-direction:column;overflow:hidden;border:3px solid var(--c);border-radius:18px;
+  background:color-mix(in srgb,var(--c) 9%,var(--surface));box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.play .tpat{opacity:1}
+.phead{position:relative;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--c);color:var(--ci)}
+.phead .ticon{background:rgba(0,0,0,.18);color:var(--ci)}
+.pname{font-family:var(--display);font-weight:700;font-size:1.8rem;line-height:1}
+.pmode{font-family:var(--display);font-weight:600;font-size:1.2rem;opacity:.85}
+.min{margin-left:auto;display:flex;align-items:center;gap:6px;border:2px solid currentColor;background:transparent;color:inherit;border-radius:999px;padding:5px 12px 5px 8px;cursor:pointer;font-weight:600;font-size:.88rem}
+.min svg{width:20px;height:20px}
+.pbar{position:relative;padding:14px 16px 2px}
+.pbody{position:relative;flex:1;overflow:auto;padding:16px}
+.pin{display:flex;flex-direction:column;min-height:100%}
+.flag{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding:5px 14px 5px 10px;border-radius:999px;background:var(--c);color:var(--ci);font-family:var(--display);font-weight:700;font-size:1.1rem;letter-spacing:.06em;text-transform:uppercase}
+.flag::before{content:"";border-left:11px solid currentColor;border-top:7px solid transparent;border-bottom:7px solid transparent}
+.pbody h2{font-family:var(--display);font-size:2.4rem;line-height:1;margin:12px 0 6px}
+.pbody .line{margin:0 0 16px;color:var(--muted);max-width:52ch}
+.q{font-weight:700;font-size:1.12rem;margin:4px 0 10px}
+.res svg{display:block;width:100%;max-width:420px;height:auto;margin:0 auto}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.opt{min-height:60px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;font-family:var(--display);font-size:1.45rem;padding:8px}
+.opt:hover{border-color:var(--c)}
+.opt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+@media (prefers-reduced-motion:no-preference){.opt.bad{animation:nope .4s}}
+.streak{display:flex;align-items:baseline;gap:10px;font-family:var(--display);font-size:1.4rem}
+.streak b{font-size:2.2rem;color:#b8860b}
+.streak span{margin-left:auto;font-family:var(--text);font-size:.9rem;color:var(--muted)}
+.keywin{margin:auto;text-align:center;display:grid;justify-items:center;gap:6px}
+.keywin svg{width:180px;height:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3))}
+@media (prefers-reduced-motion:no-preference){.keywin svg{animation:keyin .8s cubic-bezier(.3,1.6,.5,1) both}@keyframes keyin{from{transform:scale(.2) rotate(-90deg);opacity:0}}}
+.keywin h3{font-family:var(--display);font-size:2rem;line-height:1.05;margin:8px 0 0;text-wrap:balance}
+.keywin p{margin:0;color:var(--muted)}
+.sketchnote{margin-top:auto;padding-top:14px;font-size:.8rem;color:var(--muted)}
+
+/* Eldprovets spelkort */
+.play.examplay{border:0;color:#ffe8d2;background:radial-gradient(120% 90% at 50% 110%,#ff9a3c,#d9381e 45%,#2a1712 85%)}
+.examplay .phead{background:rgba(0,0,0,.3);color:#ffe8d2}
+.dare{margin:auto;display:grid;justify-items:center;gap:10px;border:0;background:none;color:inherit;cursor:pointer;padding:10px;text-align:center}
+.dare .fire{position:static;width:150px}
+.dare b{font-family:var(--display);font-size:clamp(2rem,7vw,3rem);line-height:1.05;letter-spacing:.02em;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.examplay .rule{text-align:center;color:#ffd6b0;margin:0}
+.play.goldplay{border-color:#b8860b}
+.goldplay .phead{background:linear-gradient(120deg,#e8b923,#b8860b);color:#3a2a00}
+
+/* Omslaget: första gången man öppnar ett ämne. Visas en gång, sedan aldrig mer. */
+.play.cover{border-width:6px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.coverwrap{position:relative;display:flex;flex-direction:column;height:100%;overflow:auto;padding:22px 24px}
+.eyebrow{font-family:var(--display);font-weight:700;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cover .anim{display:block;width:100%;max-width:440px;height:auto;margin:10px auto 4px;color:var(--muted)}
+.anim text{font-family:var(--text);font-size:13px;fill:var(--muted)}
+.anim text.big{font-family:var(--display);font-size:20px;font-weight:700;fill:var(--ink)}
+.cname{font-family:var(--display);font-weight:700;font-size:clamp(2.8rem,8vw,4.2rem);line-height:.95;margin:8px 0 6px;display:flex;align-items:center;gap:12px}
+.cname .ticon{width:52px;height:52px;border-radius:13px}.cname .ticon svg{width:36px;height:36px}
+.cline{margin:0;color:var(--muted);font-size:1.05rem;max-width:46ch}
+.unlock{margin-top:auto;padding-top:18px}
+.unlock .rule{height:0;border-top:2px dashed var(--c);margin-bottom:14px}
+.ulab{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase}
+.ulab svg{width:20px;height:20px;color:var(--c)}
+.unlock .q{margin:6px 0 0}
+.cover .opts{grid-template-columns:repeat(4,1fr)}
+.m2 .cover .opts,.m1 .cover .opts{grid-template-columns:1fr 1fr}
+.opt[disabled]{cursor:default}
+.xbtn{position:absolute;top:12px;right:12px;z-index:2;width:40px;height:40px;border-radius:50%;border:2px solid var(--c);background:var(--surface);display:grid;place-items:center;cursor:pointer;padding:0}
+.xbtn svg{width:20px;height:20px}
+@media (prefers-reduced-motion:no-preference){
+  .anim .a{animation:ain .5s ease-out both;transform-box:fill-box}
+  @keyframes ain{from{opacity:0;transform:translateY(6px)}}
+  .anim .swing circle{animation:swing 2.4s ease-in-out 1.6s infinite}
+  @keyframes swing{0%,100%{transform:translateX(0)}25%{transform:translateX(-55px)}75%{transform:translateX(55px)}}
+}
+@media (max-width:600px){.cover .opts{grid-template-columns:1fr 1fr}.coverwrap{padding:18px 16px}}
+.notes{max-width:1000px;margin:0 auto 32px;color:var(--muted);font-size:.92rem}
+.notes ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
+@media (max-width:600px){
+  .stage .app,.stage.m2 .app,.stage.m1 .app{max-width:none;border:0;border-radius:0;height:auto;min-height:calc(100dvh - 20px);padding:18px 0}
+  body{padding-inline:12px}
+}
+</style>
+
+<div class="tools" role="group" aria-label="Skissens verktyg">
+  <span class="tag">Skiss</span>
+  <div class="seg" id="modes">
+    <button data-mode="desk" aria-pressed="true">Dator 3×2</button>
+    <button data-mode="m2" aria-pressed="false">Mobil 2×3</button>
+    <button data-mode="m1" aria-pressed="false">Mobil 1 kolumn</button>
+  </div>
+  <button class="tbtn" data-start="first">Första besöket</button>
+  <button class="tbtn" data-start="mid">Mitt i spelet</button>
+  <button class="tbtn" id="almost">Ett rätt kvar till Mästare</button>
+</div>
+
+<div class="stage desk" id="stage">
+  <div class="app" id="app">
+    <header class="top">
+      <h1 class="brand"><span class="brandbands" aria-hidden="true"><b style="background:#7a4a21"></b><b style="background:#c62828"></b><b style="background:#ef7d1a"></b><b style="background:#f2d024"></b><b style="background:#2e8b3d"></b></span>Färgkoden</h1>
+      <div class="menu"><button class="round" id="sound" aria-pressed="true" aria-label="Ljud på"></button></div>
+    </header>
+    <p class="lead" id="lead"></p>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<div class="notes">
+  <b>Prova så här</b>
+  <ul>
+    <li><b>Första besöket:</b> allt är låst och nyckeln sitter i Motståndets lås och skakar. Ett tryck vrider om den: låset faller, dimman lättar och omslaget öppnas.</li>
+    <li><b>Mitt i spelet:</b> tryck på Resistansen. Första gången vänds kortet fram som ett omslag med ämnets animering och en lätt fråga som låser upp ämnet. Svarar du rätt vänds kortet till spelsidan, och omslaget kommer aldrig tillbaka. Minimera och öppna igen: du fortsätter där du var.</li>
+    <li>Svara rätt tills du når Mästare (eller tryck <i>Ett rätt kvar till Mästare</i>). Kortet zoomar ut och nyckeln flyger in i Toleransens lås, där den skakar tills du trycker på kortet.</li>
+    <li>Motståndet är klarat (guld) och spelar blandat med svit. Eldprovet går att starta när som helst. Ett låst kort skakar och säger vad som krävs.</li>
+    <li>Mobil 1 kolumn visar din ordning: öppna först, sedan låsta, Eldprovet och klarade sist. Frågorna är bara exempel.</li>
+  </ul>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Ikoner, ritade med currentColor
+const I = {
+  body:'<path d="M1 16h7M24 16h7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="7" y="9" width="18" height="14" rx="6" fill="currentColor" opacity=".35"/><rect x="11" y="9" width="2.4" height="14" fill="currentColor"/><rect x="15" y="9" width="2.4" height="14" fill="currentColor"/><rect x="20" y="9" width="2.8" height="14" fill="currentColor"/>',
+  ohm:'<text x="16" y="25" text-anchor="middle" font-size="25" font-weight="700" font-family="Georgia,serif" fill="currentColor">Ω</text>',
+  tol:'<text x="16" y="25" text-anchor="middle" font-size="26" font-weight="700" font-family="Georgia,serif" fill="currentColor">±</text>',
+  tc:'<rect x="12.5" y="3" width="7" height="19" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="16" cy="24" r="5.5" fill="currentColor"/><rect x="14.8" y="10" width="2.4" height="12" fill="currentColor"/>',
+  e:'<path d="M3 22H29" stroke="currentColor" stroke-width="2"/><g fill="currentColor"><circle cx="4" cy="22" r="2.4"/><circle cx="9" cy="22" r="2.4"/><circle cx="13.5" cy="22" r="2.4"/><circle cx="17.5" cy="22" r="2.4"/><circle cx="21.5" cy="22" r="2.4"/><circle cx="25.5" cy="22" r="2.4"/></g><text x="16" y="15" text-anchor="middle" font-size="11" font-weight="700" font-family="sans-serif" fill="currentColor">E12</text>',
+  exam:'<path fill="currentColor" d="M16 3c1.3 4.6 6 7.3 6 13.3a6 6 0 0 1-12 0c0-2.5 1-4.3 2.4-5.6.3 2.1 1.3 3.5 2.9 4 0-4.8-2.1-7.6.7-11.7z"/>',
+  min:'<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><rect x="3" y="4" width="5" height="7" rx="1.2"/><rect x="9.5" y="4" width="5" height="7" rx="1.2"/><rect x="16" y="4" width="5" height="7" rx="1.2"/><rect x="3" y="13" width="5" height="7" rx="1.2"/><rect x="9.5" y="13" width="5" height="7" rx="1.2"/><rect x="16" y="13" width="5" height="7" rx="1.2"/></g></svg>'
+};
+const icon = k => `<svg viewBox="0 0 32 32" aria-hidden="true">${I[k]}</svg>`;
+// Ämnets mönster i bakgrunden: ikonen upprepad, svagt och snett
+const pat = (k, color, op = .13) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72'><g color='${color}' opacity='${op}' transform='rotate(-14 36 36) translate(20 20)'>${I[k]}</g></svg>`)}")`;
+const FIRE = `<svg class="fire" viewBox="0 0 120 140" aria-hidden="true"><defs>
+  <linearGradient id="fo" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d1a"/><stop offset=".6" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ffb347"/></linearGradient>
+  <linearGradient id="fm" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff9a1f"/><stop offset="1" stop-color="#ffd23f"/></linearGradient></defs>
+  <path class="f1" fill="url(#fo)" d="M60 136C30 136 14 114 16 90C18 70 30 60 34 42C36 54 42 60 48 60C44 40 52 18 66 4C66 24 78 34 88 48C96 60 104 74 104 92C104 116 88 136 60 136Z"/>
+  <path class="f2" fill="url(#fm)" d="M60 134C42 134 32 120 34 104C36 90 46 82 48 70C52 80 58 82 62 80C60 68 66 56 74 48C74 62 84 72 86 88C88 112 78 134 60 134Z"/>
+  <path class="f3" fill="#fff3b0" d="M60 132C50 132 44 124 45 114C46 104 54 98 56 90C60 98 66 100 68 108C72 116 70 132 60 132Z"/></svg>`;
+const KEY = c => `<svg viewBox="0 0 96 40" aria-hidden="true"><path fill-rule="evenodd" fill="${c}" stroke="#2a1d10" stroke-width="2" d="M18 4a16 16 0 1 1 0 32a16 16 0 0 1 0-32zm0 9a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM33 16h58v8h-6v9h-7v-9h-6v6h-7v-6H33z"/><circle cx="12" cy="12" r="3" fill="#fff" opacity=".55"/></svg>`;
+const PADLOCK = `<svg class="padlock" viewBox="0 0 60 72" aria-hidden="true"><defs><linearGradient id="lk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9c1c8"/><stop offset=".5" stop-color="#7d8791"/><stop offset="1" stop-color="#4f5860"/></linearGradient></defs>
+  <path class="shackle" d="M16 34V21a14 14 0 0 1 28 0v13" fill="none" stroke="#5f6870" stroke-width="7" stroke-linecap="round"/>
+  <rect x="5" y="31" width="50" height="39" rx="9" fill="url(#lk)" stroke="#3d454c" stroke-width="1.5"/>
+  <g class="kh" fill="#1d2730"><circle cx="30" cy="47" r="6"/><path d="M26.5 49h7l1.8 12h-10.6z"/></g></svg>`;
+// Två kedjor i kryss över det låsta kortet
+function chains(){
+  const link = (x, y, a, i) => i % 2
+    ? `<rect x="${x - 10}" y="${y - 2.5}" width="20" height="5" rx="2.5" transform="rotate(${a} ${x} ${y})" fill="#5f6870"/>`
+    : `<ellipse cx="${x}" cy="${y}" rx="12" ry="6.5" transform="rotate(${a} ${x} ${y})" fill="none" stroke="#7d8791" stroke-width="3.6"/>`;
+  const line = (x0, y0, x1, y1) => { let s = ''; const n = 22, a = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI; for (let i = 0; i <= n; i++) s += link(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n, a, i); return s; };
+  return `<svg class="chains" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${line(-20, 10, 320, 190)}${line(-20, 190, 320, 10)}</svg>`;
+}
+
+const TT = {
+  body:{name:'Motståndet', line:'Hur ett motstånd ser ut: hur många band, vilka färger och åt vilket håll man läser.', c:'#7a4a21', ci:'#fff',
+    kick:['Vad gör ett motstånd i en krets?', ['Begränsar strömmen', 'Lagrar vatten', 'Spelar musik', 'Lyser i mörker']]},
+  ohm:{name:'Resistansen', line:'Vad färgerna betyder i ohm: siffror, multiplikator och hela värdet.', c:'#c62828', ci:'#fff',
+    kick:['Vilken enhet har resistans?', ['Ω ohm', 'kg', '°C', 'km/h']]},
+  tol:{name:'Toleransen', line:'Hur mycket värdet får avvika: guld, silver och de andra toleransfärgerna.', c:'#ef7d1a', ci:'#2a1400',
+    kick:['Ett motstånd på 100 Ω ±10 %. Vilket mätvärde är okej?', ['104 Ω', '150 Ω', '200 Ω', '3 Ω']]},
+  tc:{name:'Temperaturen', line:'Det sjätte bandet: hur mycket värdet ändras när det blir varmt.', c:'#f2d024', ci:'#2a2200',
+    kick:['Vad händer med resistansen när motståndet blir varmt?', ['Den ändras lite', 'Den blir noll', 'Den byter färg', 'Tusen gånger större']]},
+  e:{name:'E-serierna', line:'Standardvärdena som motstånd säljs i: E6, E12, E24 och resten.', c:'#2e8b3d', ci:'#fff',
+    kick:['Motstånd säljs i standardvärden. Vilket kan du köpa?', ['4,7 kΩ', '4,713 kΩ', '4,6982 kΩ', '4,70015 kΩ']]}
+};
+const IDS = ['body', 'ohm', 'tol', 'tc', 'e'];
+const HEX = {brown:'#7a4a21', black:'#1b1b1b', red:'#c62828', gold:'#c9a43a', violet:'#7b3fa0'};
+const E12 = [10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82];
+function animHTML(lv){
+  const a = (d, s) => `<g class="a" style="animation-delay:${d}s">${s}</g>`;
+  const band = (x, c, w = 14) => `<rect x="${x}" y="8" width="${w}" height="40" rx="2" fill="${HEX[c]}"/>`;
+  const res = (x0, x1) => `<path d="M${x0 - 34} 28 H${x1 + 34}" stroke="var(--lead)" stroke-width="4" stroke-linecap="round"/><rect x="${x0}" y="8" width="${x1 - x0}" height="40" rx="16" fill="var(--body)"/>`;
+  const txt = (x, y, s, cls = '') => `<text x="${x}" y="${y}" text-anchor="middle" class="${cls}">${s}</text>`;
+  let s = '';
+  if (lv === 'body') {
+    s = res(62, 244) + ['brown','black','red','gold'].map((c, i) => a(.2 + i * .35, band(84 + i * 34 + (i === 3 ? 18 : 0), c, i === 3 ? 20 : 14))).join('')
+      + a(1.6, `<path d="M70 62 H240" stroke="currentColor" stroke-width="2.5"/><path d="M240 62 l-9 -6 v12 z" fill="currentColor"/>`) + a(1.9, txt(155, 80, 'läs härifrån →'));
+  } else if (lv === 'ohm') {
+    const cs = [['brown','1'], ['black','0'], ['red','×100']];
+    s = res(52, 212) + `<rect x="188" y="8" width="14" height="40" rx="2" fill="${HEX.gold}" opacity=".35"/>`
+      + cs.map(([c, t], i) => a(i * .45, band(66 + i * 40, c) + txt(73 + i * 40, 68, t, 'big'))).join('') + a(1.6, txt(270, 34, '= 1 kΩ', 'big'));
+  } else if (lv === 'tol') {
+    s = res(40, 120) + ['brown','black','brown'].map((c, i) => band(52 + i * 16, c, 10)).join('') + a(0, band(100, 'gold', 12)) + a(.5, txt(106, 70, '±5 %', 'big'))
+      + a(1, `<path d="M170 30 H300" stroke="currentColor" stroke-width="2"/>${txt(178, 22, '95')}${txt(235, 22, '100 Ω')}${txt(294, 22, '105')}`)
+      + `<g class="a swing" style="animation-delay:1.2s"><circle cx="235" cy="30" r="6" fill="var(--c)"/></g>`;
+  } else if (lv === 'tc') {
+    s = res(44, 232) + ['red','violet','black','red','brown','brown'].map((c, i) => a(i * .2, band(62 + i * 26 + (i > 3 ? 12 : 0), c))).join('')
+      + a(1.4, `<rect x="${62 + 5 * 26 + 12 - 4}" y="4" width="22" height="48" rx="3" fill="none" stroke="var(--ink)" stroke-width="2.5"/>`) + a(1.8, txt(211, 76, '100 ppm/K', 'big'));
+  } else {
+    const xs = E12.map(v => 40 + 230 * Math.log10(v / 10));
+    s = a(0, `<path d="M40 40 H270" stroke="currentColor" stroke-width="2"/>${txt(40, 64, '10')}${txt(270, 64, '100')}`)
+      + xs.map((x, i) => a(.4 + i * .12, `<circle cx="${x}" cy="40" r="5" fill="var(--c)"/>`)).join('') + a(2, txt(155, 22, 'E12: 12 värden per tiopotens'));
+  }
+  return `<svg class="anim" viewBox="0 0 310 86" aria-hidden="true">${s}</svg>`;
+}
+const SPARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4z" fill="currentColor"/></svg>';
+const LOCKICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="4" y="11" width="16" height="11" rx="3" fill="currentColor"/></svg>';
+const GR = ['Nykomling', 'Lärling', 'Gesäll', 'Mästare', 'Stormästare'];
+const DIG = [['#1b1b1b','Svart'],['#7a4a21','Brun'],['#c62828','Röd'],['#ef7d1a','Orange'],['#f2d024','Gul'],['#2e8b3d','Grön'],['#1f5fbf','Blå'],['#7b3fa0','Violett'],['#8a8a8a','Grå'],['#f7f7f2','Vit']];
+// Första besöket: allt är låst och nyckeln sitter redan i Motståndets lås. Mitt i spelet: Motståndet klart, Resistansen pågår.
+const STARTS = {
+  first: () => ({body:{s:'locked'}, ohm:{s:'locked'}, tol:{s:'locked'}, tc:{s:'locked'}, e:{s:'locked'}, exam:{dare:0}, keys:['body'], fresh:null, pop:null}),
+  mid: () => ({body:{s:'done', best:7, streak:0}, ohm:{s:'open', g:2, up:1, started:true}, tol:{s:'locked'}, tc:{s:'locked'}, e:{s:'locked'}, exam:{dare:0}, keys:[], fresh:null, pop:null})
+};
+let S = STARTS.first(), mode = 'desk', active = null, ov = null;
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const nextOf = id => IDS[IDS.indexOf(id) + 1];
+const prevOf = id => IDS[IDS.indexOf(id) - 1];
+
+function bar(g, up, big, pop){
+  return `<div class="gb${big ? ' big' : ''}" aria-label="${GR[g]}, ${up} av 3 rätt i rad">${GR.map((n, i) =>
+    `<div class="gs${i === g ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(j =>
+      `<i class="${i < g ? 'full' : i === g && j < up ? 'on' : ''}${pop && pop.g === i && pop.j === j ? ' pop' : ''}"></i>`).join('')}</div>${big ? `<span>${n}</span>` : ''}</div>`).join('')}</div>`;
+}
+const vars = id => `--c:${TT[id].c};--ci:${TT[id].ci};--pat:${pat(id, TT[id].c)}`;
+
+function tileHTML(id){
+  if (id === 'exam') return `<button class="tile exam" data-id="exam" style="--c:#d9381e;--ci:#fff">
+    <span class="thead"><span class="ticon">${icon('exam')}</span><span class="tname">Eldprovet</span></span>
+    <span class="tline">20 frågor från alla ämnen. Gör det när du vill. Klarar du ett ämne här låses det upp.</span>
+    <span class="tfoot"><span class="chip">Alltid öppet</span></span>${FIRE}</button>`;
+  const t = TT[id], st = S[id];
+  const head = `<span class="tpat"></span><span class="thead"><span class="ticon">${icon(id)}</span><span class="tname">${t.name}</span></span><span class="tline">${t.line}</span>`;
+  if (st.s === 'done') return `<button class="tile done" data-id="${id}" style="${vars(id)}">${head}
+    <span class="tfoot"><span class="tstate">Klart ✓ · rekord ${st.best} i rad</span><span class="chip">Spela blandat</span></span></button>`;
+  if (st.s === 'locked') {
+    const why = st.why ? ' why' : '';
+    const key = S.keys.includes(id);
+    const txt = st.why || (key ? 'Tryck för att låsa upp' : `Låst · nyckeln finns på Mästare i ${TT[prevOf(id)].name}`);
+    return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${id}" style="${vars(id)}"${key ? ` aria-label="${t.name}: tryck för att vrida om nyckeln"` : ''}>${head}
+      <span class="tfoot"><span class="tstate${why}">${txt}</span></span>
+      <span class="fog"></span>${chains()}${PADLOCK}${key ? `<span class="inkey${S.arriving === id ? ' arriving' : ''}">${KEY(t.c)}</span>` : ''}</button>`;
+  }
+  return `<button class="tile open${S.fresh === id ? ' fresh' : ''}" data-id="${id}" style="${vars(id)}">${head}
+    <span class="tfoot">${bar(st.g, st.up)}<span class="tstate">${!st.started ? 'Nytt · börja med en snabbkoll' : `${GR[st.g]} · ${st.up} av 3 rätt i rad · fortsätt`}</span></span>
+    ${S.fresh === id ? '<span class="newflag">Nytt!</span>' : ''}</button>`;
+}
+function renderGrid(){
+  const rank = {open:0, locked:1, exam:2, done:3};
+  const all = IDS.concat(['exam']), status = id => id === 'exam' ? 'exam' : S[id].s;
+  const order = mode === 'm1' ? all.slice().sort((a, b) => rank[status(a)] - rank[status(b)]) : all;
+  $('#grid').innerHTML = order.map(tileHTML).join('');
+  const k = S.keys.find(x => x !== S.arriving);
+  $('#lead').innerHTML = k ? `<b>Tryck på ${TT[k].name}</b> för att vrida om nyckeln och låsa upp.`
+    : 'Lär dig läsa motstånd. <b>Välj ett ämne.</b> Når du Mästare flyger nyckeln till nästa.';
+}
+
+// Frågorna i skissen: bara exempel. Vilken siffra är det markerade bandet?
+function newQ(){
+  const d = Math.floor(Math.random() * 10), opts = new Set([d]);
+  while (opts.size < 4) opts.add(Math.floor(Math.random() * 10));
+  const o = shuffle([...opts]);
+  return {d, bands:[d || 1, Math.floor(Math.random() * 10), 2], opts:o.map(String), right:o.indexOf(d), at:0, pick:null};
+}
+function kickQ(id){
+  const [q, list] = TT[id].kick, o = shuffle([0, 1, 2, 3]);
+  return {kick:q, opts:o.map(i => list[i]), right:o.indexOf(0), pick:null};
+}
+const BONE = 'M70,45 C70,16 108,16 112,25 L208,25 C212,16 250,16 250,45 C250,74 212,74 208,65 L112,65 C108,74 70,74 70,45 Z';
+function resistor(q){
+  const cols = [DIG[q.d][0], DIG[q.bands[1]][0], DIG[q.bands[2]][0], '#c9a43a'], xs = [104, 136, 160, 214], w = [14, 14, 14, 20];
+  return `<svg viewBox="0 -4 320 100" role="img" aria-label="Motstånd där första bandet är markerat">
+    <line x1="4" y1="45" x2="74" y2="45" stroke="var(--lead)" stroke-width="5" stroke-linecap="round"/><line x1="246" y1="45" x2="316" y2="45" stroke="var(--lead)" stroke-width="5" stroke-linecap="round"/>
+    <clipPath id="bc"><path d="${BONE}"/></clipPath><path d="${BONE}" fill="var(--body)"/>
+    <g clip-path="url(#bc)">${cols.map((c, i) => `<rect x="${xs[i] - w[i] / 2}" y="8" width="${w[i]}" height="76" fill="${c}"/>`).join('')}</g>
+    <path d="${BONE}" fill="none" stroke="rgba(0,0,0,.28)"/>
+    <rect x="${xs[0] - 11}" y="1" width="22" height="90" rx="4" fill="none" stroke="var(--accent)" stroke-width="3"/></svg>`;
+}
+function optsHTML(q){
+  return `<div class="opts">${q.opts.map((o, i) => {
+    const bad = q.bad && q.bad.includes(i);
+    const cls = q.pick == null ? (bad ? ' bad' : '') : i === q.right ? ' ok' : i === q.pick ? ' bad' : '';
+    return `<button class="opt${cls}" data-a="${i}"${bad ? ' disabled' : ''}>${o}</button>`; }).join('')}</div>`;
+}
+
+function playHTML(){
+  const id = active;
+  if (id === 'exam') {
+    const DARE = ['VÅGAR DU???', 'KAN DU TILLRÄCKLIGT?', '20 FRÅGOR. INGEN HJÄLP. INGEN NÅD.'];
+    const d = S.exam.dare;
+    return `<div class="phead"><span class="ticon">${icon('exam')}</span><span class="pname">Eldprovet</span>
+      <button class="min" data-min aria-label="Byt ämne">${I.min}<span>Byt ämne</span></button></div>
+      <div class="pbody"><div class="pin">${d < 3 ? `<button class="dare" data-dare>${FIRE}<b>${DARE[d]}</b></button>
+      <p class="rule">20 frågor, fyra från varje ämne. 3 av 4 i ett ämne låser upp det, 4 av 4 klarar det.</p>`
+      : '<div class="keywin"><h3>Provet börjar här.</h3><p>(Skissen slutar här.)</p></div>'}</div></div>`;
+  }
+  const t = TT[id], st = S[id], done = st.s === 'done';
+  if (!done && !st.started) {
+    st.q ||= kickQ(id);
+    return `<span class="tpat" style="--pat:${pat(id, t.c, .2)}"></span><div class="coverwrap">
+      <button class="xbtn" data-min aria-label="Byt ämne">${I.min}</button>
+      <span class="eyebrow">Ämne ${IDS.indexOf(id) + 1} av 5</span>
+      ${animHTML(id)}
+      <h2 class="cname"><span class="ticon">${icon(id)}</span>${t.name}</h2>
+      <p class="cline">${t.line}</p>
+      <div class="unlock"><div class="rule"></div><span class="ulab">${SPARK}Snabbkoll</span>
+        <p class="q">${st.q.kick}</p>${optsHTML(st.q)}</div></div>`;
+  }
+  const head = `<div class="phead"><span class="ticon">${icon(id)}</span><span class="pname">${t.name}</span>${done ? '<span class="pmode">· Blandat</span>' : ''}
+    <button class="min" data-min aria-label="Byt ämne">${I.min}<span>Byt ämne</span></button></div>`;
+  const top = done ? `<div class="streak"><b>${st.streak}</b> i rad<span>Rekord ${st.best}</span></div>` : bar(st.g, st.up, true, S.pop && S.pop.id === id ? S.pop : null);
+  let body;
+  if (st.cer) {
+    const nx = nextOf(id);
+    body = `<div class="keywin">${KEY(TT[nx].c)}<h3>Mästare! Du fick nyckeln till ${TT[nx].name}.</h3><p>Den flyger till låset.</p></div>`;
+  } else {
+    st.q ||= newQ();
+    body = `<p class="q">Vilken siffra är det markerade bandet?</p><div class="res">${resistor(st.q)}</div>${optsHTML(st.q)}
+      <p class="sketchnote">Exempelfråga. I spelet kommer ämnets riktiga frågor här.</p>`;
+  }
+  return `<span class="tpat"></span>${head}<div class="pbar">${top}</div><div class="pbody"><div class="pin">${body}</div></div>`;
+}
+function renderPlay(){ if (ov) ov.innerHTML = playHTML(); S.pop = null; }
+function flip(fn){
+  if (reduce() || !ov.animate) { fn(); return; }
+  ov.animate([{transform: 'perspective(1400px) rotateY(0)'}, {transform: 'perspective(1400px) rotateY(90deg)'}], {duration: 230, easing: 'ease-in'}).onfinish = () => {
+    fn();
+    ov.animate([{transform: 'perspective(1400px) rotateY(-90deg)'}, {transform: 'perspective(1400px) rotateY(0)'}], {duration: 260, easing: 'ease-out'});
+  };
+}
+
+// Kortet zoomas från sin ruta till hela ytan, och tillbaka när man minimerar
+const px = r => ({left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px'});
+function tileRect(id){
+  const app = $('#app'), a = app.getBoundingClientRect(), el = $(`#grid [data-id="${id}"]`);
+  const r = el.getBoundingClientRect();
+  return {left: r.left - a.left - app.clientLeft, top: r.top - a.top - app.clientTop + app.scrollTop, width: r.width, height: r.height};
+}
+const fullRect = () => { const app = $('#app'); return {left: 0, top: app.scrollTop, width: app.clientWidth, height: app.clientHeight}; };
+function openPlay(id){
+  const app = $('#app');
+  active = id; if (S.fresh === id) S.fresh = null;
+  ov = document.createElement('section');
+  const cover = id !== 'exam' && S[id].s === 'open' && !S[id].started;
+  ov.className = 'play' + (id === 'exam' ? ' examplay' : S[id].s === 'done' ? ' goldplay' : '') + (cover ? ' cover' : '');
+  ov.setAttribute('aria-label', id === 'exam' ? 'Eldprovet' : TT[id].name);
+  if (id !== 'exam') ov.style.cssText = vars(id);
+  const from = tileRect(id), to = fullRect();
+  app.classList.add('busy');
+  renderPlay();
+  Object.assign(ov.style, px(to));
+  app.appendChild(ov);
+  if (!reduce()) {
+    ov.animate(cover ? [{...px(from), transform: 'perspective(1400px) rotateY(-180deg)'}, {...px(to), transform: 'perspective(1400px) rotateY(0)'}] : [px(from), px(to)],
+      {duration: cover ? 700 : 450, easing: 'cubic-bezier(.2,.8,.2,1)'});
+    ov.querySelectorAll('.phead,.pbar,.pbody,.coverwrap').forEach(el => el.animate([{opacity: 0}, {opacity: 1}], {duration: 300, delay: 180, fill: 'backwards'}));
+  }
+  ov.querySelector('[data-min]').focus({preventScroll: true});
+}
+function minimize(after){
+  if (!ov) return;
+  const id = active, el = ov, app = $('#app');
+  renderGrid();
+  const done = () => { el.remove(); app.classList.remove('busy'); active = null; ov = null; after && after(); $(`#grid [data-id="${id}"]`)?.focus({preventScroll: true}); };
+  if (reduce()) { done(); return; }
+  el.querySelectorAll('.phead,.pbar,.pbody,.coverwrap').forEach(x => x.animate([{opacity: 1}, {opacity: 0}], {duration: 160, fill: 'forwards'}));
+  el.animate([px(fullRect()), px(tileRect(id))], {duration: 420, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards'}).onfinish = done;
+}
+
+function answer(i){
+  const id = active, st = S[id], q = st.q;
+  if (!q || q.pick != null) return;
+  q.pick = i;
+  const ok = i === q.right;
+  if (q.kick) {
+    // Rätt: kortet vänds till spelsidan och omslaget visas aldrig mer. Fel: försök igen.
+    if (!ok) { q.pick = null; (q.bad ||= []).push(i); renderPlay(); return; }
+    renderPlay();
+    setTimeout(() => { if (active !== id) return; flip(() => { st.started = true; st.q = newQ(); ov.classList.remove('cover'); renderPlay(); }); }, 550);
+    return;
+  }
+  let gradeUp = false;
+  if (st.s === 'done') { st.streak = ok ? st.streak + 1 : 0; st.best = Math.max(st.best, st.streak); }
+  else if (ok) {
+    S.pop = {id, g: st.g, j: st.up};
+    st.up++;
+    if (st.up === 3) { st.g = Math.min(st.g + 1, 4); st.up = 0; gradeUp = true; S.pop = null; }
+  } else st.up = 0;
+  renderPlay();
+  if (gradeUp) ov.querySelector('.gb')?.classList.add('up');
+  const nx = nextOf(id);
+  setTimeout(() => {
+    if (active !== id) return;
+    if (gradeUp && st.g === 3 && nx && S[nx].s === 'locked' && !st.gaveKey) {
+      st.gaveKey = true; st.cer = true; st.q = null; renderPlay();
+      setTimeout(() => { if (active !== id) return; st.cer = false; minimize(() => flyKey(id, nx)); }, 2200);
+      return;
+    }
+    st.q = newQ(); renderPlay();
+  }, ok ? 700 : 1300);
+}
+
+// Nyckeln flyger från kortet man just lämnade till nästa ämnes nyckelhål och blir sittande där
+function flyKey(fromId, toId){
+  const from = $(`#grid [data-id="${fromId}"]`).getBoundingClientRect();
+  S.keys.push(toId); S.arriving = toId; renderGrid();
+  const target = $(`#grid [data-id="${toId}"]`), slot = target.querySelector('.inkey');
+  target.scrollIntoView?.({block: 'nearest', behavior: reduce() ? 'auto' : 'smooth'});
+  const land = () => { S.arriving = null; slot.classList.remove('arriving'); renderGrid(); };
+  if (reduce()) { land(); return; }
+  setTimeout(() => {
+    const to = slot.getBoundingClientRect();
+    const g = document.createElement('div'); g.className = 'ghost'; g.innerHTML = KEY(TT[toId].c);
+    g.style.width = to.width + 'px';
+    document.body.appendChild(g);
+    const a = {left: from.left + from.width / 2 - to.width / 2 + 'px', top: from.top + from.height / 2 + 'px', transform: 'scale(2.2) rotate(-30deg)'};
+    const mid = {left: (from.left + to.left) / 2 + 'px', top: Math.min(from.top, to.top) - 60 + 'px', transform: 'scale(1.6) rotate(200deg)', offset: .55};
+    const b = {left: to.left + 'px', top: to.top + 'px', transform: 'scale(1) rotate(360deg)'};
+    g.animate([a, mid, b], {duration: 1100, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards'}).onfinish = () => { g.remove(); land(); };
+  }, 250);
+}
+// Ett tryck på kortet vrider om nyckeln: låset öppnas, kedjorna faller, dimman lättar, och omslaget öppnas direkt
+function unlockTile(tile){
+  const id = tile.dataset.id;
+  if (tile.classList.contains('turning')) return;
+  tile.classList.add('turning');
+  const open = () => { S[id] = {s: 'open', g: 0, up: 0}; S.keys = S.keys.filter(x => x !== id); S.fresh = id; renderGrid(); setTimeout(() => { if (!ov) openPlay(id); }, reduce() ? 0 : 700); };
+  if (reduce()) { open(); return; }
+  setTimeout(() => tile.classList.add('opening'), 380);
+  setTimeout(open, 1500);
+}
+
+// Klick på startsidan och i spelkortet
+$('#app').addEventListener('click', e => {
+  if (e.target.closest('[data-min]')) { minimize(); return; }
+  const a = e.target.closest('[data-a]');
+  if (a && ov) { answer(+a.dataset.a); return; }
+  if (e.target.closest('[data-dare]')) { S.exam.dare++; renderPlay(); return; }
+  const tile = e.target.closest('#grid .tile');
+  if (!tile || ov) return;
+  const id = tile.dataset.id;
+  if (id !== 'exam' && S[id].s === 'locked') {
+    if (S.keys.includes(id)) { unlockTile(tile); return; }
+    S[id].why = `Klara Mästare i ${TT[prevOf(id)].name} först, så får du nyckeln.`;
+    renderGrid();
+    const t = $(`#grid [data-id="${id}"]`); t.classList.add('nope');
+    clearTimeout(S[id].whyT); S[id].whyT = setTimeout(() => { S[id].why = null; if (!ov) renderGrid(); }, 2600);
+    return;
+  }
+  openPlay(id);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && ov) minimize(); });
+
+// Skissens verktyg
+function setMode(m){
+  mode = m;
+  $('#stage').className = 'stage ' + m;
+  document.querySelectorAll('#modes button').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+  renderGrid();
+  if (ov) Object.assign(ov.style, px(fullRect()));
+}
+$('#modes').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) setMode(b.dataset.mode); });
+document.querySelectorAll('[data-start]').forEach(b => b.addEventListener('click', () => {
+  if (ov) { ov.remove(); ov = null; active = null; $('#app').classList.remove('busy'); }
+  document.querySelectorAll('.ghost').forEach(g => g.remove());
+  S = STARTS[b.dataset.start](); renderGrid();
+}));
+$('#almost').addEventListener('click', () => {
+  if (S.ohm.s !== 'open') { if (ov) { ov.remove(); ov = null; active = null; $('#app').classList.remove('busy'); } S = STARTS.mid(); }
+  const st = S.ohm;
+  Object.assign(st, {g: 2, up: 2, started: true, gaveKey: false, q: null, cer: false});
+  S.tol = {s: 'locked'}; S.keys = S.keys.filter(x => x !== 'tol');
+  if (ov && active === 'ohm') renderPlay(); else { if (ov) minimize(); renderGrid(); }
+});
+const soundBtn = $('#sound');
+const syncSound = () => { const on = soundBtn.getAttribute('aria-pressed') === 'true'; soundBtn.setAttribute('aria-label', on ? 'Ljud på' : 'Ljud av');
+  soundBtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/>${on ? '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' : '<path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'}</svg>`; };
+soundBtn.addEventListener('click', () => { soundBtn.setAttribute('aria-pressed', soundBtn.getAttribute('aria-pressed') !== 'true'); syncSound(); });
+syncSound();
+setMode(innerWidth < 600 ? 'm2' : 'desk');
+addEventListener('resize', () => { if (ov) Object.assign(ov.style, px(fullRect())); });
+</script>
