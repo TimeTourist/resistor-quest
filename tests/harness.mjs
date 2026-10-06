@@ -4,7 +4,9 @@ import { readFileSync } from 'node:fs';
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 // Laddar spelet i jsdom. storage fylls i localStorage innan scriptet körs.
-export function load({ storage = {}, url = 'http://localhost/', instant = true, audio = null } = {}) {
+// start: sidan öppnar på startkortet. De flesta tester vill börja på en fråga, så utan start svarar harnessen rätt
+// på startfrågan först (bara när spelaren har sparade framsteg, en ny spelare ska se kortet).
+export function load({ storage = {}, url = 'http://localhost/', instant = true, audio = null, start = false } = {}) {
   const errors = [];
   const dom = new JSDOM(html, {
     url, runScripts: 'dangerously', pretendToBeVisual: true,
@@ -17,6 +19,7 @@ export function load({ storage = {}, url = 'http://localhost/', instant = true, 
   const w = dom.window, doc = w.document;
   // Utan animeringar och väntan: svaret visas direkt och rätt svar väntar på Nästa
   if (instant) w.eval('S.instant = true');
+  if (!start) w.eval("if (S.view && S.view !== 'ultra' && !S.firstVisit && S.kick) goTopic(S.view)");
   return { w, doc, errors, g: expr => w.eval(expr), $: s => doc.querySelector(s), $$: s => [...doc.querySelectorAll(s)] };
 }
 

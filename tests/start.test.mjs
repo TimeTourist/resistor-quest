@@ -14,7 +14,11 @@ test('Startfrågan: ämneskortet har ingen Spela-knapp utan en lätt fråga med 
   assert.equal(opts.length, 4);
   const right = opts.find(b => +b.dataset.kick === t.g('S.kick.right'));
   assert.ok(right.querySelector('svg'), 'rätt val är ett riktigt motstånd');
-  assert.match(t.$('.kick').textContent, /Kyckling/);
+  // Bara bilder på valen, ingen text. Namnet finns för skärmläsare.
+  const chicken = opts.find(b => b.getAttribute('aria-label') === 'Kyckling');
+  assert.ok(chicken, 'kycklingen har en etikett för skärmläsare');
+  assert.equal(chicken.textContent.trim(), '🐔');
+  assert.ok(opts.every(b => !/[a-zåäö]/i.test(b.textContent)), 'ingen text på valen');
 });
 
 test('Startfrågan: varje ämne har en egen fråga', () => {
@@ -179,4 +183,40 @@ test('Stapeln på kortet: Nej stänger frågan, och under spelet går stapeln in
   assert.equal(t.g('S.grade.tol'), 3);
   kick(t);
   assert.equal(t.$$('#gbar [data-gpick]').length, 0);
+});
+
+test('Startkortet ser ut som en start: egen färg och Här börjar det!', () => {
+  const t = load({ storage: ALL_OPEN });
+  t.g("showLevelCard('ohm')");
+  assert.ok(t.$('#q').classList.contains('startcard'));
+  assert.match(t.$('#q .startflag').textContent, /Här börjar det!/);
+  kick(t, true);
+  assert.ok(!t.$('#q').classList.contains('startcard'), 'frågan ser ut som vanligt');
+});
+
+test('Startkortet: låst ämne och Eldprovet är inga startkort', () => {
+  const t = load();
+  t.g("showLevelCard('tc')");
+  assert.ok(!t.$('#q').classList.contains('startcard'));
+  assert.equal(t.$('#q .startflag'), null);
+});
+
+test('Sidan öppnar på startkortet för ämnet man var på, även med sparade framsteg', () => {
+  const t = load({ start: true, storage: { ...ALL_OPEN, 'fargkoden2-topic': 'tol' } });
+  assert.equal(t.g('S.view'), 'tol');
+  assert.ok(t.$('#q .kick'));
+  kick(t, true);
+  assert.equal(t.g('S.view'), null);
+  assert.equal(t.g('S.answered'), false);
+});
+
+test('Sidan öppnar på Eldprovets kort om man var där', () => {
+  const t = load({ start: true, storage: { ...ALL_OPEN, 'fargkoden2-topic': 'ultra' } });
+  assert.ok(t.$('#dare'));
+});
+
+test('Förhandsvisningen från dev.html hoppar över startkortet', () => {
+  const t = load({ start: true, url: 'http://localhost/index.html?test=true&topic=ohm&grade=2' });
+  assert.equal(t.g('S.view'), null);
+  assert.equal(t.g('S.type'), 'point');
 });

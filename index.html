@@ -12,18 +12,18 @@
 :root{
   --bg:#e8edf0;--grid:rgba(31,111,178,.08);--surface:#fff;--ink:#1d2730;--muted:#566673;--line:#c8d1d8;
   --accent:#1f6fb2;--accent-ink:#fff;--ok:#24803a;--ok-bg:#e3f3e6;--bad:#b83227;--bad-bg:#f8e4e1;--tip-bg:#fbefcf;
-  --body:#dcc596;--lead:#98a1a8;
+  --body:#dcc596;--lead:#98a1a8;--start-a:#e3f0fc;--start-b:#c4ddf5;--start-line:#1f6fb2;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
-    --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;
+    --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;
   }
 }
 :root[data-theme="dark"]{
   --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
-  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;
+  --accent:#5aa6e6;--accent-ink:#0d1a24;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;--lead:#7d878e;--start-a:#173450;--start-b:#0f2236;--start-line:#5aa6e6;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -62,6 +62,14 @@ html,body{overflow-x:clip}
 .lvcard .state.done{background:var(--ok-bg)}
 .lvbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
 .lvbtns .primary{margin:0}
+.card.startcard{background:linear-gradient(165deg,var(--start-a),var(--start-b));border:2px solid var(--start-line);box-shadow:0 10px 28px rgba(31,111,178,.22)}
+.startflag{display:inline-flex;align-items:center;gap:8px;margin:0 0 10px;padding:5px 14px 5px 10px;border-radius:999px;background:var(--start-line);color:var(--surface);font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.15rem;letter-spacing:.06em;text-transform:uppercase}
+.startflag::before{content:'';width:0;height:0;border-left:11px solid currentColor;border-top:7px solid transparent;border-bottom:7px solid transparent}
+.goldcard .startflag{background:#b8860b}
+@media (prefers-reduced-motion: no-preference){
+  .startflag{animation:flagin .5s cubic-bezier(.3,1.6,.5,1) both}
+  @keyframes flagin{from{transform:translateX(-14px) scale(.9);opacity:0}}
+}
 .fresh{display:inline-block;margin-bottom:8px;font-size:.8rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--ok);color:var(--surface);border-radius:6px;padding:3px 8px}
 .card.bosscard{color:#ffe8d2;border:0;background:radial-gradient(120% 90% at 50% 110%,#ff9a3c,#d9381e 45%,#2a1712 85%)}
 .bosscard .primary{background:#ffe8d2;color:#2a1712}
@@ -746,7 +754,7 @@ function levelCardHTML(lv, fresh){
   if (cleared(lv)) {
     // Gyllene: trappan har gjort sitt jobb. Ämnet spelas blandat, och vägen vidare är nästa ämne eller Eldprovet.
     const on = nx && unlocked(nx) ? nx : 'ultra';
-    return `<div class="lvcard goldcard">${fresh ? '<span class="fresh gold">Ämnet är klart!</span>' : ''}<h2>${topicName(lv)} <span class="goldmark">✓</span></h2>${S.kick && S.kick.lv === lv && S.kick.bad.length ? `<div class="kickwhy"><p>${TOPIC_LINE[lv]}</p>${animHTML(lv)}</div>` : ''}
+    return `<div class="lvcard goldcard">${fresh ? '<span class="fresh gold">Ämnet är klart!</span>' : '<div class="startflag">Här börjar det!</div>'}<h2>${topicName(lv)} <span class="goldmark">✓</span></h2>${S.kick && S.kick.lv === lv && S.kick.bad.length ? `<div class="kickwhy"><p>${TOPIC_LINE[lv]}</p>${animHTML(lv)}</div>` : ''}
       <p class="state done">Klart! Nu blandas frågor från alla grader. <b>Rekordsvit: ${S.mix.best[lv] || 0}</b></p>
       ${kickHTML(lv)}
       ${fresh ? `<div class="lvbtns"><button class="ghost go" data-go="${on}">${on === 'ultra' ? 'Till Eldprovet' : `Till ${topicName(on)}`}</button></div>` : ''}</div>`;
@@ -757,7 +765,7 @@ function levelCardHTML(lv, fresh){
   // Öppet ämne: bara namnet och startfrågan. Graden väljs i stapeln uppe. Ämnets rad och animering visas först vid fel svar.
   const why = open && S.kick && S.kick.lv === lv && S.kick.bad.length;
   const intro = `<p>${TOPIC_LINE[lv]}</p>${animHTML(lv)}`;
-  return `<div class="lvcard">${fresh ? '<span class="fresh">Nytt ämne upplåst!</span>' : ''}<h2>${topicName(lv)}</h2>${!open ? intro : why ? `<div class="kickwhy">${intro}</div>` : ''}
+  return `<div class="lvcard">${open ? `<div class="startflag">${fresh ? 'Nytt ämne! Här börjar det!' : 'Här börjar det!'}</div>` : ''}<h2>${topicName(lv)}</h2>${!open ? intro : why ? `<div class="kickwhy">${intro}</div>` : ''}
     ${open ? '' : `<p class="state">${state}</p>`}
     ${open ? kickHTML(lv) : '<div class="lvbtns"><button class="primary" disabled>Låst</button></div>'}
     ${fresh ? `<div class="lvbtns"><button class="ghost" id="stay">Stanna på ${topicName(S.topic)}</button></div>` : ''}</div>`;
@@ -765,6 +773,8 @@ function levelCardHTML(lv, fresh){
 function drawCard(lv, fresh){
   const q = document.getElementById('q');
   q.classList.toggle('bosscard', lv === 'ultra');
+  // Startkortet har en egen färg, så att man ser att något börjar här
+  q.classList.toggle('startcard', lv !== 'ultra' && unlocked(lv) && !cleared(lv));
   q.innerHTML = levelCardHTML(lv, fresh);
   document.getElementById('more').hidden = true;
   updateScore();
@@ -850,13 +860,12 @@ function showLevelCard(lv, fresh = false){
 // Startfrågan på ämneskortet: en lätt, riktig fråga i stället för en Spela-knapp.
 // Rätt svar krossar kortet och ämnet börjar. Fel svar visar ämnets rad och animering, och man får försöka igen. Trappan påverkas inte.
 // Första valet är det rätta.
-const emo = (e, t) => `<span class="emo" aria-hidden="true">${e}</span><span>${t}</span>`;
+// Bara bilden syns. Namnet läses upp av skärmläsare.
+const emo = (e, label) => ({html: `<span class="emo" aria-hidden="true">${e}</span>`, label});
 const KICK = {
   body: {q: 'Välj motståndet', opts: [
-    {html: () => svg(genBands(4), {style: stdStyle(4), label: 'Motstånd'})},
-    {html: emo('🐔', 'Kyckling')},
-    {html: emo('🚗', 'Bil')},
-    {html: emo('⚓', 'Ankare')}]},
+    {html: () => svg(genBands(4), {style: stdStyle(4), label: 'Motstånd'}), label: 'Motstånd'},
+    emo('🐔', 'Kyckling'), emo('🚗', 'Bil'), emo('⚓', 'Ankare')]},
   ohm: {q: 'Vilken enhet har resistans?', opts: [{html: '<b>Ω</b> ohm'}, {html: 'kg'}, {html: '°C'}, {html: 'km/h'}]},
   tol: {q: 'Ett motstånd på 100 Ω ±10 %. Vilket mätvärde är okej?', opts: [{html: '104 Ω'}, {html: '150 Ω'}, {html: '200 Ω'}, {html: '3 Ω'}]},
   tc: {q: 'Vad händer med resistansen när motståndet blir varmt?', opts: [{html: 'Den ändras lite'}, {html: 'Den blir noll'}, {html: 'Motståndet byter färg'}, {html: 'Den blir tusen gånger större'}]},
@@ -865,11 +874,11 @@ const KICK = {
 function kickHTML(lv){
   if (!S.kick || S.kick.lv !== lv) {
     const K = KICK[lv], order = shuffle([0, 1, 2, 3]);
-    S.kick = {lv, right: order.indexOf(0), bad: [], opts: order.map(i => { const o = K.opts[i]; return {html: typeof o.html === 'function' ? o.html() : o.html}; })};
+    S.kick = {lv, right: order.indexOf(0), bad: [], opts: order.map(i => { const o = K.opts[i]; return {html: typeof o.html === 'function' ? o.html() : o.html, label: o.label}; })};
   }
   const k = S.kick;
   return `<div class="kick"><p class="kickq">${KICK[lv].q}</p><div class="kickopts">${k.opts.map((o, i) =>
-    `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${TEST_MODE && i === k.right ? ' cheat' : ''}" data-kick="${i}"${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o.html}</button>`).join('')}</div></div>`;
+    `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${TEST_MODE && i === k.right ? ' cheat' : ''}" data-kick="${i}"${o.label ? ` aria-label="${o.label}"` : ''}${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o.html}</button>`).join('')}</div></div>`;
 }
 const centerOf = el => { const r = el.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
 function kickPick(btn){
@@ -969,8 +978,8 @@ function shatter(fn, at){
 
 // Spela på ett nivåkort. Samma ämne och grad: fortsätt där man var.
 function goTopic(lv){
-  S.view = null; clearBar();
-  document.getElementById('q').classList.remove('bosscard');
+  S.view = null; S.kick = null; clearBar();
+  document.getElementById('q').classList.remove('bosscard', 'startcard');
   if (lv === S.topic && S.plan && S.type !== 'exam') { render(); return; }
   if (lv !== S.topic) { S.up = 0; S.down = 0; S.mix.streak = 0; S.exam = null; S.lastMore = ''; S.topic = lv; save('fargkoden2-topic', lv); }
   S.moved = null;
@@ -2748,8 +2757,9 @@ document.getElementById('eSeg').addEventListener('click', e => {
 renderE();
 
 next();
-// Ny spelare: börja med Motståndets kort
-if (S.firstVisit) showLevelCard('body');
+// Sidan öppnar alltid på ett startkort: Motståndets för en ny spelare, annars ämnet man var på.
+// Förhandsvisningen från dev.html går direkt till frågan.
+if (!S.pin) showLevelCard(S.firstVisit ? 'body' : S.topic);
 </script>
 </body>
 </html>
