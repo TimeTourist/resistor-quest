@@ -56,3 +56,16 @@ test('dev.html: Motståndets katalog har den nya ordningen', () => {
   const rows = JSON.parse(w.eval('JSON.stringify(CATALOG.body)'));
   assert.deepEqual(rows.filter(r => r.g < 3).map(r => [r.g, r.id]), [[0, 'body-rakna'], [1, 'body-antal'], [2, 'body-farg']]);
 });
+
+test('Resistansen Nykomling: frågan säger att klammern visar banden som ger ohm-värdet, och värdet står vid klammern', () => {
+  const t = atGrade('ohm', 0);
+  for (let i = 0; i < 10; i++) {
+    t.g('S.grade.ohm = 0; next()');
+    assert.equal(t.g('S.cq.prompt'), 'Klammern visar vilka band som ger ohm-värdet.');
+    const cards = t.$$('#q [data-c]');
+    cards.forEach((c, j) => {
+      const want = t.g(`fmtVal(S.cq.vals[${j}])`);
+      assert.equal(c.querySelector('.bracket text').textContent, want, `kort ${j}`);
+    });
+  }
+});

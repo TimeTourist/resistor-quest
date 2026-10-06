@@ -1577,11 +1577,13 @@ const GRADES = {
       });
       const T = {fix: .6}; T.pop = T.fix + 1.5; T.green = T.pop + .5; T.total = T.green + .8;
       const wrongNow = () => S.answered && !S.ok;
-      S.cq = {odd:true, anim: T, brackets, right, layout:'r', prompt:'Klammern visar ohm-banden.',
+      // Varje motstånds eget värde står vid klammern. På det udda täcker klammern fel band för värdet.
+      const bands = brackets.map(([n]) => genBands(n));
+      S.cq = {odd:true, anim: T, brackets, right, layout:'r', prompt:'Klammern visar vilka band som ger ohm-värdet.', vals: bands.map(valueOf),
         opts: brackets.map(([n, to], i) => {
-          const b = genBands(n), k = nd(b);
-          return {draw: () => svg(b, {style: stdStyle(n), label: 'Motstånd med en klammer över några band',
-            bracket: i === right && wrongNow() ? [{to, kind:'bad'}, {to: k, kind:'ok', at: T.fix, dim: true}] : [{to}]}),
+          const b = bands[i], k = nd(b), title = fmtVal(valueOf(b));
+          return {draw: () => svg(b, {style: stdStyle(n), label: `Motstånd på ${title} med en klammer över några band`,
+            bracket: i === right && wrongNow() ? [{to, kind:'bad'}, {to: k, kind:'ok', at: T.fix, dim: true, title}] : [{to, title}]}),
             badge: () => wrongNow() && (i === right ? {text: '✗', kind: 'bad', at: T.fix} : {text: '✓', kind: 'ok', at: T.green})};
         }),
         wrong: 'Ohm-banden är alla band utom det sista. På sex band alla utom de två sista.'};
