@@ -24,7 +24,7 @@ E3 (±40 %) är inte med. Det finns inget toleransband för ±40 %, så serien g
 | Grad | Mål | Frågor |
 |---|---|---|
 | Nykomling | Vad en E-serie är | Vad betyder 12 i E12? (klockan) · Vad är E12? |
-| Lärling | Serie och tolerans | Serie ↔ tolerans · Vilken serie räcker? · Vilken tolerans är E12 gjord för? (staplarna) |
+| Lärling | Serie och tolerans | Serie ↔ tolerans · Vilken serie räcker? · Vilken tolerans är E12 gjord för? (staplarna) · Vilken serie tillhör motståndet? med toleransen utskriven |
 | Gesäll | Toleransbandet visar serien | Vilken serie tillhör motståndet? Guld, silver, brun, röd och tre band. |
 | Mästare | Samma sak, svårare | Vilken serie tillhör motståndet? Också grön, blå och violett, sex band och vända motstånd · Samma siffror, annan multiplikator |
 | Stormästare | Allt blandat | Slumpas bland Lärlings, Gesälls och Mästares frågor i de svåraste varianterna |
@@ -45,7 +45,7 @@ Graden blandar två frågor.
 
 ### Lärling
 
-Graden blandar tre frågor.
+Graden blandar fyra frågor.
 
 1. **Serie ↔ tolerans.** "Vilken tolerans hör till E24?" och "Vilken serie hör till ±5 %?" flyttas oförändrade från Gesäll.
 2. **Vilken serie räcker? (ny)**
@@ -53,14 +53,23 @@ Graden blandar tre frågor.
    - Svaren är fyra serier: den rätta, den närmast grövre (räcker inte), den närmast finare (räcker men har fler värden än man behöver) och en till. För ±20 %, där det inte finns någon grövre, tas två finare.
    - Raden vid fel: "±10 % räcker, och E12 är gjord för ±10 %. E6 är för grov (±20 %). E24 och finare fungerar också, men har fler värden än du behöver."
 3. **Vilken tolerans är E12 gjord för?** Frågan med toleransstaplarna flyttas oförändrad från Gesäll.
+4. **Vilken serie tillhör motståndet? med toleransen utskriven (ny).** Samma fråga som på Gesäll, men toleransen står under motståndet, till exempel "±5 %". Man övar på att gå från tolerans till serie med motståndet framför sig, innan man själv måste läsa av bandet på Gesäll.
 
 ### Gesäll: Vilken serie tillhör motståndet?
 
 - **Frågan (ny):** ett motstånd visas och frågan är "Vilken serie tillhör motståndet?". Svaren är E6, E12, E24, E48 och E96.
 - **Motståndet:** ett standardvärde ur serien, med seriens toleransband. Fyra band för E12 och E24, tre band för E6 och fem band för E48 och E96. Motståndet sitter alltid rättvänt, och värdet står inte utskrivet.
 - **Bara toleransbandet avgör.** Värdet finns alltid i serien, så svaret "Inte standard" finns inte.
-- **Efter svaret, rätt eller fel,** får toleransbandet en ring, och raden under visar bandet och serien: "Guld, ±5 %, alltså E24." För tre band: "Tre band, inget toleransband, alltså ±20 % och E6."
+- **Efter svaret, rätt eller fel,** får toleransbandet en ring.
+- **Vid fel förklarar en animering varför bandet hör till serien,** i tre steg på ungefär 2 s:
+  1. Ringen runt toleransbandet pulserar.
+  2. En lapp med bandets färg och toleransen, "Guld ±5 %", glider ut från bandet och lägger sig under motståndet.
+  3. En pil går från lappen till serien, "→ E24", och den rätta svarsknappen lyser upp.
+
+  För tre band pulserar platsen där toleransbandet skulle ha suttit, och lappen säger "Inget band ±20 %".
 - **Raden vid fel:** "Titta på toleransbandet längst till höger: guld är ±5 %, och ±5 % är E24."
+- **Låset vid fel** väntar in animeringen, som vid de andra felanimeringarna. Med minskad rörelse och i testerna visas slutläget direkt: ringen, lappen och pilen.
+- **Samma facit** används på Lärling, Mästare och Stormästare.
 
 ### Mästare
 
@@ -106,6 +115,7 @@ Raderna för `e` i `CATALOG` skrivs om så att de stämmer med graderna ovan:
 | `e-serie-tol`, `e-tol-serie` | 1 |
 | `e-racker` (ny) | 1 |
 | `e-tol-staplar` | 1 |
+| `e-band-tol` (ny) | 1 |
 | `e-band` (ny) | 2 |
 | `e-band-svar` (ny) | 3 |
 | `e-multi` (ny) | 3 |
@@ -115,7 +125,7 @@ Raderna för `e` i `CATALOG` skrivs om så att de stämmer med graderna ovan:
 
 ## Tester
 
-- **Beroenderegeln** i `model.test.mjs` för `e` blir: choice, choice, series, choice eller series, choice eller series.
+- **Beroenderegeln** i `model.test.mjs` för `e` blir: choice, choice eller series, series, choice eller series, choice eller series.
 - **Inga värden behövs:** ingen fråga i E-serierna har "Inte standard" som svar, och ingen fråga kräver att man vet om ett värde finns i en serie utan att få det i frågan.
 - **Nykomling:**
   - Båda frågorna förekommer.
@@ -124,11 +134,14 @@ Raderna för `e` i `CATALOG` skrivs om så att de stämmer med graderna ovan:
 - **Lärling, vilken serie räcker:**
   - Det rätta svaret är serien som är gjord för toleransen.
   - Svaren innehåller en grövre serie när det finns en, och alltid en finare.
+- **Lärling, vilken serie tillhör motståndet:** toleransen står utskriven och stämmer med bandet.
 - **Gesäll:**
+  - Toleransen står inte utskriven.
   - Svaret följer bara toleransbandet (`TOL_SER`, och tre band ger E6).
   - Värdet finns alltid i serien.
   - Motståndet sitter rättvänt och har tre, fyra eller fem band.
   - Efter svaret har toleransbandet en ring.
+  - Vid fel finns lappen med bandets färg och tolerans och pilen till serien, och låset väntar in animeringen.
 - **Mästare:**
   - E192 förekommer, med grönt, blått eller violett band och ett värde ur E96.
   - Motstånd med sex band och vända motstånd förekommer.
