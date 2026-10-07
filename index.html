@@ -2282,8 +2282,12 @@ function reveal(){
   const party = S.moved === 'up' || S.moved === 'top';
   if (inExam()) sfx.tick();
   else if (!S.ok) sfx.wrong();
-  else if (S.moved === 'top') sfx.gold();
-  else if (party) sfx.fanfare();
+  else if (party) {
+    // Sista pricken i graden pingar högst, och fanfaren eller guldet kommer strax efter
+    sfx.right(2);
+    const fan = S.moved === 'top' ? sfx.gold : sfx.fanfare;
+    if (S.instant) fan(); else setTimeout(fan, 450);
+  }
   else sfx.right(S.barPlan && !S.barPlan.mix ? S.barPlan.from.up : 0);
   if (!S.instant) outcomeFX(inExam() ? 'neutral' : S.ok ? 'won' : 'lost', party);
   if (!S.instant) barFX(S.barPlan, barStart);

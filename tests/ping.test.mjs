@@ -4,15 +4,15 @@ import { load, golden } from './harness.mjs';
 import { answer } from './answer.mjs';
 
 // Ljuden spelas in: namn och steg
-const rec = t => t.g("S.played = []; ['right','fanfare','tick'].forEach(k => { sfx[k] = s => S.played.push(k + ':' + (s || 0)); })");
+const rec = t => t.g("S.played = []; ['right','fanfare','gold','tick'].forEach(k => { sfx[k] = s => S.played.push(k + ':' + (s || 0)); })");
 const played = t => Array.from(t.g('S.played'));
 const ladder = () => load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 1 }), 'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }) } });
 
-test('Pinget stiger för varje prick i graden, och den tredje ger fanfaren', () => {
+test('Pinget stiger för varje prick i graden, och den tredje pingar högst och följs av fanfaren', () => {
   const t = ladder();
   rec(t);
   for (let i = 0; i < 3; i++) { t.g('next()'); answer(t, true); }
-  assert.deepEqual(played(t), ['right:0', 'right:1', 'fanfare:0']);
+  assert.deepEqual(played(t), ['right:0', 'right:1', 'right:2', 'fanfare:0']);
 });
 
 test('Efter fel börjar pinget om från grundtonen', () => {
@@ -44,4 +44,11 @@ test('Högre steg ger högre ton', () => {
   freqs.length = 0;
   t.g('sfx.right(1)'); const high = freqs[0];
   assert.ok(high > low * 1.2, `${high} > ${low}`);
+});
+
+test('Sista pricken på Stormästare: ett ping och sedan guldet', () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 4 }), 'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }) } });
+  rec(t);
+  t.g('S.up = 2; S.down = 0; next()'); answer(t, true);
+  assert.deepEqual(played(t), ['right:2', 'gold:0']);
 });
