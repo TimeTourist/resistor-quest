@@ -144,7 +144,7 @@ test('Lärling: vilken serie räcker, rätt svar är serien gjord för toleranse
   const t = atGrade('e', 1);
   for (let i = 0; i < 60; i++) {
     until(t, p => p.eq === 'racker');
-    const need = +t.$('#q .prompt').textContent.match(/tål ±(\d+)/)[1];
+    const need = +t.$('#q .prompt').textContent.match(/avvika högst ±(\d+)/)[1];
     const opts = t.$$('#q [data-c]').map(b => b.textContent.trim()), right = opts[t.g('S.cq.right')];
     assert.equal(right, t.g(`TOL_SER[${need}]`));
     const idx = s => t.g(`SERS.indexOf('${s}')`);
@@ -289,4 +289,21 @@ test('Eldprovet: bandfrågan visar ingen ring efter svaret, eftersom provet inte
   assert.equal(t.g('S.plan.eq'), 'band');
   answer(t, true);
   assert.equal(t.$$('#q .ring').length, 0);
+});
+
+test('Samma siffror: felanimeringen visar multiplikatorn utan flyttalsskräp', () => {
+  const t = atGrade('e', 0);
+  for (let i = 0; i < 300; i++) {
+    t.g('GRADES.e[0] = multiQ; next()');
+    answer(t, false);
+    for (const r of t.$$('#q .emrow')) assert.doesNotMatch(r.textContent, /\d\.\d|e[+-]\d/, r.textContent);
+  }
+});
+
+test('Vilken serie räcker? handlar om motståndens egen tolerans, så att den inte säger emot Räcker säkert', () => {
+  const t = atGrade('e', 1);
+  until(t, p => p.eq === 'racker');
+  assert.match(t.$('#q .prompt').textContent, /^Motstånden får avvika högst ±\d+ % från sitt märkta värde\. Vilken serie räcker, med så få värden som möjligt\?$/);
+  answer(t, false);
+  assert.match(t.$('#q .eneed').textContent, /^Motstånden får avvika ±\d+ %$/);
 });

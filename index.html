@@ -3320,14 +3320,14 @@ function bandResistor({sers, six = false, flip = false}){
   return {bands, ser, flip: flip && bands.length > 3};
 }
 // Trappan: serierna i ordning, med dubbelt så många värden och smalare tolerans för varje steg.
-// hl: serien frågan gällde. need: toleransen bygget tål, då blir stegen för grova (bad), räcker (ok) eller fler än du behöver (more).
+// hl: serien frågan gällde. need: hur mycket motstånden får avvika, då blir stegen för grova (bad), räcker (ok) eller fler än du behöver (more).
 const stairEnd = (at = .3, step = .3) => at + SERS.length * step + .3;
 function stairHTML({hl = null, need = null, at = .3, step = .3} = {}){
   const enough = need == null ? null : SERS.find(s => SER_T[s] <= need);
   const fit = s => need == null ? (s === hl ? ' hl' : '') : SER_T[s] > need ? ' bad' : s === enough ? ' ok' : ' more';
   const note = s => need == null ? '' : SER_T[s] > need ? 'för grov' : s === enough ? 'räcker' : 'onödigt fin';
   // Kravet är en streckad linje mellan de för grova stegen och det första som räcker
-  const line = `<p class="eneed mk" style="animation-delay:${(at + SERS.length * step).toFixed(2)}s">Bygget tål ${fmtTol(need)}</p>`;
+  const line = `<p class="eneed mk" style="animation-delay:${(at + SERS.length * step).toFixed(2)}s">Motstånden får avvika ${fmtTol(need)}</p>`;
   const rows = SERS.map((s, i) => (s === enough ? line : '') + `<div class="estep${fit(s)} mk" style="animation-delay:${(at + i * step).toFixed(2)}s;--k:${i}">` +
     `<b>${s}</b><span>${fmtTol(SER_T[s])}</span><i>${note(s)}</i></div>`).join('');
   return `<div class="estair" aria-hidden="true">${rows}</div>`;
@@ -3373,8 +3373,9 @@ function multiQ(){
     const right = rnd4(), ms = shuffle(E_MULTS.slice()).slice(0, 4);
     const vals = ms.map((k, i) => Math.round((i === right ? odd : hint) / 10 * k * 100) / 100);
     const dg = x => String(x).split('').join(' ');
-    const row = (v, i) => { const d = i === right ? odd : hint, k = v / (d / 10);
-      return `<div class="emrow ${i === right ? 'bad' : 'ok'} mk" style="animation-delay:${(.4 + i * .4).toFixed(2)}s"><b>${dg(d)}</b> ${fmtMult(k / 10)} = ${fmtVal(v)} ${i === right ? '✗' : '✓'}</div>`; };
+    // Multiplikatorn tas direkt ur ms, inte räknad tillbaka ur det avrundade värdet (det ger flyttalsskräp)
+    const row = (v, i) => { const d = i === right ? odd : hint;
+      return `<div class="emrow ${i === right ? 'bad' : 'ok'} mk" style="animation-delay:${(.4 + i * .4).toFixed(2)}s"><b>${dg(d)}</b> ${fmtMult(ms[i] / 10)} = ${fmtVal(v)} ${i === right ? '✗' : '✓'}</div>`; };
     S.cq = {odd: true, m: {ser, hint, odd}, vals, prompt:`${num(hint / 10)} Ω finns i ${ser}. Vilken av resistanserna finns inte i ${ser}?`,
       layout:'mc', right, opts: vals.map(v => ({html: fmtVal(v)})),
       anim: {total: .4 + 4 * .4 + .6},
@@ -3449,7 +3450,7 @@ const eRacker = () => choice(() => {
       const coarse = ri > 0 ? [SERS[ri - 1]] : [], finer = SERS.slice(ri + 1);
       const rest = shuffle(SERS.filter(s => s !== right && !coarse.includes(s) && s !== finer[0]));
       const opts = shuffle([right, ...coarse, finer[0], ...rest].slice(0, 4));
-      S.cq = {prompt:`Ditt bygge tål ${fmtTol(need)}. Vilken serie räcker, med så få värden som möjligt?`, layout:'mc',
+      S.cq = {prompt:`Motstånden får avvika högst ${fmtTol(need)} från sitt märkta värde. Vilken serie räcker, med så få värden som möjligt?`, layout:'mc',
         right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
         anim: {total: stairEnd() + .4}, after: () => S.ok ? '' : stairHTML({need}),
         wrong: `${fmtTol(need)} räcker, och ${right} är gjord för ${fmtTol(need)}.${coarse.length ? ` ${coarse[0]} är för grov (${fmtTol(SER_T[coarse[0]])}).` : ''} Finare serier fungerar också, men har fler värden än du behöver.`};

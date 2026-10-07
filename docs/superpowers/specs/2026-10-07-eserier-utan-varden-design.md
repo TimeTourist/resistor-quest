@@ -49,7 +49,7 @@ Graden blandar fyra frågor.
 
 1. **Serie ↔ tolerans.** "Vilken tolerans hör till E24?" och "Vilken serie hör till ±5 %?" flyttas oförändrade från Gesäll.
 2. **Vilken serie räcker? (ny)**
-   - Frågan: "Ditt bygge tål ±10 %. Vilken serie räcker, med så få värden som möjligt?" Toleransen slumpas bland ±20 %, ±10 %, ±5 %, ±2 % och ±1 %.
+   - Frågan: "Motstånden får avvika högst ±10 % från sitt märkta värde. Vilken serie räcker, med så få värden som möjligt?" Frågan gäller motståndens egen tolerans, inte hela bygget, så att den inte säger emot "Vilken serie räcker säkert?" Toleransen slumpas bland ±20 %, ±10 %, ±5 %, ±2 % och ±1 %.
    - Svaren är fyra serier: den rätta, den närmast grövre (räcker inte), den närmast finare (räcker men har fler värden än man behöver) och en till. För ±20 %, där det inte finns någon grövre, tas två finare.
    - Raden vid fel: "±10 % räcker, och E12 är gjord för ±10 %. E6 är för grov (±20 %). E24 och finare fungerar också, men har fler värden än du behöver."
 3. **Vilken tolerans är E12 gjord för?** Frågan med toleransstaplarna flyttas oförändrad från Gesäll.
