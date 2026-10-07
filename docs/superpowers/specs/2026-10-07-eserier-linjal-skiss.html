@@ -1,0 +1,393 @@
+<meta charset="utf-8">
+<title>E-seriernas linjal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Skiss i spelets stil: rutat papper, kort med ram, linjalen i ohm med jämna steg */
+:root{
+  --bg:#e8edf0;--grid:rgba(31,111,178,.08);--surface:#fff;--ink:#1d2730;--muted:#566673;--line:#c8d1d8;
+  --accent:#1f6fb2;--ok:#24803a;--ok-bg:#e3f3e6;--bad:#b83227;--gap:#c98a12;--bar:#7aa7d6;--bar2:#a9c6e6;--body:#dcc596;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;--text:"IBM Plex Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
+  --accent:#5aa6e6;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--gap:#e7b04a;--bar:#4f86c0;--bar2:#35628f;--body:#b9a477;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121a20;--grid:rgba(90,166,230,.07);--surface:#1b252d;--ink:#e4ebf0;--muted:#92a2ae;--line:#304049;
+  --accent:#5aa6e6;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--gap:#e7b04a;--bar:#4f86c0;--bar2:#35628f;--body:#b9a477;color-scheme:dark}
+body{background:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;color:var(--ink);font:16px/1.5 var(--text);padding-inline:16px;padding-block:24px 48px}
+main{max-width:760px;margin:0 auto;display:grid;gap:20px}
+h1{font-family:var(--display);font-size:2.2rem;line-height:1;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-size:1.5rem;line-height:1.1;margin:0 0 6px;text-wrap:balance}
+p{margin:0;max-width:62ch}
+.lead{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;min-width:0}
+.tag{justify-self:start;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-radius:999px;padding:3px 10px}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl button{font:600 .95rem var(--text);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:7px 14px;cursor:pointer}
+.ctrl button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.ctrl button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.ctrl .sep{width:1px;height:26px;background:var(--line)}
+svg{display:block;width:100%;height:auto}
+.axis{stroke:var(--ink);stroke-width:2}
+.tick{stroke:var(--muted);stroke-width:1}
+.tlab{fill:var(--muted);font:13px var(--text);text-anchor:middle}
+.dot{fill:var(--accent)}
+.vlab{fill:var(--ink);font:700 15px var(--text);text-anchor:middle}
+.vlab.sm{font-size:11px}
+.bar{fill:var(--bar)}.bar.alt{fill:var(--bar2)}
+.crash{fill:var(--bad)}.hole{fill:var(--gap)}
+.cover{fill:var(--ok);opacity:.85}
+.next{fill:var(--muted);font:600 13px var(--text)}
+.blab{fill:var(--muted);font:12px var(--text);text-anchor:middle}
+.note{font-weight:600;min-height:1.5em}
+.note b{color:var(--ok)}
+.note.badn b{color:var(--bad)}
+@media (prefers-reduced-motion:no-preference){
+  .drop{animation:drop .4s ease-out both}
+  @keyframes drop{from{transform:translateY(-40px);opacity:0}}
+  .grow{transform-box:fill-box;transform-origin:center;animation:grow .5s ease-out both}
+  @keyframes grow{from{transform:scaleX(0)}}
+  .fade{animation:fade .4s ease-out both}
+  @keyframes fade{from{opacity:0}}
+  .sweep{transform-box:fill-box;transform-origin:left;animation:sweep .8s ease-in-out both}
+  @keyframes sweep{from{transform:scaleX(0)}}
+}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:4px 14px 4px 0;text-align:left}
+th{font-weight:600;color:var(--muted);font-size:.85rem}
+.wide{overflow-x:auto}
+.series{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.ser{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:4px;justify-items:center;text-align:center}
+.ser b{font-family:var(--display);font-size:1.3rem}
+.ser span{color:var(--muted);font-size:.85rem}
+.ring{fill:none;stroke:var(--ok);stroke-width:2.5}
+.pool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:46px}
+.chip{font:700 1.05rem var(--text);font-variant-numeric:tabular-nums;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.chip:disabled{visibility:hidden}
+.chip:focus-visible,.slot:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.slot circle{fill:var(--surface);stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.slot.full circle{fill:var(--ok);stroke:var(--ok);stroke-dasharray:none}
+.slot.nx circle{stroke-width:3;stroke-dasharray:none}
+.slot.miss circle{stroke:var(--bad);stroke-width:3;stroke-dasharray:none}
+.slot text{fill:var(--ink);font:700 14px var(--text);text-anchor:middle}
+.ltick{stroke:var(--muted)}
+.arc{fill:none;stroke:var(--ok);stroke-width:2}
+.arclab{fill:var(--ok);font:700 13px var(--text);text-anchor:middle}
+.mv{transition:transform 1.1s ease-in-out}
+
+.box rect{fill:var(--surface);stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.box.full rect{fill:var(--ok);stroke:var(--ok);stroke-dasharray:none}
+.box.nx rect{stroke-width:3;stroke-dasharray:none}
+.box.full text{fill:var(--surface)}
+.box.miss rect{stroke:var(--bad);stroke-width:3;stroke-dasharray:none}
+.box text{fill:var(--ink);font:700 13px var(--text);text-anchor:middle}
+.box:focus-visible{outline:3px solid var(--accent)}
+.pin{stroke:var(--accent);stroke-width:2}
+.flychip{position:fixed;z-index:50;margin:0;pointer-events:none;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+.flychip.bad{background:var(--bad);border-color:var(--bad);color:var(--surface)}
+@media (prefers-reduced-motion:no-preference){
+  .chip.shake{animation:shake .4s ease-in-out}
+  @keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+}
+</style>
+
+<main>
+  <header style="display:grid;gap:8px">
+    <h1>E-seriernas linjal</h1>
+    <p class="lead">Skiss: en vanlig linjal i ohm med jämna steg i stället för klockan. Värdena faller ner, toleransstaplarna växer ut, och man ser att de täcker hela sträckan. Tryck på knapparna för att prova.</p>
+  </header>
+
+  <section class="card" aria-labelledby="h-pla">
+    <span class="tag">Ny fråga · Placera värdena</span>
+    <h2 id="h-pla" class="pq">Placera E6-värdena på skalan</h2>
+    <p class="lead">Tryck på ett värde och sedan på platsen där det hör hemma. Läs av strecken: skalan är logaritmisk, så strecken ligger tätare åt höger.</p>
+    <div class="ctrl" role="group" aria-label="Variant">
+      <button id="p-10" aria-pressed="true">10–68 Ω</button>
+      <button id="p-1" aria-pressed="false">1,0–6,8 Ω</button>
+      <button id="p-k" aria-pressed="false">1–6,8 kΩ</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="p-new">Ny omgång</button>
+      <button id="p-why">Visa förklaringen</button>
+      <button id="p-ohm">Visa i ohm</button>
+    </div>
+    <div id="place"></div>
+    <div class="pool" id="pool" role="group" aria-label="Värden att placera"></div>
+    <p class="note" id="pnote" role="status"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-box">
+    <span class="tag">Ny fråga · Placera i lådorna</span>
+    <h2 id="h-box">Placera E6-värdena i lådorna</h2>
+    <p class="lead">Samma fråga på en rak skala i ohm. Lådorna står där värdena hör hemma: tätt till vänster, glest till höger. Tryck på ett värde och sedan på lådan.</p>
+    <div class="ctrl" role="group" aria-label="Variant">
+      <button id="q-10" aria-pressed="true">10–68 Ω</button>
+      <button id="q-1" aria-pressed="false">1,0–6,8 Ω</button>
+      <button id="q-k" aria-pressed="false">1–6,8 kΩ</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="q-new">Ny omgång</button>
+      <button id="q-why">Visa förklaringen</button>
+    </div>
+    <div id="boxes"></div>
+    <div class="pool" id="bpool" role="group" aria-label="Värden att placera"></div>
+    <p class="note" id="bnote" role="status"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-lin">
+    <span class="tag">Linjalen</span>
+    <h2 id="h-lin">Varför ligger värdena glesare högre upp?</h2>
+    <div class="ctrl" role="group" aria-label="Serie och tolerans">
+      <button id="b-e6" aria-pressed="true">E6</button>
+      <button id="b-e12" aria-pressed="false">E12</button>
+      <button id="b-e24" aria-pressed="false">E24</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="b-right" aria-pressed="true">Seriens tolerans</button>
+      <button id="b-small" aria-pressed="false">För liten</button>
+      <button id="b-big" aria-pressed="false">För stor</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="b-play">Spela igen</button>
+    </div>
+    <div id="ruler"></div>
+    <p class="note" id="note" role="status"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-pro">
+    <span class="tag">Varför</span>
+    <h2 id="h-pro">Toleransen är i procent</h2>
+    <p>Samma ±20 % blir fler ohm ju större värdet är. Därför kan stegen bli längre högre upp, och ändå når varje värde fram till grannen.</p>
+    <div class="wide"><table id="pro"></table></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-ser">
+    <span class="tag">Trappan</span>
+    <h2 id="h-ser">Serien syns på toleransbandet</h2>
+    <p>Varje steg i trappan får ett litet motstånd med toleransbandet inringat, i stället för bara en procentsats.</p>
+    <div class="series" id="sers"></div>
+  </section>
+</main>
+
+<script>
+const SER = {
+  E6:  {vals:[10,15,22,33,47,68], tol:20, small:10, big:40},
+  E12: {vals:[10,12,15,18,22,27,33,39,47,56,68,82], tol:10, small:5, big:20},
+  E24: {vals:[10,11,12,13,15,16,18,20,22,24,27,30,33,36,39,43,47,51,56,62,68,75,82,91], tol:5, small:2, big:10}
+};
+const st = {ser:'E6', mode:'right'};
+const X0 = 30, X1 = 610, x = v => X0 + (Math.min(Math.max(v, 10), 100) - 10) / 90 * (X1 - X0);
+const num = v => String(Math.round(v * 10) / 10).replace('.', ',');
+const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function draw(){
+  const S = SER[st.ser], tol = st.mode === 'right' ? S.tol : st.mode === 'small' ? S.small : S.big;
+  const many = S.vals.length > 12, AY = 150;
+  const vals = S.vals, t0 = .2, step = many ? .08 : .25, tBars = t0 + vals.length * step + .2, tCov = tBars + .7;
+  let h = `<line class="axis" x1="${X0}" y1="${AY}" x2="${X1}" y2="${AY}"/>`;
+  for (let v = 10; v <= 100; v += 10) h += `<line class="tick" x1="${x(v)}" y1="${AY}" x2="${x(v)}" y2="${AY + 8}"/><text class="tlab" x="${x(v)}" y="${AY + 24}">${v}</text>`;
+  h += `<text class="tlab" x="${X1}" y="${AY + 40}" style="text-anchor:end">ohm</text>`;
+  // Staplarna: ±tol runt varje värde, varannan lite högre så att krock och glapp syns
+  const bars = vals.concat([100]).map(v => [v * (1 - tol / 100), v * (1 + tol / 100)]);
+  bars.forEach(([a, b], i) => {
+    if (i === vals.length) return;
+    h += `<rect class="bar${i % 2 ? ' alt' : ''} grow" style="animation-delay:${(tBars + i * .04).toFixed(2)}s" x="${x(a)}" y="${i % 2 ? 108 : 120}" width="${Math.max(2, x(b) - x(a))}" height="10" rx="3"/>`;
+  });
+  // Krock och glapp mellan grannar, också mellan sista värdet och 100
+  let crash = 0, hole = 0;
+  for (let i = 0; i < vals.length; i++) {
+    const end = bars[i][1], nxt = bars[i + 1][0], d = (end - nxt) / (vals[i + 1] ?? 100);
+    if (Math.abs(d) < .03) continue;
+    const lo = Math.min(end, nxt), hi = Math.max(end, nxt);
+    if (d > 0) crash++; else hole++;
+    h += `<rect class="${d > 0 ? 'crash' : 'hole'} fade" style="animation-delay:${tCov.toFixed(2)}s" x="${x(lo)}" y="${AY - 4}" width="${Math.max(3, x(hi) - x(lo))}" height="8" rx="2"/>`;
+  }
+  if (!crash && !hole) h += `<rect class="cover sweep" style="animation-delay:${tCov.toFixed(2)}s" x="${X0}" y="${AY - 3}" width="${X1 - X0}" height="6" rx="3"/>`;
+  // Värdena faller ner
+  vals.forEach((v, i) => {
+    h += `<g class="drop" style="animation-delay:${(t0 + i * step).toFixed(2)}s"><circle class="dot" cx="${x(v)}" cy="${AY}" r="${many ? 4 : 6}"/>` +
+      `<text class="vlab${many ? ' sm' : ''}" x="${x(v)}" y="${many && i % 2 ? 78 : 96}">${v}</text></g>`;
+  });
+  h += `<g class="fade" style="animation-delay:${tCov.toFixed(2)}s"><circle cx="${x(100)}" cy="${AY}" r="6" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3 2"/>` +
+    `<text class="next" x="${X1}" y="${AY - 18}" style="text-anchor:end">100 → nästa varv: 100, 150, 220 …</text></g>`;
+  const el = document.getElementById('ruler');
+  el.innerHTML = `<svg viewBox="0 0 640 200" role="img" aria-label="Linjal från 10 till 100 ohm med ${st.ser}-värdena och ±${tol} % runt varje värde">${h}</svg>`;
+  const note = document.getElementById('note');
+  note.className = 'note' + (crash || hole ? ' badn' : '');
+  note.innerHTML = crash ? `±${num(tol)} % är för stort: staplarna <b>krockar</b> (rött), två värden kan bli samma resistans.`
+    : hole ? `±${num(tol)} % är för litet: det blir <b>glapp</b> (gult), resistanser mellan värdena kan man inte få.`
+    : `${st.ser} med ±${num(tol)} %: varje stapel når fram till grannen, och <b>hela sträckan 10–100 täcks</b>.`;
+  if (reduce()) note.style.opacity = 1;
+  // Tabellen: ±tol i ohm
+  document.getElementById('pro').innerHTML = `<tr><th>Värde</th><th>±${num(tol)} %</th><th>Kan vara</th><th>Steg till nästa</th></tr>` +
+    vals.slice(0, many ? vals.length : vals.length).filter((_, i) => !many || i % 3 === 0 || i === vals.length - 1).map(v => {
+      const i = vals.indexOf(v), nx = vals[i + 1] ?? 100;
+      return `<tr><td>${v} Ω</td><td>±${num(v * tol / 100)} Ω</td><td>${num(v * (1 - tol / 100))}–${num(v * (1 + tol / 100))} Ω</td><td>${nx - v} Ω</td></tr>`;
+    }).join('');
+}
+
+// Små motstånd med toleransbandet inringat
+const HEX = {silver:'#b8bcc2', gold:'#c9a227', red:'#c62828', brown:'#7a4a21', green:'#2e8b3d', yellow:'#f2d024', violet:'#7b3fa0', orange:'#ef7d1a'};
+function mini(bands, tolIdx){
+  const xs = bands.length === 4 ? [44, 60, 76, 112] : [40, 54, 68, 82, 112];
+  let r = `<line x1="4" y1="30" x2="150" y2="30" stroke="var(--muted)" stroke-width="3"/><rect x="28" y="14" width="98" height="32" rx="12" style="fill:var(--body)"/>`;
+  bands.forEach((c, i) => {
+    const w = i === tolIdx ? 10 : 7, x0 = xs[i] - w / 2;
+    r += c ? `<rect x="${x0}" y="14" width="${w}" height="32" fill="${HEX[c]}"/>` : `<rect x="${x0}" y="14" width="${w}" height="32" fill="none" stroke="var(--muted)" stroke-dasharray="2 2"/>`;
+  });
+  r += `<rect class="ring" x="${xs[tolIdx] - 9}" y="9" width="18" height="42" rx="4"/>`;
+  return `<svg viewBox="0 0 154 60" style="max-width:160px" aria-hidden="true">${r}</svg>`;
+}
+document.getElementById('sers').innerHTML = [
+  ['E6', '±20 %', ['yellow','violet','red', null], 'Inget band'],
+  ['E12', '±10 %', ['yellow','violet','red','silver'], 'Silver'],
+  ['E24', '±5 %', ['yellow','violet','red','gold'], 'Guld'],
+  ['E48', '±2 %', ['red','orange','orange','brown','red'], 'Rött'],
+  ['E96', '±1 %', ['red','orange','orange','brown','brown'], 'Brunt'],
+  ['E192', '±0,5 %', ['red','orange','orange','brown','green'], 'Grönt']
+].map(([s, t, b, n]) => `<div class="ser">${mini(b, b.length - 1)}<b>${s}</b><span>${n} · ${t}</span></div>`).join('');
+
+const btn = id => document.getElementById(id);
+const pick = (ids, on) => ids.forEach(i => btn(i).setAttribute('aria-pressed', String(i === on)));
+['E6','E12','E24'].forEach(s => btn('b-' + s.toLowerCase()).addEventListener('click', () => { st.ser = s; pick(['b-e6','b-e12','b-e24'], 'b-' + s.toLowerCase()); draw(); }));
+[['b-right','right'],['b-small','small'],['b-big','big']].forEach(([id, m]) => btn(id).addEventListener('click', () => { st.mode = m; pick(['b-right','b-small','b-big'], id); draw(); }));
+btn('b-play').addEventListener('click', draw);
+draw();
+
+// Placera värdena: en tiopotens på logaritmisk skala, sex tomma platser på lika avstånd
+const E6M = [1.0, 1.5, 2.2, 3.3, 4.7, 6.8];
+const VAR = {
+  '10': {k: 10, lab: m => num(m * 10), unit: 'Ω', tick: d => String(d * 10)},
+  '1':  {k: 1, lab: m => num(m), unit: 'Ω', tick: d => String(d)},
+  'k':  {k: 1000, lab: m => num(m) + ' k', unit: 'kΩ', tick: d => d + 'k'}
+};
+const P = {v: '10', pool: [], placed: {}, sel: null, miss: 0, done: false, why: false, ohm: false};
+const LX0 = 30, LX1 = 610, lx = m => LX0 + Math.log10(m) * (LX1 - LX0), LY = 92;
+// I ohm (rak skala): samma värden från 1 till 10 linjärt
+const ox = m => LX0 + (m - 1) / 9 * (LX1 - LX0);
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function newRound(){ Object.assign(P, {pool: shuffle(E6M.slice()), placed: {}, sel: null, miss: 0, done: false, why: false, ohm: false}); drawPlace(); }
+function drawPlace(){
+  const V = VAR[P.v], why = P.why || (P.done && P.miss > 0);
+  let h = `<line class="axis" x1="${LX0}" y1="${LY}" x2="${LX1}" y2="${LY}"/>`;
+  // Strecken: 1, 2 … 10 (gånger multiplikatorn), med etikett där det finns plats
+  if (!P.ohm) for (let d = 1; d <= 10; d++) h += `<line class="ltick" x1="${lx(d)}" y1="${LY}" x2="${lx(d)}" y2="${LY + (d === 1 || d === 10 ? 12 : 8)}"/>` +
+    (d <= 6 || d === 8 || d === 10 ? `<text class="tlab" x="${lx(d)}" y="${LY + 26}">${V.tick(d)}</text>` : '');
+  else for (let d = 1; d <= 10; d++) h += `<line class="ltick" x1="${ox(d)}" y1="${LY}" x2="${ox(d)}" y2="${LY + 8}"/><text class="tlab" x="${ox(d)}" y="${LY + 26}">${V.tick(d)}</text>`;
+  h += `<text class="tlab" x="${LX1}" y="${LY + 44}" style="text-anchor:end">${P.ohm ? 'rak skala i ' : 'logaritmisk skala, '}${V.unit}</text>`;
+  // Bågarna ×1,5 mellan grannar vid förklaringen
+  if (why && !P.ohm) E6M.concat([10]).forEach((m, i, a) => {
+    if (i === a.length - 1) return;
+    const x1 = lx(m), x2 = lx(a[i + 1]), mid = (x1 + x2) / 2, r = (a[i + 1] / m).toFixed(1).replace('.', ',');
+    h += `<g class="fade" style="animation-delay:${(.3 + i * .35).toFixed(2)}s"><path class="arc" d="M${x1} ${LY - 16} Q${mid} ${LY - 52} ${x2} ${LY - 16}"/><text class="arclab" x="${mid}" y="${LY - 40}">×${r}</text></g>`;
+  });
+  // Platserna. I ohm glider de till sin plats på den raka skalan.
+  E6M.forEach((m, i) => {
+    const full = P.placed[m], dx = P.ohm ? ox(m) - lx(m) : 0;
+    const nx = !P.done && m === E6M.find(x => !P.placed[x]);
+    h += `<g class="mv" style="transform:translateX(${dx}px)"><g class="slot${full ? ' full' : ''}${nx ? ' nx' : ''}" data-m="${m}" aria-label="Plats ${i + 1}${full ? ': ' + V.lab(m) + ' ' + V.unit : ''}">` +
+      `<circle cx="${lx(m)}" cy="${LY}" r="11"/>${full ? `<text x="${lx(m)}" y="${LY - 20}">${V.lab(m)}</text>` : ''}</g></g>`;
+  });
+  if (P.ohm) E6M.forEach((m, i) => {
+    const a = m * .8, b = Math.min(m * 1.2, 10);
+    h += `<rect class="bar${i % 2 ? ' alt' : ''} grow" style="animation-delay:${(1.2 + i * .08).toFixed(2)}s" x="${ox(a)}" y="${LY + (i % 2 ? 30 : 40)}" width="${ox(b) - ox(a)}" height="8" rx="3"/>`;
+  });
+  h += `<g${why || P.ohm ? ' class="fade"' : ''} style="animation-delay:${(.3 + 6 * .35).toFixed(2)}s"><circle cx="${P.ohm ? ox(10) : lx(10)}" cy="${LY}" r="8" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3 2"/>` +
+    `<text class="next" x="${LX1}" y="${LY - 64}" style="text-anchor:end">${why || P.ohm ? `→ ${V.tick(10)}, nästa varv` : ''}</text></g>`;
+  document.getElementById('place').innerHTML = `<svg viewBox="0 0 640 ${P.ohm ? 150 : 140}" role="img" aria-label="Skala med sex platser för E6-värdena">${h}</svg>`;
+  document.getElementById('pool').innerHTML = P.pool.map(m => `<button class="chip" data-m="${m}"${P.placed[m] ? ' disabled' : ''}>${V.lab(m)} ${V.unit}</button>`).join('');
+  const note = document.getElementById('pnote');
+  note.className = 'note' + (P.done && P.miss ? ' badn' : '');
+  note.innerHTML = P.ohm ? 'Samma sex värden i ohm: på en rak skala glesnar de, men toleransstaplarna (±20 %) växer i samma takt och täcker hela sträckan.'
+    : P.done ? (P.miss ? `Klart, med ${P.miss} fel. Varje värde är <b>ungefär ×1,5</b> av det förra, så på den logaritmiska skalan ligger de på lika avstånd.`
+      : 'Rätt! <b>Lika avstånd</b> på den logaritmiska skalan: varje värde är ungefär ×1,5 av det förra.')
+    : P.why ? 'Varje steg är ungefär ×1,5. Därför ligger platserna på lika avstånd.' : 'Tryck på värdet som hör hemma i nästa plats, minst först.';
+}
+[['p-10','10'],['p-1','1'],['p-k','k']].forEach(([id, v]) => btn(id).addEventListener('click', () => { P.v = v; pick(['p-10','p-1','p-k'], id); newRound(); }));
+btn('p-new').addEventListener('click', newRound);
+btn('p-why').addEventListener('click', () => { P.why = true; P.ohm = false; E6M.forEach(m => P.placed[m] = true); P.done = true; drawPlace(); });
+btn('p-ohm').addEventListener('click', () => {
+  E6M.forEach(m => P.placed[m] = true); P.done = true;
+  // Först på logaritmisk skala, sedan glider värdena till den raka
+  P.ohm = false; drawPlace();
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    P.ohm = true;
+    document.querySelectorAll('#place .mv').forEach((g, i) => g.style.transform = `translateX(${ox(E6M[i]) - lx(E6M[i])}px)`);
+    setTimeout(drawPlace, reduce() ? 0 : 1150);
+  }));
+});
+newRound();
+
+// Placera i lådorna: rak skala från 0, lådorna står på värdenas riktiga platser
+const BV = {
+  '10': {lab: m => num(m * 10), unit: 'Ω', tick: d => String(d * 10)},
+  '1':  {lab: m => num(m), unit: 'Ω', tick: d => num(d)},
+  'k':  {lab: m => num(m) + ' k', unit: 'kΩ', tick: d => d ? d + 'k' : '0'}
+};
+const B = {v: '10', pool: [], placed: {}, sel: null, miss: 0, done: false, why: false};
+const BX0 = 24, BX1 = 616, bx = m => BX0 + m / 10 * (BX1 - BX0), BY = 120;
+function newBoxes(){ Object.assign(B, {pool: shuffle(E6M.slice()), placed: {}, sel: null, miss: 0, done: false, why: false}); drawBoxes(); }
+function drawBoxes(){
+  const V = BV[B.v], why = B.why || (B.done && B.miss > 0);
+  let h = `<line class="axis" x1="${BX0}" y1="${BY}" x2="${BX1}" y2="${BY}"/>`;
+  for (let d = 0; d <= 10; d++) h += `<line class="ltick" x1="${bx(d)}" y1="${BY}" x2="${bx(d)}" y2="${BY + 8}"/><text class="tlab" x="${bx(d)}" y="${BY + 24}">${V.tick(d)}</text>`;
+  h += `<text class="tlab" x="${BX1}" y="${BY + 42}" style="text-anchor:end">rak skala, ${V.unit}</text>`;
+  // Lådorna: varannan högre upp, så att de tätt liggande inte krockar. En nål visar exakt plats på skalan.
+  E6M.forEach((m, i) => {
+    const full = B.placed[m], x0 = bx(m), y = i % 2 ? 22 : 62, w = 46;
+    h += `<line class="pin" x1="${x0}" y1="${y + 28}" x2="${x0}" y2="${BY}"/><circle cx="${x0}" cy="${BY}" r="3.5" style="fill:var(--accent)"/>` +
+      `<g class="box${full ? ' full' : ''}${!B.done && m === E6M.find(x => !B.placed[x]) ? ' nx' : ''}" data-m="${m}" aria-label="Låda ${i + 1}${full ? ': ' + V.lab(m) + ' ' + V.unit : ''}">` +
+      `<rect x="${x0 - w / 2}" y="${y}" width="${w}" height="28" rx="6"/>${full ? `<text x="${x0}" y="${y + 19}">${V.lab(m)}</text>` : ''}</g>`;
+  });
+  // Förklaringen: toleransstaplarna ±20 % under skalan når fram till varandra, fast stegen blir längre
+  if (why) E6M.forEach((m, i) => {
+    const a = m * .8, b = Math.min(m * 1.2, 10);
+    h += `<rect class="bar${i % 2 ? ' alt' : ''} grow" style="animation-delay:${(.3 + i * .3).toFixed(2)}s" x="${bx(a)}" y="${BY + 52 + (i % 2 ? 0 : 12)}" width="${bx(b) - bx(a)}" height="9" rx="3"/>`;
+  });
+  if (why) h += `<text class="next fade" style="animation-delay:2.2s" x="${BX1}" y="${BY + 100}" text-anchor="end">±20 % runt varje värde: stegen blir längre, men staplarna når ändå fram</text>`;
+  document.getElementById('boxes').innerHTML = `<svg viewBox="0 0 640 ${why ? 230 : 170}" role="img" aria-label="Rak skala från 0 med sex lådor för E6-värdena">${h}</svg>`;
+  document.getElementById('bpool').innerHTML = B.pool.map(m => `<button class="chip" data-m="${m}"${B.placed[m] ? ' disabled' : ''}>${V.lab(m)} ${V.unit}</button>`).join('');
+  const note = document.getElementById('bnote');
+  note.className = 'note' + (B.done && B.miss ? ' badn' : '');
+  note.innerHTML = B.done ? (B.miss ? `Klart, med ${B.miss} fel. På en rak skala ligger värdena <b>tätt i början och glest i slutet</b>.`
+      : 'Rätt! Tätt i början, glest i slutet: <b>stegen växer med värdet</b>.')
+    : 'Tryck på värdet som hör hemma i nästa låda, minst först.';
+}
+[['q-10','10'],['q-1','1'],['q-k','k']].forEach(([id, v]) => btn(id).addEventListener('click', () => { B.v = v; pick(['q-10','q-1','q-k'], id); newBoxes(); }));
+btn('q-new').addEventListener('click', newBoxes);
+btn('q-why').addEventListener('click', () => { B.why = true; E6M.forEach(m => B.placed[m] = true); B.done = true; drawBoxes(); });
+newBoxes();
+
+// Som Ordna: tryck på värdet som hör hemma i nästa plats. Rätt: det flyger upp och lyser grönt.
+// Fel: det flyger till sin rätta plats, skakar med röd bakgrund och hoppar tillbaka.
+let flying = false;
+function flyChip(chip, target, ok){
+  const a = chip.getBoundingClientRect(), b = target.getBoundingClientRect();
+  if (reduce() || !chip.animate) return Promise.resolve();
+  const c = chip.cloneNode(true); c.classList.add('flychip');
+  Object.assign(c.style, {left: a.left + 'px', top: a.top + 'px', width: a.width + 'px', height: a.height + 'px'});
+  document.body.appendChild(c); chip.style.visibility = 'hidden';
+  const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2), to = `translate(${dx}px,${dy}px)`;
+  return c.animate([{transform: 'none'}, {transform: to}], {duration: 420, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards'}).finished.then(() => {
+    if (ok) { c.remove(); return; }
+    c.classList.add('bad');
+    return c.animate([{transform: to}, {transform: to + ' translateX(-7px)'}, {transform: to + ' translateX(6px)'}, {transform: to + ' translateX(-3px)'}, {transform: to}],
+      {duration: 450, fill: 'forwards'}).finished
+      .then(() => c.animate([{transform: to}, {transform: 'none'}], {duration: 380, easing: 'ease-in', fill: 'forwards'}).finished)
+      .then(() => { c.remove(); chip.style.visibility = ''; });
+  });
+}
+function pickNext(S, poolId, wrapId, sel, redraw, e){
+  const chip = e.target.closest('.chip'); if (!chip || S.done || flying) return;
+  const m = +chip.dataset.m, next = E6M.find(x => !S.placed[x]), target = document.querySelector(`#${wrapId} ${sel}[data-m="${m}"]`);
+  const ok = m === next; flying = true;
+  if (!ok) S.miss++;
+  flyChip(chip, target, ok).then(() => {
+    flying = false;
+    if (ok) { S.placed[m] = true; S.lastOk = m; if (Object.keys(S.placed).length === 6) S.done = true; }
+    redraw();
+  });
+}
+document.getElementById('pool').addEventListener('click', e => pickNext(P, 'pool', 'place', '.slot', drawPlace, e));
+document.getElementById('bpool').addEventListener('click', e => pickNext(B, 'bpool', 'boxes', '.box', drawBoxes, e));
+</script>
