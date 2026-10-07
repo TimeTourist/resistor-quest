@@ -257,3 +257,19 @@ test('Lådorna på skalorna krockar inte med knappsatsens klass, och står i tre
   const keys = t.g('S.ord.keys.slice()');
   keys.forEach((k, i) => assert.ok(t.$(`#q [data-oslot="${k}"]`).classList.contains('eslot') && t.$(`#q [data-oslot="${k}"]`).classList.contains('r' + (i % 3))));
 });
+
+test('Staplarfrågans förklaring: inzoomad linjal med tre grannvärden, samma skala i alla tre raderna', () => {
+  const t = load();
+  for (const [n, vals] of [[6, ['22','33','47']], [12, ['27','33','39']], [24, ['30','33','36']]]) {
+    t.g(`S.cq = {tols: ETOL_Q[${n}]}; S.pickC = 1`);
+    const d = frag(t, `etolRows(${n}, ETOL_Q[${n}])`), rows = [...d.querySelectorAll('.etrow')];
+    assert.equal(rows.length, 3);
+    rows.forEach(r => assert.deepEqual([...r.querySelectorAll('.lval text')].map(e => e.textContent), vals, `E${n}`));
+    const xs = rows.map(r => [...r.querySelectorAll('.lval circle')].map(c => c.getAttribute('cx')).join());
+    assert.equal(new Set(xs).size, 1, 'samma skala');
+    assert.ok(rows[0].querySelector('.ecrash'), 'för stor krockar');
+    assert.equal(rows[1].querySelectorAll('.ecrash, .egap').length, 0, 'rätt är ren');
+    assert.ok(rows[2].querySelector('.egap'), 'för liten glappar');
+    assert.match(rows[0].textContent, new RegExp(`${vals[0]} Ω och ${vals[1]} Ω kan båda bli`));
+  }
+});

@@ -3527,9 +3527,31 @@ function eGlesare(){
       wrong: '±20 % av 10 är ±2 Ω, men ±20 % av 68 är ±13,6 Ω. Därför kan stegen bli längre högre upp, och ändå når varje värde fram till grannen.'};
   }, {eq: 'glesare'});
 }
+// Förklaringen till staplarfrågan: inzoomad på tre grannvärden runt 33, med samma skala i alla tre raderna
+const ETOL_ZOOM = {6: [22, 33, 47], 12: [27, 33, 39], 24: [30, 33, 36]};
+function zoomSVG(vals, tol, [lo, hi]){
+  const W = 400, x = v => 20 + (v - lo) / (hi - lo) * W, Y = 64;
+  const step = [1, 2, 5, 10].find(s => (hi - lo) / s <= 10);
+  let h = `<line class="eline" x1="20" y1="${Y}" x2="${20 + W}" y2="${Y}"/>`;
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) h += `<line class="ltick" x1="${f1(x(v))}" y1="${Y}" x2="${f1(x(v))}" y2="${Y + 7}"/><text class="ltl" x="${f1(x(v))}" y="${Y + 22}">${v}</text>`;
+  const bars = vals.map(v => [v * (1 - tol / 100), v * (1 + tol / 100)]);
+  vals.forEach((v, i) => {
+    const [a, b] = bars[i];
+    h += `<rect class="lbar${i % 2 ? ' alt' : ''}" x="${f1(x(Math.max(lo, a)))}" y="${i % 2 ? 28 : 40}" width="${f1(x(Math.min(hi, b)) - x(Math.max(lo, a)))}" height="12" rx="4"/>`;
+    if (i === vals.length - 1) return;
+    const rel = (b - bars[i + 1][0]) / vals[i + 1];
+    if (Math.abs(rel) < LIN_MIN) return;
+    const l = Math.min(b, bars[i + 1][0]), r = Math.max(b, bars[i + 1][0]);
+    h += `<rect class="${rel > 0 ? 'ecrash' : 'egap'}" x="${f1(x(l))}" y="${Y - 5}" width="${f1(Math.max(3, x(r) - x(l)))}" height="10" rx="2"/>`;
+  });
+  vals.forEach(v => { h += `<g class="lval"><circle cx="${f1(x(v))}" cy="${Y}" r="6"/><text x="${f1(x(v))}" y="18">${v}</text></g>`; });
+  return `<svg class="elin zoom" viewBox="0 0 440 ${Y + 30}" role="img" aria-label="${vals.join(', ')} Ω med ±${num(tol)} %">${h}</svg>`;
+}
 function etolRows(n, [big, right, small]){
-  const v = eVals(n), picked = S.cq.tols[S.pickC];
-  const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${linSVG(n, {tol: t})}</div>`;
+  const v = ETOL_ZOOM[n], picked = S.cq.tols[S.pickC];
+  // Samma skala i alla rader: plats för den största toleransen runt första och sista värdet
+  const span = [Math.floor(v[0] * (1 - big / 100)) - 1, Math.ceil(v[2] * (1 + big / 100)) + 1];
+  const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${zoomSVG(v, t, span)}</div>`;
   // Ett värde som båda de två första värdena kan bli när toleransen är för stor: mitt i överlappet
   const both = num(Math.round((v[0] * (1 + big / 100) + v[1] * (1 - big / 100)) / 2 * 10) / 10);
   return `<div class="etrows">${row(big, `för stor: staplarna krockar, ${v[0]} Ω och ${v[1]} Ω kan båda bli ${both} Ω`)}${row(right, 'lagom: staplarna möts ungefär kant i kant')}${row(small, 'för liten: glapp mellan värdena')}</div>`;
