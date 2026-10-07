@@ -186,3 +186,46 @@ test('Samma siffror: frågan har ledtråden, är Vilken ska bort?, och vid fel d
   assert.equal(t.$$('#q .emrow.ok').length, 3);
   assert.match(t.$('#q .emrow.bad').textContent, new RegExp(String(m.odd).split('').join(' ')));
 });
+
+test('Räcker säkert: exemplet 3,4 kΩ ±10 % ger E24, eftersom E12:s 3,3 kΩ ±10 % kan bli för lågt', () => {
+  const t = load();
+  const rows = JSON.parse(t.g('JSON.stringify(safeRows(3400, 10))'));
+  const by = s => rows.find(r => r.s === s);
+  assert.equal(by('E6').ok, false);
+  assert.equal(by('E12').ok, false);
+  assert.equal(by('E24').ok, true);
+  assert.equal(by('E24').v, 3300);
+});
+
+test('Räcker säkert: gränsfall avgörs med tolerans för flyttal', () => {
+  const t = load();
+  // 3,3 kΩ ±5 % = 3135–3465. Ett fönster på exakt 3135–3465 ska räcka.
+  const T = (3135 + 3465) / 2, need = (3465 - T) / T * 100;
+  const rows = JSON.parse(t.g(`JSON.stringify(safeRows(${T}, ${need}))`));
+  assert.equal(rows.find(r => r.s === 'E24').ok, true);
+});
+
+test('Räcker säkert: slumpade uppgifter är alltid lösbara, aldrig E6, och den grövre räcker inte', () => {
+  const t = load();
+  for (let i = 0; i < 300; i++) {
+    const k = JSON.parse(t.g('JSON.stringify(safeTask())'));
+    assert.ok(['E12','E24','E48','E96'].includes(k.answer), k.answer);
+    const i0 = k.rows.findIndex(r => r.s === k.answer);
+    assert.equal(k.rows[i0].ok, true);
+    assert.ok(k.rows.slice(0, i0).every(r => !r.ok), 'alla grövre räcker inte');
+    assert.ok([20, 10, 5, 2].includes(k.need));
+  }
+});
+
+test('Räcker säkert: tabellen visas före svaret, och vid fel tallinjen med staplar fram till svaret', () => {
+  const t = atGrade('e', 0);
+  t.g('GRADES.e[0] = safeQ; next()');
+  assert.equal(t.$$('#q .esafe tr').length, 5, 'en rad per serie E6–E96');
+  assert.deepEqual(t.$$('#q [data-c]').map(b => b.textContent.trim()), ['E6','E12','E24','E48','E96']);
+  answer(t, false);
+  const ans = t.g('S.cq.k.answer'), bars = t.$$('#q .esline .ebarr');
+  assert.equal(bars.length, t.g(`SERS.indexOf('${ans}')`) + 1);
+  assert.ok(bars.at(-1).classList.contains('ok'));
+  assert.ok(bars.slice(0, -1).every(b => b.classList.contains('bad')));
+  assert.ok(t.$$('#q [data-c]')[t.g('S.cq.right')].classList.contains('land'));
+});

@@ -461,6 +461,17 @@ p.epre{margin:0}
 .emrow b{font-family:var(--display);font-size:1.15rem;letter-spacing:.1em}
 .emrow.ok{border-color:var(--ok)}
 .emrow.bad{border-color:var(--bad);background:var(--bad-bg)}
+.esafe{margin:6px auto;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.esafe th{text-align:left;padding:2px 10px 2px 0;font-weight:700;white-space:nowrap}
+.esafe td{padding:2px 0}
+.esline{display:block;width:100%;max-width:480px;margin:6px auto}
+.esline .ewin{fill:var(--ok-bg);stroke:var(--ok);stroke-width:1.5;stroke-dasharray:4 3}
+.esline text{font-size:13px;text-anchor:middle;fill:var(--ink)}
+.esline .eaxis{fill:var(--muted)}
+.esline line{stroke-width:7;stroke-linecap:round}
+.esline .in{stroke:var(--muted)}
+.esline .ok .in{stroke:var(--ok)}
+.esline .out{stroke:var(--bad)}
 .ering{fill:none;stroke:var(--line);stroke-width:10}
 .etick{stroke:var(--line);stroke-width:2}
 .emid{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:34px;text-anchor:middle;fill:var(--ink)}
@@ -3424,6 +3435,55 @@ function multiQ(){
       after: () => S.ok ? '' : `<div class="emrows"><p class="emhint">${num(hint / 10)} Ω = <b>${dg(hint)}</b> ${fmtMult(0.1)}</p>${vals.map(row).join('')}</div>`,
       wrong: `Samma siffror, ${String(hint).split('').join(' och ')}, med olika multiplikator finns alla i ${ser}. ${fmtVal(vals[right])} har siffrorna ${String(odd).split('').join(' och ')}.`};
   }, {eq: 'multi'});
+}
+// Vilken serie räcker säkert? En serie räcker om den har ett värde vars hela toleransintervall ryms i fönstret T ± need %.
+const SAFE_SERS = SERS.slice(0, 5), EPS = 1e-9;
+// Seriens värden i dekaden under, i och över T
+function eCands(ser, T){
+  const two = ['E6','E12','E24'].includes(ser), e = Math.floor(Math.log10(T));
+  return [e - 1, e, e + 1].flatMap(d => ESER[ser][0].map(m => Math.round(m / (two ? 10 : 100) * 10 ** d * 1e6) / 1e6));
+}
+function safeRows(T, need){
+  const lo = T * (1 - need / 100), hi = T * (1 + need / 100);
+  const near = vs => vs.reduce((a, v) => Math.abs(Math.log(v / T)) < Math.abs(Math.log(a / T)) ? v : a);
+  return SAFE_SERS.map(s => {
+    const ts = SER_T[s], c = eCands(s, T);
+    const fit = c.filter(v => v * (1 - ts / 100) >= lo * (1 - EPS) && v * (1 + ts / 100) <= hi * (1 + EPS));
+    return {s, ts, v: near(fit.length ? fit : c), ok: fit.length > 0};
+  });
+}
+function safeTask(){
+  for (;;) {
+    const three = Math.random() < .3, m = three ? 100 + Math.floor(Math.random() * 900) : 10 + Math.floor(Math.random() * 90);
+    const T = Math.round(m / (three ? 100 : 10) * rnd([1, 10, 100, 1000, 10000]) * 100) / 100, need = rnd([20, 10, 5, 2]);
+    const rows = safeRows(T, need), hit = rows.find(r => r.ok);
+    if (hit && hit.s !== 'E6') return {T, need, rows, answer: hit.s};
+  }
+}
+// Tallinjen: fönstret i grönt, seriernas staplar fram till svaret, rött där de sticker ut
+function safeSVG(k){
+  const {T, need} = k, rows = k.rows.slice(0, SAFE_SERS.indexOf(k.answer) + 1), half = Math.max(2.5 * need, 6) / 100;
+  const x = v => Math.max(8, Math.min(392, 200 + (v - T) / (T * half) * 170)), lo = T * (1 - need / 100), hi = T * (1 + need / 100);
+  let h = `<rect class="ewin" x="${f1(x(lo))}" y="4" width="${f1(x(hi) - x(lo))}" height="${rows.length * 30 + 8}" rx="4"/>`;
+  rows.forEach((r, i) => {
+    const y = 22 + i * 30, a = r.v * (1 - r.ts / 100), b = r.v * (1 + r.ts / 100), d = (.3 + i * .5).toFixed(2);
+    const seg = (p, q, cls) => q > p ? `<line class="${cls}" x1="${f1(x(p))}" x2="${f1(x(q))}" y1="${y}" y2="${y}"/>` : '';
+    h += `<g class="ebarr ${r.ok ? 'ok' : 'bad'} mk" style="animation-delay:${d}s"><text x="200" y="${y - 7}">${r.s} ${fmtVal(r.v)} ${fmtTol(r.ts)}</text>`
+      + seg(a, Math.min(b, lo), 'out') + seg(Math.max(a, lo), Math.min(b, hi), 'in') + seg(Math.max(a, hi), b, 'out') + '</g>';
+  });
+  return `<svg class="esline" viewBox="0 0 400 ${rows.length * 30 + 30}" aria-hidden="true">${h}<text class="eaxis" x="200" y="${rows.length * 30 + 26}">${fmtVal(lo)} – ${fmtVal(hi)}</text></svg>`;
+}
+function safeQ(){
+  return choice(() => {
+    const k = safeTask(), n = SAFE_SERS.indexOf(k.answer) + 1, land = .3 + n * .5 + .2;
+    const near3 = s => eCands(s, k.T).sort((a, b) => Math.abs(Math.log(a / k.T)) - Math.abs(Math.log(b / k.T))).slice(0, 3).sort((a, b) => a - b);
+    const table = `<table class="esafe">${SAFE_SERS.map(s => `<tr><th>${s} ${fmtTol(SER_T[s])}</th><td>${near3(s).map(fmtVal).join(' · ')}</td></tr>`).join('')}</table>`;
+    const bad = k.rows[n - 2];
+    S.cq = {k, prompt:`Du behöver ${fmtVal(k.T)}, och det får avvika högst ${fmtTol(k.need)}. Vilken är den grövsta serien som säkert räcker?`,
+      layout:'mc', right: n - 1, opts: SAFE_SERS.map(s => ({html: s})), anim: {land, total: land + .7},
+      res: () => table, after: () => S.ok ? '' : safeSVG(k),
+      wrong: `${bad.s} har ${fmtVal(bad.v)} ${fmtTol(bad.ts)}, och det kan hamna utanför ${fmtVal(k.T * (1 - k.need / 100))}–${fmtVal(k.T * (1 + k.need / 100))}. ${k.answer} har ${fmtVal(k.rows[n - 1].v)} ${fmtTol(k.rows[n - 1].ts)}, som ryms. Det räcker inte att värdet ligger nära: hela toleransen måste rymmas.`};
+  }, {eq: 'sakert'});
 }
 // Lärling: serie och tolerans hör ihop
 const eSerieTol = () => choice(() => {
