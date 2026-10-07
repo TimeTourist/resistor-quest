@@ -61,6 +61,7 @@ test('Ordna: fel i första försöket ger ett sista försök, utan hjälp och me
   for (const k of keys) clickKey(t, k);
   assert.equal(t.g('S.answered'), true); assert.equal(t.g('S.ok'), false);
   assert.match(t.$('#q .lesson').textContent, /Svart 0, brun 1/);
+  assert.equal(t.$('#q .ordnote'), null, 'rutan om sista försöket försvinner när frågan är besvarad');
 });
 
 test('Ordna: inga ledtrådar i sista försöket förrän man gjort fel, och utan fel är frågan rätt', () => {

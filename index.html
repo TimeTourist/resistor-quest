@@ -98,10 +98,11 @@ html,body{overflow-x:clip}
 .escale .eaxis{position:absolute;left:3%;right:3%;top:52px;height:2px;background:var(--ink)}
 .escale .etk{position:absolute;top:52px;width:1px;height:8px;background:var(--muted)}
 .escale .etk b{position:absolute;top:10px;left:50%;transform:translateX(-50%);font:400 .75rem var(--text);color:var(--muted);white-space:nowrap}
-.escale .ebox{position:absolute;top:30px;width:36px;height:22px;max-width:none;aspect-ratio:auto;transform:translateX(-50%);border-radius:6px}
-.escale.lin .ebox.up{top:2px}
-.escale.lin .ebox::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:22px;background:var(--accent)}
-.escale.lin .ebox.up::after{height:50px}
+.escale .ebox{position:absolute;top:30px;width:30px;height:22px;max-width:none;aspect-ratio:auto;transform:translateX(-50%);border-radius:6px}
+.escale.lin .ebox{top:18px}
+.escale.lin .ebox.up{top:-10px}
+.escale.lin .ebox::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:12px;margin-left:-1px;background:var(--accent)}
+.escale.lin .ebox.up::after{height:40px}
 .escale .enext{position:absolute;top:44px;width:16px;height:16px;transform:translateX(-50%);border:2px dashed var(--muted);border-radius:50%}
 .escale .escap{position:absolute;right:3%;top:76px;margin:0;font-size:.75rem;color:var(--muted)}
 .escale.arcs{height:44px;margin-top:4px}
@@ -114,6 +115,7 @@ html,body{overflow-x:clip}
 .ebarl.alt{top:20px;opacity:.35}
 .escale.bars .escap{top:36px;left:3%;right:auto}
 @media (prefers-reduced-motion:no-preference){.ebarl.grow{transform-origin:center;animation:lgrow .5s ease-out both}}
+.escale .osw.val{font-size:.72rem;letter-spacing:-.02em}
 .osw.val{display:grid;place-items:center;background:var(--ok);color:var(--surface);font:700 .8rem var(--text);white-space:nowrap}
 .ordnote{margin:6px 0 0;padding:8px 12px;border-radius:10px;background:var(--k-order-line);color:var(--surface);font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.25rem;text-align:center}
 .ochip.cheat::after{left:2px;top:1px}
@@ -483,8 +485,8 @@ p.epre{margin:0}
   margin-left:calc(var(--k) * 6px);background:var(--surface);border:1px solid var(--line);font-size:.95rem}
 .estep b{font-family:var(--display);font-size:1.1rem}
 .estep i{font-style:normal;color:var(--muted);font-size:.85rem}
-.estep:has(.emini){grid-template-columns:52px 3.4em 4.2em 1fr}
-.emini svg{width:52px;height:auto;display:block}
+.estep:has(.emini){grid-template-columns:64px 2.9em 3.7em minmax(0,1fr);gap:4px;padding:2px 8px;margin-left:calc(var(--k) * 4px);font-size:.9rem}
+.emini svg{width:64px;height:auto;display:block}
 .estep.hl{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .estep.bad{border-color:var(--bad);background:var(--bad-bg)}
 .estep.ok{border-color:var(--ok);background:var(--ok-bg);box-shadow:0 0 0 2px var(--ok)}
@@ -2186,9 +2188,9 @@ function render(){
     const slots = O.layout ? O.layout(o) : `<div class="ordrow ord-${o.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
       `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${P[k] ? (o.landed.has(k) ? ' ok' : ' fly') : ''}" data-oslot="${k}">${P[k] ? oswHTML(k) : ''}</i></div>`).join('')}</div>`;
     const inner = k => O.chip ? O.chip(k, o) : '', look = k => O.chip ? '' : ` style="${swStyle(k)}"`;
-    h += `${topHTML(oval(O, O.prompt, o))}${O.e6 && !inExam() ? `<p class="e6note">${E6_NOTE}</p>` : ''}${o.round === 2 ? '<p class="ordnote">Nästan! Du får ett sista försök – utan hjälp.</p>' : ''}${slots}
-      <div class="opool">${o.pool.map(k => `<button class="ochip${O.chip ? ' val' : ''}${P[k] || o.away.has(k) ? ' gone' : ''}${o.hint === k ? ' hint' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${oLabel(O, k, o)}"${look(k)}${P[k] || S.answered ? ' disabled' : ''}>${inner(k)}</button>`).join('')}</div>
-      ${S.answered && !S.ok && !inExam() && O.after ? `<div class="res after">${O.after(o)}</div>` : ''}`;
+    h += `${topHTML(oval(O, O.prompt, o))}${O.e6 && !inExam() ? `<p class="e6note">${E6_NOTE}</p>` : ''}${o.round === 2 && !S.answered ? '<p class="ordnote">Nästan! Du får ett sista försök – utan hjälp.</p>' : ''}${slots}
+      ${S.answered && !S.ok && !inExam() && O.after ? `<div class="res after">${O.after(o)}</div>` : ''}
+      <div class="opool">${o.pool.map(k => `<button class="ochip${O.chip ? ' val' : ''}${P[k] || o.away.has(k) ? ' gone' : ''}${o.hint === k ? ' hint' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${oLabel(O, k, o)}"${look(k)}${P[k] || S.answered ? ' disabled' : ''}>${inner(k)}</button>`).join('')}</div>`;
   } else if (S.type === 'dir') {
     const right = S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}${cheat(right === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
