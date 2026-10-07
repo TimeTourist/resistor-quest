@@ -3501,10 +3501,10 @@ const eRacker = () => choice(() => {
 }, {eq: 'racker'});
 const eStaplar = () => choice(() => {
       const n = rnd([6, 6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
-      S.cq = {prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
+      S.cq = {prompt:`Vilken tolerans har motstånd som ingår i E${n}-serien?`, layout:'mc', right: opts.indexOf(right), tols: opts,
         opts: opts.map(v => ({html: fmtTol(v)})),
         res: () => S.answered && !inExam() ? etolRows(n, tols) : linSVG(n, {tol: right, bare: true}),
-        wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
+        wrong: `Motstånd i E${n}-serien har ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
 }, {eq: 'staplar'});
 // E6 är ovanlig i dag, men har minst värden och är bra för att lära ut principen med serier
 const E6_NOTE = 'E6 är ovanlig i dag, men har bara sex värden och är bra för att lära ut principen med serier. Vanligast är E24 och E96.';

@@ -7,11 +7,11 @@ import { answer, until } from './answer.mjs';
 const frag = (t, expr) => { const d = t.doc.createElement('div'); d.innerHTML = t.g(expr); return d; };
 const n = (d, sel) => d.querySelectorAll(sel).length;
 
-test('E-seriernas Lärling: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
+test('E-seriernas Lärling: Vilken tolerans har motstånd som ingår i serien?, tre stapelrader efter svaret', () => {
   for (const ok of [false, true]) {
     const t = atGrade('e', 1);
     until(t, p => p.eq === 'staplar');
-    const m = t.$('#q .prompt').textContent.match(/Vilken tolerans är E(6|12|24) gjord för\?/);
+    const m = t.$('#q .prompt').textContent.match(/^Vilken tolerans har motstånd som ingår i E(6|12|24)-serien\?$/);
     assert.ok(m);
     assert.equal(t.$$('#q [data-c]').length, 3);
     assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), t.g(`fmtTol(SER_TOL.E${m[1]})`));
