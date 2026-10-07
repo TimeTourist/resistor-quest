@@ -278,7 +278,7 @@ test('Vilken serie räcker?: ett motstånd med kravets toleransband inringat vis
   const t = atGrade('e', 1), seen = new Set();
   for (let i = 0; i < 60; i++) {
     until(t, p => p.eq === 'racker');
-    const need = +t.$('#q .prompt').textContent.match(/avvika högst ±(\d+)/)[1];
+    const need = +t.$('#q .prompt').textContent.match(/upp till ±(\d+)/)[1];
     const b = JSON.parse(t.g('JSON.stringify(S.cq.bands)'));
     assert.ok(t.$('#q .res svg'), 'ett motstånd');
     assert.equal(t.$$('#q .res .ring').length, 1, 'toleransbandet inringat');

@@ -85,7 +85,7 @@ test('Lärling: vilken serie räcker, rätt svar är serien gjord för toleranse
   const t = atGrade('e', 1);
   for (let i = 0; i < 60; i++) {
     until(t, p => p.eq === 'racker');
-    const need = +t.$('#q .prompt').textContent.match(/avvika högst ±(\d+)/)[1];
+    const need = +t.$('#q .prompt').textContent.match(/upp till ±(\d+)/)[1];
     const opts = t.$$('#q [data-c]').map(b => b.textContent.trim()), right = opts[t.g('S.cq.right')];
     assert.equal(right, t.g(`TOL_SER[${need}]`));
     const idx = s => t.g(`SERS.indexOf('${s}')`);
@@ -238,7 +238,7 @@ test('Samma siffror: felanimeringen visar multiplikatorn utan flyttalsskräp', (
 test('Vilken serie räcker? handlar om motståndens egen tolerans, så att den inte säger emot Räcker säkert', () => {
   const t = atGrade('e', 1);
   until(t, p => p.eq === 'racker');
-  assert.match(t.$('#q .prompt').textContent, /^Motstånden får avvika högst ±\d+ % från sitt märkta värde\. Vilken serie räcker, med så få värden som möjligt\?$/);
+  assert.match(t.$('#q .prompt').textContent, /^Din krets klarar att motståndet är fel med upp till ±\d+ %\. Vilken serie köper du\? Ta den billigaste som räcker\.$/);
   answer(t, false);
-  assert.match(t.$('#q .eneed').textContent, /^Motstånden får avvika ±\d+ %$/);
+  assert.match(t.$('#q .eneed').textContent, /^Din krets klarar ±\d+ %$/);
 });

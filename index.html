@@ -3367,7 +3367,7 @@ function stairHTML({hl = null, need = null, at = .3, step = .3, minis = false} =
   const fit = s => need == null ? (s === hl ? ' hl' : '') : SER_T[s] > need ? ' bad' : s === enough ? ' ok' : ' more';
   const note = s => need == null ? '' : SER_T[s] > need ? 'för grov' : s === enough ? 'räcker' : 'onödigt fin';
   // Kravet är en streckad linje mellan de för grova stegen och det första som räcker
-  const line = `<p class="eneed mk" style="animation-delay:${(at + SERS.length * step).toFixed(2)}s">Motstånden får avvika ${fmtTol(need)}</p>`;
+  const line = `<p class="eneed mk" style="animation-delay:${(at + SERS.length * step).toFixed(2)}s">Din krets klarar ${fmtTol(need)}</p>`;
   const rows = SERS.map((s, i) => (s === enough ? line : '') + `<div class="estep${fit(s)} mk" style="animation-delay:${(at + i * step).toFixed(2)}s;--k:${i}">` +
     `${minis ? miniRes(s) : ''}<b>${s}</b><span>${fmtTol(SER_T[s])}</span><i>${note(s)}</i></div>`).join('');
   return `<div class="estair" aria-hidden="true">${rows}</div>`;
@@ -3493,11 +3493,11 @@ const eRacker = () => choice(() => {
       const opts = shuffle([right, ...coarse, finer[0], ...rest].slice(0, 4));
       // Ett motstånd med kravets toleransband inringat (samma som trappans exempel för serien)
       const bands = MINI[right], ti = bands.length - 1, name = bands[ti] ? C[bands[ti]].n : 'Inget band';
-      S.cq = {bands, prompt:`Motstånden får avvika högst ${fmtTol(need)} från sitt märkta värde. Vilken serie räcker, med så få värden som möjligt?`, layout:'mc',
+      S.cq = {bands, prompt:`Din krets klarar att motståndet är fel med upp till ${fmtTol(need)}. Vilken serie köper du? Ta den billigaste som räcker.`, layout:'mc',
         right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
         res: () => `<div>${svg(bands, {style: stdStyle(bands.length), ring: [[ti, 'accent']], label: `Motstånd med toleransen ${fmtTol(need)}`})}</div><p class="etol">${name} · ${fmtTol(need)}</p>`,
         anim: {total: stairEnd() + .4}, after: () => S.ok ? '' : stairHTML({need, minis: true}),
-        wrong: `${fmtTol(need)} räcker, och ${right} är gjord för ${fmtTol(need)}.${coarse.length ? ` ${coarse[0]} är för grov (${fmtTol(SER_T[coarse[0]])}).` : ''} Finare serier fungerar också, men har fler värden än du behöver.`};
+        wrong: `${right} är gjord för ${fmtTol(need)}, precis vad kretsen klarar.${coarse.length ? ` ${coarse[0]} (${fmtTol(SER_T[coarse[0]])}) kan bli för fel.` : ''} Finare serier fungerar också, men de är noggrannare och dyrare än du behöver.`};
 }, {eq: 'racker'});
 const eStaplar = () => choice(() => {
       const n = rnd([6, 6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
