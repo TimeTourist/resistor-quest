@@ -115,3 +115,50 @@ test('Ordna med färger fungerar som förut: färgrutor, inga textlappar', () =>
   assert.equal(chip.textContent.trim(), '');
   assert.match(chip.getAttribute('style'), /background/);
 });
+// Placerar alla värden. Fel: ett fel tryck först i varje omgång, så att också det sista försöket blir fel.
+const placeAll = (t, ok) => {
+  for (let r = 0; r < 2 && !t.g('S.answered'); r++) {
+    if (!ok) t.$(`#q [data-ord="${t.g('S.ord.keys[1]')}"]`).click();
+    for (const k of t.g('S.ord.keys.slice()')) t.$(`#q [data-ord="${k}"]`).click();
+  }
+};
+
+test('Placera på skalan: logaritmiska platser på nästan lika avstånd, tre varianter och E6-raden', () => {
+  const t = atGrade('e', 0), vs = new Set();
+  for (let i = 0; i < 30; i++) {
+    until(t, p => p.type === 'order' && t.g("S.ord.set") === 'e6log');
+    vs.add(t.g('S.ord.v'));
+  }
+  assert.deepEqual([...vs].sort(), ['1', '10', 'k']);
+  const left = k => parseFloat(t.$(`#q .escale [data-oslot="${k}"]`).style.left);
+  const xs = t.g('S.ord.keys.slice()').map(left), steps = xs.slice(1).map((x, i) => x - xs[i]);
+  const avg = steps.reduce((a, b) => a + b) / steps.length;
+  steps.forEach(s => assert.ok(Math.abs(s - avg) / avg < .15, 'lika avstånd'));
+  assert.ok(t.$('#q .escale.log'));
+  assert.ok(t.$('#q .e6note'));
+  assert.match(t.$('#q .escale').textContent, /logaritmisk skala/);
+});
+
+test('Placera på skalan: lapparna har värden med enhet, och vid fel tänds bågarna ×1,5', () => {
+  const t = atGrade('e', 0);
+  until(t, p => p.type === 'order' && t.g("S.ord.set") === 'e6log');
+  t.g("S.ord.v = '10'; render()");
+  assert.deepEqual(t.$$('#q [data-ord]').map(b => b.textContent.trim()).sort(), ['10 Ω','15 Ω','22 Ω','33 Ω','47 Ω','68 Ω'].sort());
+  placeAll(t, false);
+  assert.equal(t.g('S.ok'), false);
+  assert.equal(t.$$('#q .earc').length, 6);
+  assert.match(t.$('#q .after').textContent, /×1,5/);
+});
+
+test('Placera: lapparna är små motstånd med rätt färgband och värdet under', () => {
+  const t = atGrade('e', 0);
+  until(t, p => p.type === 'order' && t.g("S.ord.set") === 'e6log');
+  t.g("S.ord.v = 'k'; render()");
+  assert.deepEqual(JSON.parse(t.g("JSON.stringify(e6Bands('1.5', 'k'))")), ['brown', 'green', 'red']);
+  assert.deepEqual(JSON.parse(t.g("JSON.stringify(e6Bands('1.0', '1'))")), ['brown', 'black', 'gold']);
+  assert.deepEqual(JSON.parse(t.g("JSON.stringify(e6Bands('6.8', '10'))")), ['blue', 'grey', 'black']);
+  const chip = t.$('#q [data-ord="1.5"]');
+  assert.ok(chip.querySelector('svg'), 'ett motstånd');
+  assert.equal(chip.getAttribute('aria-label'), '1,5 kΩ');
+  assert.match(chip.textContent, /1,5 kΩ/);
+});

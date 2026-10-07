@@ -94,6 +94,21 @@ html,body{overflow-x:clip}
 .ofloat{position:absolute;z-index:60;border-radius:10px;border:2px solid var(--line);pointer-events:none}
 .ochip.val{width:auto;min-width:46px;height:auto;min-height:46px;padding:2px 8px;background:var(--surface);color:var(--ink);font:700 .9rem var(--text);font-variant-numeric:tabular-nums;display:grid;justify-items:center;gap:0}
 .ofloat.val{display:grid;place-items:center;background:var(--bad);border-color:var(--bad);color:var(--surface);font:700 .9rem var(--text)}
+.escale{position:relative;height:96px;margin:28px 6px 8px}
+.escale .eaxis{position:absolute;left:3%;right:3%;top:52px;height:2px;background:var(--ink)}
+.escale .etk{position:absolute;top:52px;width:1px;height:8px;background:var(--muted)}
+.escale .etk b{position:absolute;top:10px;left:50%;transform:translateX(-50%);font:400 .75rem var(--text);color:var(--muted);white-space:nowrap}
+.escale .ebox{position:absolute;top:30px;width:36px;height:22px;max-width:none;aspect-ratio:auto;transform:translateX(-50%);border-radius:6px}
+.escale.lin .ebox.up{top:2px}
+.escale.lin .ebox::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:22px;background:var(--accent)}
+.escale.lin .ebox.up::after{height:50px}
+.escale .enext{position:absolute;top:44px;width:16px;height:16px;transform:translateX(-50%);border:2px dashed var(--muted);border-radius:50%}
+.escale .escap{position:absolute;right:3%;top:76px;margin:0;font-size:.75rem;color:var(--muted)}
+.escale.arcs{height:44px;margin-top:4px}
+.earc{position:absolute;top:18px;height:22px;border:2px solid var(--ok);border-bottom:0;border-radius:50% 50% 0 0/100% 100% 0 0}
+.earc b{position:absolute;top:-18px;left:50%;transform:translateX(-50%);color:var(--ok);font:700 .8rem var(--text)}
+.ochip.val .eres svg{display:block;width:56px;height:auto}
+.ofloat.val .eres svg{display:block;width:56px;height:auto}
 .osw.val{display:grid;place-items:center;background:var(--ok);color:var(--surface);font:700 .8rem var(--text);white-space:nowrap}
 .ordnote{margin:6px 0 0;padding:8px 12px;border-radius:10px;background:var(--k-order-line);color:var(--surface);font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.25rem;text-align:center}
 .ochip.cheat::after{left:2px;top:1px}
@@ -1858,6 +1873,32 @@ const pointPlan = (roles, {labels = true} = {}) => () => ({type:'point', fmt:'mc
     }});
 // Ordna: alla färger som knappar, i blandad ordning. Den man klickar på flyger till sin låda,
 // grön om den kom i tur och ordning, annars röd. Rätt om alla blir gröna.
+// Placera E6-värdena: nycklarna är siffrorna, varianten ger multiplikator och enhet
+const E6M = ['1.0','1.5','2.2','3.3','4.7','6.8'];
+const E6VAR = {'10': {k: 10, u: 'Ω'}, '1': {k: 1, u: 'Ω'}, 'k': {k: 1, u: 'kΩ'}};
+const e6Lab = (key, v) => `${num(+key * E6VAR[v].k)} ${E6VAR[v].u}`;
+// I lådan står bara siffran: enheten står under skalan, och lådorna är smala
+const e6Box = (key, o) => num(+key * E6VAR[o.v].k);
+const e6Tick = (d, v) => `${num(d * E6VAR[v].k)}`;
+// Skalan: logaritmisk (lika avstånd) eller rak från 0 (tätt i början). Lådorna är Ordnas, placerade i procent.
+const ePosLog = m => 3 + Math.log10(m) * 94, ePosLin = m => 3 + m / 10 * 94;
+function escaleHTML(o, kind){
+  const P = o.placed, pos = kind === 'log' ? ePosLog : ePosLin, v = o.v;
+  const ticks = kind === 'log' ? [1,2,3,4,5,6,7,8,9,10] : [0,1,2,3,4,5,6,7,8,9,10];
+  const lab = d => kind === 'log' && (d === 7 || d === 9) ? '' : e6Tick(d, v);
+  const t = ticks.map(d => `<i class="etk" style="left:${f1(pos(d || .0001))}%"><b>${lab(d)}</b></i>`).join('');
+  const boxes = o.keys.map((k, i) => {
+    const row = kind === 'lin' && i % 2 ? ' up' : '';
+    return `<i class="obox ebox${row}${P[k] ? (o.landed.has(k) ? ' ok' : ' fly') : ''}" data-oslot="${k}" style="left:${f1(pos(+k))}%">${P[k] ? oswHTML(k) : ''}</i>`;
+  }).join('');
+  const next = kind === 'log' ? `<i class="enext" style="left:${f1(pos(10))}%"></i>` : '';
+  return `<div class="escale ${kind}"><div class="eaxis"></div>${t}${boxes}${next}<p class="escap">${kind === 'log' ? 'logaritmisk skala' : 'rak skala'}, ${E6VAR[v].u}</p></div>`;
+}
+const e6arcs = o => `<div class="escale log arcs">${E6M.concat(['10']).map((k, i, a) => i === a.length - 1 ? '' :
+  `<i class="earc mk" style="left:${f1(ePosLog(+k))}%;width:${f1(ePosLog(+a[i + 1]) - ePosLog(+k))}%;animation-delay:${(.3 + i * .35).toFixed(2)}s"><b>×${num(Math.round(+a[i + 1] / +k * 10) / 10)}</b></i>`).join('')}</div>`;
+// Lapparna är små motstånd med rätt färgband (tre band, E6 har inget toleransband) och värdet under
+const e6Bands = (key, v) => seriesBands(+key * E6VAR[v].k * (v === 'k' ? 1000 : 1), Math.round(+key * 100), 'E6');
+const e6Chip = (key, o) => `<span class="eres">${svg(e6Bands(key, o.v), {style: STYLE3(), label: e6Lab(key, o.v)})}</span><span>${e6Lab(key, o.v)}</span>`;
 const ORDER_SETS = {
   d: {keys: DIG, lab: c => String(C[c].d), prompt: 'Varje siffra har en färg. Klicka på färgerna i nummerordning.',
     wrong: 'Svart 0, brun 1, röd 2, orange 3, gul 4, grön 5, blå 6, violett 7, grå 8, vit 9.'},
@@ -1865,7 +1906,11 @@ const ORDER_SETS = {
     wrong: 'Silver ×0,01, guld ×0,1, svart ×1, brun ×10, röd ×100, orange ×1k, gul ×10k, grön ×100k, blå ×1M.'},
   t: {keys: ['silver','gold','red','brown','green','blue','violet'], lab: c => num(C[c].t) + '%',
     prompt: 'Klicka på toleransfärgerna från störst till minst tolerans.',
-    wrong: 'Silver ±10 %, guld ±5 %, röd ±2 %, brun ±1 %, grön ±0,5 %, blå ±0,25 % och violett ±0,1 %.'}
+    wrong: 'Silver ±10 %, guld ±5 %, röd ±2 %, brun ±1 %, grön ±0,5 %, blå ±0,25 % och violett ±0,1 %.'},
+  e6log: {keys: E6M, e6: true, init: () => ({v: rnd(['10', '1', 'k'])}), chip: e6Chip, label: (k, o) => e6Lab(k, o.v), boxLab: e6Box, layout: o => escaleHTML(o, 'log'),
+    prompt: 'Placera E6-värdena på skalan. Börja med det minsta.',
+    anim: () => ({total: .3 + 6 * .35 + .4}), after: e6arcs,
+    wrong: 'Varje värde är ungefär ×1,5 av det förra. På en logaritmisk skala ligger de därför på lika avstånd, och efter 68 kommer 100 och samma värden igen.'}
 };
 const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ const O = ORDER_SETS[set]; S.ord = {set, keys: O.keys, pool: shuffle(O.keys.slice()), placed: {}, landed: new Set(), away: new Set(), inflight: 0, round: 1, missed: false, ...(O.init ? O.init() : {})}; }});
 // Ordna med värden: chip ger lappens innehåll (html), label dess text för skärmläsare, boxLab texten i lådan när den landat.
@@ -2081,7 +2126,7 @@ const GRADES = {
   ],
   e: [
     // Nykomling: vad E6 är, placera värdena på två skalor, och varför de glesnar
-    () => rnd([eVad, eGlesare])(),
+    () => rnd([eVad, eGlesare, orderPlan('e6log')])(),
     // Lärling: serie ↔ tolerans, vilken serie räcker, staplarna och motståndet med toleransen utskriven
     () => rnd([eSerieTol, eRacker, eStaplar, () => bandQ({sers: SERS.slice(0, 5), showTol: true})])(),
     // Gesäll: vilken serie tillhör motståndet? Bara toleransbandet avgör.
