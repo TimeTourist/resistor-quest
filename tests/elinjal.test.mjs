@@ -181,9 +181,10 @@ test('Nykomling blandar alla fyra frågorna', () => {
   for (let i = 0; i < 120; i++) { t.g('next()'); seen.add(t.g('S.plan.eq') || t.g('S.ord.set')); }
   assert.deepEqual([...seen].sort(), ['e6lin', 'e6log', 'glesare', 'vad']);
 });
-test('Vilken serie hör till motståndet?: bandet inringat före svaret, färgen under, och trappan med motstånd vid fel', () => {
+test('Vilken serie hör motståndet till?: bandet inringat före svaret, färgen under, och trappan med motstånd vid fel', () => {
   const t = atGrade('e', 1);
   until(t, p => p.eq === 'bandring');
+  assert.equal(t.$('#q .prompt').textContent, 'Vilken serie hör motståndet till?');
   const r = JSON.parse(t.g('JSON.stringify(S.cq.r)'));
   assert.equal(t.$$('#q .res .ring').length, 1, 'inringat före svaret');
   assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), t.g(`serOfBands(${JSON.stringify(r.bands)})`));

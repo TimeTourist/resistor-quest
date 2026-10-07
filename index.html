@@ -3375,12 +3375,12 @@ function stairHTML({hl = null, need = null, at = .3, step = .3, minis = false} =
 // Vilken serie tillhör motståndet? Bara toleransbandet avgör. showTol: toleransen står utskriven (Lärling).
 // Vid fel: ett vänt motstånd vänds rätt, ringen runt toleransbandet, lappen "Guld ±5 % → E24" och rätt knapp lyser upp.
 const BAND_T = {turn: .5, ring: .2, lab: .7, seq: 1.2, land: 1.5, total: 2.2};
-// Vilken serie hör till motståndet? Toleransbandet är inringat redan före svaret och färgen står under. Vid fel: trappan med motstånd.
+// Vilken serie hör motståndet till? Toleransbandet är inringat redan före svaret och färgen står under. Vid fel: trappan med motstånd.
 function bandRingQ(sers){
   return choice(() => {
     const r = bandResistor({sers}), n = r.bands.length, ti = n === 3 ? 3 : tolIdx(n), opts = SERS.slice(0, 5);
     const b = n === 3 ? [...r.bands, null] : r.bands, name = n === 3 ? 'Inget band' : C[r.bands[ti]].n;
-    S.cq = {r, prompt:'Vilken serie hör till motståndet?', layout:'mc', right: opts.indexOf(r.ser), opts: opts.map(x => ({html: x})),
+    S.cq = {r, prompt:'Vilken serie hör motståndet till?', layout:'mc', right: opts.indexOf(r.ser), opts: opts.map(x => ({html: x})),
       anim: {total: stairEnd()},
       res: () => `<div>${svg(b, {style: n === 3 ? stdStyle(4) : styleFor(b), ring: [[ti, 'accent']], label: `Motstånd med ${n} färgband`})}</div><p class="etol">${name}</p>`,
       after: () => S.ok ? '' : stairHTML({hl: r.ser, minis: true}),
