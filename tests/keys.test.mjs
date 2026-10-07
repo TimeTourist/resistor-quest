@@ -74,7 +74,7 @@ test('Första besöket: nyckeln sitter i Motståndets lås, och raden ovanför �
   assert.ok(tile.classList.contains('haskey'));
   assert.ok(tile.querySelector('.inkey svg'), 'nyckeln sitter i låset');
   assert.ok(!tile.querySelector('.inkey').classList.contains('arriving'));
-  assert.equal(t.$('#lead').textContent, 'Lär dig läsa motstånd. Välj ett ämne.');
+  assert.equal(t.$('#lead').textContent, 'Lär dig läsa motstånd.');
 });
 
 test('Ett tryck vrider om nyckeln: låset öppnas och nyckeln är förbrukad, men inget kort öppnas', () => {
@@ -89,7 +89,7 @@ test('Ett tryck vrider om nyckeln: låset öppnas och nyckeln är förbrukad, me
   assert.ok(tile.classList.contains('open'));
   assert.ok(tile.classList.contains('fresh'));
   assert.match(tile.textContent, /Nytt!/);
-  assert.match(t.$('#lead').textContent, /Välj ett ämne/);
+  assert.equal(t.$('#lead').textContent, 'Lär dig läsa motstånd.');
   tile.click();
   assert.equal(t.g('S.cover'), 'body', 'nästa tryck öppnar omslaget');
 });
