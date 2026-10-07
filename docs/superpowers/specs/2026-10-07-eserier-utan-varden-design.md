@@ -127,6 +127,8 @@ Varje fråga har en pedagogisk animering vid fel svar. Den visar varför det rä
 - **"Vilken serie?" med "Inte standard" som svar,** både med och utan utskrivet värde. Svarsknappen "Inte standard", genereringen av värden som inte är standard (`genSeriesRead` med `none` och `cross`) och linjalen med värdet markerat (`seriesRuler`) tas bort när inget längre använder dem.
 - **`rulerSVG` med `marks`** tas bort om ingen fråga längre använder det. Linjalen och utrullningen finns kvar för toleransstaplarna.
 
+- **Frågetypen `series`** tas bort helt.
+
 ## Det som inte ändras
 
 - Snabbkollen på E-seriernas omslag.
@@ -155,7 +157,7 @@ Raderna för `e` i `CATALOG` skrivs om så att de stämmer med graderna ovan:
 
 ## Tester
 
-- **Beroenderegeln** i `model.test.mjs` för `e` blir: choice, choice eller series, series, choice eller series, choice eller series.
+- **Beroenderegeln** i `model.test.mjs` för `e` blir choice på alla fem graderna. Alla frågor, också Vilken serie tillhör motståndet?, byggs som choice-frågor, och frågetypen `series` tas bort.
 - **Inga värden behövs:** ingen fråga i E-serierna har "Inte standard" som svar, och ingen fråga kräver att man vet om ett värde finns i en serie utan att få det i frågan.
 - **Nykomling:**
   - Båda frågorna förekommer.

@@ -489,12 +489,6 @@ p.epre{margin:0}
 .ebar.alt{opacity:.55}
 .ecrash{fill:var(--bad)}
 .egap{fill:var(--gap)}
-.emark line{stroke-width:2}
-.emark.ok line{stroke:var(--ok)}
-.emark.bad line{stroke:var(--bad);stroke-dasharray:4 3}
-.emark text{font-size:15px;font-weight:700;text-anchor:middle}
-.emark.ok text{fill:var(--ok)}
-.emark.bad text{fill:var(--bad)}
 .eroll{fill:none;stroke:var(--line);stroke-width:6;opacity:0}
 .etrows{display:flex;flex-direction:column;gap:6px}
 .etrow{border:2px solid transparent;border-radius:10px;padding:4px 6px 0}
@@ -503,7 +497,6 @@ p.epre{margin:0}
 .etrow p b{color:var(--ink)}
 @media (prefers-reduced-motion:no-preference){
   .edot.pop{animation:edot .26s cubic-bezier(.3,1.6,.5,1) backwards}
-  .emark{animation:edrop .36s ease-out backwards}
   .eruler.unroll .epdot{animation:eunroll 1.4s ease-in-out backwards}
   .eruler.unroll .eline{stroke-dasharray:400;animation:edraw 1.4s ease-in-out backwards}
   .eruler.unroll .elab{animation:efade .5s 1.1s backwards}
@@ -514,7 +507,6 @@ p.epre{margin:0}
   @keyframes efade{from{opacity:0}}
   @keyframes eroll{from{opacity:1}to{opacity:0}}
   @keyframes edot{from{opacity:0;transform:scale(.4)}}
-  @keyframes edrop{from{opacity:0;transform:translateY(-14px)}}
 }
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){
@@ -1706,15 +1698,11 @@ function next(){
   const n = S.plan.n || rnd([4, 5, 6]);
   S.n = n; S.q = genBands(n);
   S.answered = false; S.be = null; S.ord = null; S.pointPrompt = null; S.mc = null; S.bopts = null; S.parts = null; S.mark = null; S.bflip = false; S.style = null;
-  S.bpick = null; S.pickDir = null; S.pickSr = null; S.pickC = null; S.pickBand = null; S.ok = null; S.cq = null; S.pointSupport = null;
+  S.bpick = null; S.pickDir = null; S.pickC = null; S.pickBand = null; S.ok = null; S.cq = null; S.pointSupport = null;
   S.palAll = null; S.entry = newEntry(); S.fieldOk = null;
-  S.moreOK = ['read','build','dir','series','point'].includes(S.type);
+  S.moreOK = ['read','build','dir','point'].includes(S.type);
   S.flipQ = !!S.plan.flip && Math.random() < 0.5;
   S.build = Array(n).fill(null); S.slot = 0;
-  if (S.type === 'series') {
-    S.sr = genSeriesRead();
-    S.ser = {v: S.sr.v, m3: S.sr.m3, set: seriesOf(S.sr.m3)};
-  }
   S.bflip = S.type === 'build' && S.plan.fmt === 'hard' && S.flipQ;
   const hf = hardFocus();
   if (hf && S.type === 'build') {
@@ -2085,18 +2073,10 @@ const GRADES = {
     () => rnd([eSerieTol, eRacker, eStaplar, () => bandQ({sers: SERS.slice(0, 5), showTol: true})])(),
     // Gesäll: vilken serie tillhör motståndet? Bara toleransbandet avgör.
     () => bandQ({sers: SERS.slice(0, 5)}),
-    // Mästare: vilket värde finns inte i E12 (värdena faller ner på linjalen), eller vilken serie med värdet utskrivet
-    () => rnd([() => choice(() => {
-      const right = rnd4(), pool = shuffle(E12.slice()).slice(0, 4);
-      let odd; do { odd = 11 + Math.floor(Math.random() * 89); } while (E24.includes(odd));
-      const vals = [0,1,2,3].map(i => Math.round((i === right ? odd : pool[i]) / 10 * rnd([1, 10, 100, 1000, 10000]) * 100) / 100);
-      const marks = [0,1,2,3].map(i => ({v: i === right ? odd : pool[i], ok: i !== right}));
-      S.cq = {odd:true, prompt:'Tre av värdena finns i E12.', layout:'mc', right, opts: vals.map(v => ({html: fmtVal(v)})),
-        after: () => rulerSVG(12, {marks, roll: !S.ok && rollNow()}),
-        wrong: `Titta på de två första siffrorna: ${odd} hamnar mellan prickarna och finns inte i E12. De andra landar på en prick.`};
-    }, {eq: 'e12'}), () => ({type:'series', fmt:'mc', showVal:true})])(),
-    // Stormästare: vilken serie, utan hjälp
-    () => ({type:'series', fmt:'mc', showVal:false})
+    // Mästare: svåra motstånd, samma siffror med annan multiplikator, och vilken serie räcker säkert
+    () => rnd([() => bandQ({sers: SERS, six: true, flip: true}), multiQ, safeQ])(),
+    // Stormästare: allt blandat
+    () => rnd([eSerieTol, eRacker, () => bandQ({sers: SERS, six: true, flip: true}), multiQ, safeQ])()
   ]
 };
 
@@ -2160,12 +2140,7 @@ function render(){
   const q = document.getElementById('q'), n = S.n;
   const v = valueOf(S.q), t = tolOf(S.q), tc = tcOf(S.q);
   let h = '';
-  if (S.type === 'series') {
-    const full = S.plan.showVal ? `<p class="big">${fmtVal(S.sr.v)} ${fmtTol(bandsTol(S.sr.bands))}</p>` : '';
-    h += `${topHTML('Vilken E-serie hör motståndet hemma i?')}${full}<div class="res">${svg(S.sr.bands, {style: styleFor(S.sr.bands)})}</div>
-
-      <div class="opts">${SER_OPTS.map(k => `<button class="opt${markCls(k === S.sr.answer, S.pickSr === k)}${cheat(k === S.sr.answer)}" data-sr="${k}"${disAttr()}>${k === 'none' ? 'Inte standard' : k}</button>`).join('')}</div>${S.answered && !S.ok && !inExam() ? seriesRuler() : ''}`;
-  } else if (S.type === 'order') {
+  if (S.type === 'order') {
     const o = S.ord, O = ORDER_SETS[o.set], P = o.placed, want = o.keys.find(k => !P[k]);
     h += `${topHTML(O.prompt)}${o.round === 2 ? '<p class="ordnote">Nästan! Du får ett sista försök – utan hjälp.</p>' : ''}<div class="ordrow ord-${S.ord.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
       `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${P[k] ? (o.landed.has(k) ? ' ok' : ' fly') : ''}" data-oslot="${k}">${P[k] ? `<b class="osw" style="${swStyle(k)}"></b>` : ''}</i></div>`).join('')}</div>
@@ -2315,7 +2290,7 @@ function reveal(){
   const anim = !S.ok && !inExam() && qAnim();
   // Stapeln kommer när animeringen är klar. Vid fel måste man se både förklaringen och stapeln innan man kan gå vidare.
   // E-seriernas linjal: utrullningen och värdena som faller ner ska synas innan man kan gå vidare
-  const barStart = S.ok ? .1 : Math.max(anim && !reduceMotion() ? anim.total : .3, inExam() ? 0 : rulerHold());
+  const barStart = S.ok ? .1 : anim && !reduceMotion() ? anim.total : .3;
   const barDur = !S.barPlan || S.ok ? 0 : S.barPlan.moved === 'down' ? BAR_DOWN : BAR_WRONG;
   S.lockUntil = S.revealAt + (S.instant ? 0 : S.ok || inExam() ? 600 : (barStart + barDur) * 1000);
   render();
@@ -2630,7 +2605,6 @@ function lessonText(){
   const NEUTER = {black:'svart', brown:'brunt', red:'rött', orange:'orange', yellow:'gult', green:'grönt', blue:'blått', violet:'violett', grey:'grått', white:'vitt', gold:'guld', silver:'silver'};
   const b = S.q, k = nd(b), name = c => NEUTER[c] || C[c].n.toLowerCase();
   if (S.type === 'dir') return directionText(b, S.style);
-  if (S.type === 'series') return seriesWhy();
   const t = {
     v: () => `${digitStr(b)} ${fmtMult(C[b[k]].m)} = ${fmtVal(valueOf(b))}.`,
     d: () => `Sifferbanden (${b.slice(0, k).map(c => C[c].n.toLowerCase()).join(', ')}) ger ${digitStr(b).split('').join(' ')}.`,
@@ -2669,13 +2643,6 @@ const pointWrong = () => S.pointRole === 'mult' ? 'Multiplikatorn är bandet eft
 function moreHTML(){
   if (!S.answered || inExam() || !S.moreOK) return '';
   let h = '<h2>Allt om motståndet</h2>';
-  if (S.type === 'series') {
-    const r = S.sr, tol = bandsTol(r.bands);
-    return h + `<div class="res">${svg(r.bands, {style: styleFor(r.bands), label: 'Motstånd: ' + colorNames(r.bands)})}</div>
-      <p>Motståndet är ${colorNames(r.bands)}, alltså ${fmtVal(r.v)} ${fmtTol(tol)}${r.bands.length === 3 ? ' (tre band, inget toleransband)' : ''}.</p>
-      ${meterFB(r.v, tol)}
-      <p class="dir">Toleransen avgör serien: ±20 % E6, ±10 % E12, ±5 % E24, ±2 % E48, ±1 % E96. Sedan kollar du om värdet finns i den serien.</p>`;
-  }
   const b = S.q, n = b.length, k = nd(b), v = valueOf(b), t = tolOf(b), tc = tcOf(b);
   const chips = b.map((c,i) => `<li><span class="sw" style="${swStyle(c)}"></span>${C[c].n} ${bandDetail(c, roleOf(n,i))}</li>`).join('');
   const st = S.type === 'build' ? stdStyle(n) : {...S.style, flip:false};
@@ -2841,9 +2808,6 @@ document.getElementById('q').addEventListener('click', e => {
   } else if (btn.dataset.c != null) {
     if (S.answered) return;
     S.pickC = +btn.dataset.c; finish(S.pickC === S.cq.right);
-  } else if (btn.dataset.sr) {
-    if (S.answered) return;
-    S.pickSr = btn.dataset.sr; finish(btn.dataset.sr === S.sr.answer);
   } else if (btn.dataset.dir) {
     if (S.answered) return;
     const right = S.style.flip ? 'right' : 'left';
@@ -3286,7 +3250,6 @@ const E48 = E96.filter((_, i) => i % 2 === 0);
 const E12 = E24.filter((_, i) => i % 2 === 0);
 const E6 = E12.filter((_, i) => i % 2 === 0);
 const ESER = {E6:[E6,20], E12:[E12,10], E24:[E24,5], E48:[E48,2], E96:[E96,1]};
-const SER_OPTS = ['E6','E12','E24','E48','E96','none'];
 // E-serierna som bild. Klockan: ett varv är 10 till 100, och prickarna sitter där värdena hamnar på en logaritmisk skala.
 // Linjalen är klockan utrullad. Serierna dubblas: E6 varannan timme, E12 varje timme, E24 varje halvtimme.
 const ePos = v => Math.log10(v / 10);
@@ -3315,17 +3278,10 @@ function dialSVG(n, {dots = true, labels = true, count = false, pop = false} = {
 }
 // Första linjalen per sidladdning rullas ut från klockan. Flaggan sätts även när animeringen hoppas över.
 const rollNow = () => { if (S.rolled) return false; S.rolled = true; return !S.instant && !reduceMotion(); };
-// Hur länge facit på linjalen behöver vid fel: utrullningen och värdena som faller ner (sekunder)
-function rulerHold(){
-  const start = !S.rolled && !S.instant && !reduceMotion() ? 1.5 : .2;
-  if (S.plan && S.plan.eq === 'e12') return start + 3 * .26 + .36;
-  if (S.type === 'series') return start + .36;
-  return 0;
-}
 // Toleransstaplar: avvikelser mindre än så här (andel av ett varv) räknas som att staplarna möts
 // Linjalen är smal i användarenheter så att texten går att läsa på telefon. E24 har värdena i två rader.
 const ETOL_MIN = 0.03, RW = 400, RY = 76, RC = [200, 40, 34];
-function rulerSVG(n, {tol = null, marks = [], roll = false} = {}){
+function rulerSVG(n, {tol = null, roll = false} = {}){
   const vals = eVals(n).concat([100]), many = vals.length > 26, two = !many && vals.length > 13, x = v => f1(RW * ePos(v));
   let h = `<line class="eline" x1="0" y1="${RY}" x2="${RW}" y2="${RY}"/>`;
   if (roll) h = `<circle class="eroll" cx="${RC[0]}" cy="${RC[1]}" r="${RC[2]}"/>` + h;
@@ -3345,17 +3301,6 @@ function rulerSVG(n, {tol = null, marks = [], roll = false} = {}){
       return ` style="--fx:${f1(cx - RW * ePos(v))}px;--fy:${f1(cy - RY)}px"`; })() : '';
     h += `<circle class="epdot${last ? ' next' : ''}" cx="${x(v)}" cy="${RY}" r="${many ? 2 : 4}"${rs}/>`;
     if (!many) h += `<text class="elab${two ? ' sm' : ''}" x="${x(v)}" y="${RY + (two && i % 2 ? 42 : 24)}">${eLab(v)}</text>`;
-  });
-  // Värden som faller nära varandra läggs på olika höjd, så att bock och kryss inte täcker varandra
-  const lv = [], placed = [];
-  marks.map((m, i) => i).sort((a, b) => marks[a].v - marks[b].v).forEach(i => {
-    const xi = RW * ePos(marks[i].v);
-    let l = 0; while (placed.some(([xj, lj]) => lj === l && Math.abs(xj - xi) < 34)) l++;
-    lv[i] = l; placed.push([xi, l]);
-  });
-  marks.forEach(({v, ok}, i) => {
-    const ty = 16 + lv[i] * 18;
-    h += `<g class="emark ${ok ? 'ok' : 'bad'}" style="animation-delay:${((roll ? 1.5 : .2) + i * .26).toFixed(2)}s"><line x1="${x(v)}" y1="${ty + 6}" x2="${x(v)}" y2="${RY - 8}"/><text x="${x(v)}" y="${ty}">${ok ? '✓' : '✗'} ${eLab(v)}</text></g>`;
   });
   return `<svg class="eruler${roll ? ' unroll' : ''}" viewBox="-20 0 440 ${many ? 88 : two ? 124 : 106}" role="img" aria-label="Linjalen för E${n}">${h}</svg>`;
 }
@@ -3404,7 +3349,7 @@ function bandQ({sers, six = false, flip = false, showTol = false}){
         const b = fx && n === 3 ? [...r.bands, null] : r.bands, st = {...(b.length === 4 && n === 3 ? stdStyle(4) : styleFor(b)), flip: fx ? false : r.flip};
         const o = {style: st, label: `Motstånd med ${n} färgband`};
         // Efter svaret: ring runt toleransbandet. Vid fel dyker den upp i animeringen, och på en trebandare runt det streckade bandet.
-        if (S.answered && (n > 3 || fx)) o.ring = [[ti, 'ok', fx ? T('ring') : null]];
+        if (S.answered && !inExam() && (n > 3 || fx)) o.ring = [[ti, 'ok', fx ? T('ring') : null]];
         if (fx) {
           o.mark = [[ti, lab]]; o.markKind = 'ok'; o.markAnim = {start: T('lab'), step: 0};
           if (n === 6) o.notes = [{i: 5, text: 'inte tolerans'}];
@@ -3520,11 +3465,6 @@ function etolRows(n, [big, right, small]){
   const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${rulerSVG(n, {tol: t})}</div>`;
   return `<div class="etrows">${row(big, `för stor: staplarna krockar, ${v[0]} Ω kan vara ${v[1]} Ω`)}${row(right, 'lagom: staplarna möts ungefär kant i kant')}${row(small, 'för liten: glapp mellan värdena')}</div>`;
 }
-// Vilken serie, fel svar: linjalen för serien som toleransen pekar ut, och var värdet hamnar
-function seriesRuler(){
-  const r = S.sr, ser = TOL_SER[bandsTol(r.bands)];
-  return `<div class="res after">${rulerSVG(+ser.slice(1), {marks: [{v: r.m3 / 10, ok: seriesOf(r.m3).includes(ser)}], roll: rollNow()})}</div>`;
-}
 function seriesOf(m3){
   const out = [];
   if (m3 % 10 === 0) {
@@ -3558,24 +3498,6 @@ function resistorFromSeries(ser){
   const m3 = rnd(list), two = ['E6','E12','E24'].includes(ser), v = Math.round(m3 / 100 * pickDec(two) * 100) / 100;
   return {v, m3, bands: seriesBands(v, m3, ser)};
 }
-// Stormästare och Eldprovet: läs av motståndet och avgör vilken serie det hör hemma i
-function genSeriesRead(){
-  const cat = rnd(['E6','E12','E24','E48','E96','none','cross']);
-  if (cat !== 'none' && cat !== 'cross') return {...resistorFromSeries(cat), answer: cat};
-  if (cat === 'cross') {
-    // Värde ur en finare serie med en grövre tolerans, t.ex. 16 kΩ ±20 %: finns inte i E6, alltså inte standard
-    const tolSer = rnd(['E6','E12','E48']);
-    const pool = tolSer === 'E48' ? E96.filter(x => !E48.includes(x) && !(x % 10 === 0 && E24.includes(x / 10))) : E24.filter(x => !ESER[tolSer][0].includes(x)).map(x => x * 10);
-    const m3 = rnd(pool), two = tolSer !== 'E48', v = Math.round(m3 / 100 * pickDec(two) * 100) / 100;
-    return {v, m3, bands: seriesBands(v, m3, tolSer), answer: 'none'};
-  }
-  const two = Math.random() < 0.5;
-  let m3;
-  do { m3 = two ? (10 + Math.floor(Math.random() * 90)) * 10 : 100 + Math.floor(Math.random() * 900); } while (seriesOf(m3).length);
-  const v = Math.round(m3 / 100 * pickDec(two) * 100) / 100;
-  return {v, m3, bands: seriesBands(v, m3, null), answer: 'none'};
-}
-const bandsTol = b => b.length === 3 ? 20 : C[b[b.length - 1]].t;
 const mantTxt = m3 => (m3 % 10 === 0 ? (m3 / 100).toFixed(1) : (m3 / 100).toFixed(2)).replace('.', ',');
 // Är motståndet ett standardvärde, i vilken serie, och hur vet man det?
 const SER_ORDER = ['E6','E12','E24','E48','E96','E192'];
@@ -3608,15 +3530,6 @@ function meterFB(v, tol, note){
   const mv = meterShown(meterRead(v, tol), v, tol);
   return `<div class="meterfb"><p>${note || 'Så här kan en mätning se ut:'}</p>${meterLcd(mv)}
     <p class="gnote">Toleransen ${fmtTol(tol)} tillåter allt från ${fmtPrecise(v * (1 - tol / 100), v)} till ${fmtPrecise(v * (1 + tol / 100), v)}, så mätvärdet ligger sällan exakt på det märkta värdet.</p></div>`;
-}
-// E-serie: varför svaret blev som det blev
-function seriesWhy(){
-  const r = S.sr, tol = bandsTol(r.bands), ser = TOL_SER[tol], inAny = seriesOf(r.m3);
-  return r.answer === 'none'
-    ? (inAny.length
-      ? `${fmtTol(tol)} hör till ${ser}, men ${mantTxt(r.m3)} finns inte i ${ser} (det finns först i ${inAny[0]}). Med den här toleransen är värdet alltså inte standard.`
-      : `${mantTxt(r.m3)} finns inte i någon standardserie, så värdet är inte standard.`)
-    : `${fmtTol(tol)} hör till ${ser}, och ${mantTxt(r.m3)} finns i ${ser}.`;
 }
 // Sidan öppnar på startsidan. Förhandsvisningen från dev.html går direkt till spelkortet.
 if (!S.pin) loadExam();

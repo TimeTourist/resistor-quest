@@ -31,7 +31,6 @@ export function answer(t, correct = true) {
     return tap(t, el);
   }
   if (type === 'dir') return pickBy('[data-dir]', 'dir', g("S.style.flip ? 'right' : 'left'"));
-  if (type === 'series') return pickBy('[data-sr]', 'sr', g('S.sr.answer'));
   if (type === 'order') {
     // Rätt: i ordning. Fel: en felaktig färg först i varje försök, sedan resten i ordning.
     for (let i = 0; i < 100 && !g('S.answered'); i++) {

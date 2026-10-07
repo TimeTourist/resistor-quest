@@ -52,14 +52,6 @@ test('Linjalen: för stor tolerans krockar, för liten glappar, den rätta är r
   }
 });
 
-test('Linjalen: värden släpps ner med bock eller kryss', () => {
-  const t = atGrade('e', 0), d = frag(t, "rulerSVG(12, {marks: [{v: 47, ok: true}, {v: 64, ok: false}]})");
-  assert.equal(n(d, '.emark.ok'), 1);
-  assert.equal(n(d, '.emark.bad'), 1);
-  assert.match(d.querySelector('.emark.bad').textContent, /✗ 64/);
-  assert.match(d.querySelector('.emark.ok').textContent, /✓ 47/);
-});
-
 test('E-seriernas Lärling: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
   for (const ok of [false, true]) {
     const t = atGrade('e', 1);
@@ -83,58 +75,10 @@ test('E-seriernas Lärling: Vilken tolerans är serien gjord för?, tre stapelra
 });
 
 
-test('E-seriernas Mästare: Inte i E12, värdena faller ner på linjalen, både rätt och fel', () => {
-  for (const ok of [false, true]) {
-    const t = atGrade('e', 3);
-    until(t, p => p.eq === 'e12');
-    assert.equal(t.$$('#q .eruler').length, 0, 'ingen linjal före svaret');
-    answer(t, ok);
-    assert.equal(t.$$('#q .eruler').length, 1);
-    assert.equal(t.$$('#q .emark').length, 4);
-    assert.equal(t.$$('#q .emark.bad').length, 1);
-    assert.equal(t.$$('#q .egrid').length, 0, 'rutnätet är borta');
-  }
-});
-
-test('E-seriernas Mästare blandar Inte i E12 med Vilken serie', () => {
-  const t = atGrade('e', 3), seen = new Set();
-  for (let i = 0; i < 60; i++) { t.g('next()'); seen.add(t.g('S.plan.eq') || t.g('S.type')); }
-  assert.deepEqual([...seen].sort(), ['e12', 'series']);
-});
-
 test('Gyllene E-serierna: blandat spelar alla nya frågor utan fel', () => {
   const t = golden('e');
   for (let i = 0; i < 40; i++) { t.g('next()'); answer(t, i % 2 === 0); }
   assert.deepEqual(t.errors, []);
-});
-
-test('E-seriernas Mästare: Inte i E12 är Vilken ska bort?, det udda poppar och tre blir gröna', () => {
-  for (const ok of [true, false]) {
-    const t = atGrade('e', 3);
-    until(t, p => p.eq === 'e12');
-    assert.match(t.$('#q').textContent, /Vilken ska bort\?/);
-    const right = t.g('S.cq.right');
-    answer(t, ok);
-    assert.ok(t.$(`[data-c="${right}"]`).classList.contains('gone'));
-    assert.equal(t.$$('#q .opt.ok').length, 3);
-    assert.equal(t.$$('#q .opt.bad').length, 0);
-  }
-});
-
-test('Vilken serie: fel svar visar linjalen för serien som toleransen pekar ut, med värdet markerat', () => {
-  const t = atGrade('e', 4);
-  for (let i = 0; i < 12; i++) {
-    t.g("S.grade.e = 4; S.down = 0; next()");
-    assert.equal(t.$$('#q .eruler').length, 0, 'ingen linjal före svaret');
-    answer(t, false);
-    assert.equal(t.$$('#q .eruler').length, 1);
-    assert.equal(t.$$('#q .emark').length, 1);
-    const ser = t.g('TOL_SER[bandsTol(S.sr.bands)]'), inSer = t.g('seriesOf(S.sr.m3)').includes(ser);
-    assert.equal(t.$$('#q .emark.ok').length, inSer ? 1 : 0, ser);
-    assert.match(t.$('#q .eruler').getAttribute('aria-label'), new RegExp(ser + '$'));
-  }
-  t.g('next()'); answer(t, true);
-  assert.equal(t.$$('#q .eruler').length, 0, 'rätt svar visar ingen linjal');
 });
 
 // Som atGrade, men med animeringar (S.instant är av)
@@ -163,30 +107,6 @@ test('Utrullningen hoppas över med S.instant men räknas ändå', () => {
 });
 
 // Rättningar efter slutgranskningen
-test('Inte i E12 vid rätt svar: linjalen rullas inte ut, utrullningen sparas', () => {
-  const t = atGrade('e', 3);
-  until(t, p => p.eq === 'e12');
-  t.g('S.rolled = false');
-  answer(t, true);
-  assert.equal(t.g('S.rolled'), false);
-  t.g('S.grade.e = 3; S.down = 0');
-  until(t, p => p.eq === 'e12');
-  answer(t, false);
-  assert.equal(t.g('S.rolled'), true, 'fel svar förbrukar den');
-});
-
-test('Vid fel går det inte att gå vidare förrän värdet har fallit ner på den utrullade linjalen', async () => {
-  const t = live('e', 4);
-  t.g('S.rolled = false');
-  answer(t, false);
-  await new Promise(r => setTimeout(r, t.g('SPARK_MS') + 150));
-  assert.equal(t.g('S.answered'), true);
-  assert.ok(t.$('#q .eruler.unroll'), 'linjalen rullas ut');
-  const lock = t.g('S.lockUntil - S.revealAt');
-  assert.ok(lock >= (1.5 + .36 + t.g('BAR_WRONG')) * 1000, `låst ${lock} ms`);
-  t.g('stopTimer()');
-});
-
 test('Linjalen går att läsa på telefon: smal viewBox och värden som inte trängs på samma rad', () => {
   const t = atGrade('e', 0);
   for (const s of [6, 12, 24]) {
@@ -197,14 +117,6 @@ test('Linjalen går att läsa på telefon: smal viewBox och värden som inte tr�
     for (const l of svg.querySelectorAll('.elab')) (rows[l.getAttribute('y')] ||= []).push(+l.getAttribute('x'));
     for (const xs of Object.values(rows)) for (let i = 1; i < xs.length; i++) assert.ok(xs[i] - xs[i - 1] >= 24, `E${s}: ${xs[i - 1]}–${xs[i]}`);
   }
-});
-
-test('Värden som faller nära varandra hamnar på olika höjd', () => {
-  const t = atGrade('e', 0);
-  const d = frag(t, "rulerSVG(12, {marks: [{v: 81, ok: false}, {v: 82, ok: true}, {v: 32, ok: false}, {v: 33, ok: true}]})");
-  const m = [...d.querySelectorAll('.emark text')].map(x => [+x.getAttribute('x'), +x.getAttribute('y')]);
-  for (let i = 0; i < m.length; i++) for (let j = i + 1; j < m.length; j++)
-    if (Math.abs(m[i][0] - m[j][0]) < 34) assert.notEqual(m[i][1], m[j][1], `${m[i]} och ${m[j]}`);
 });
 
 test('Klockan är högst 330 px bred även i .res', () => {

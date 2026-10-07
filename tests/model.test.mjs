@@ -290,7 +290,7 @@ test('Ingen Nästa-knapp: efter fel svar fortsätter man med ett tryck på korte
 });
 
 test('Efter fel går det att trycka på svarsknapparna och bilden för att gå vidare', () => {
-  for (const [topic, g, sel] of [['body', 1, '[data-c]'], ['ohm', 3, '[data-c]'], ['ohm', 3, '[data-slot]'], ['body', 3, '[data-dir]'], ['e', 3, '[data-sr]']]) {
+  for (const [topic, g, sel] of [['body', 1, '[data-c]'], ['ohm', 3, '[data-c]'], ['ohm', 3, '[data-slot]'], ['body', 3, '[data-dir]']]) {
     const t = atGrade(topic, g);
     let n = 0;
     for (let i = 0; i < 40 && n < 3; i++) {
@@ -560,7 +560,6 @@ test('Testläge: rätt svar har en grön pil, i vanligt läge syns ingen', () =>
       if (type === 'choice') assert.ok(tt.$(`[data-c="${tt.g('S.cq.right')}"]`).classList.contains('cheat'), `${topic} ${g}`);
       else if (type === 'point') assert.equal(tt.$('#q .cheatmark').dataset.at, String(tt.g('S.pointAt')));
       else if (type === 'dir') assert.ok(tt.$(`[data-dir="${tt.g("S.style.flip ? 'right' : 'left'")}"]`).classList.contains('cheat'));
-      else if (type === 'series') assert.ok(tt.$(`[data-sr="${tt.g('S.sr.answer')}"]`).classList.contains('cheat'));
       else if (fmt === 'hard') assert.match(tt.$('#q .cheatline').textContent, /Svar:/);
       else assert.equal(tt.$$('#q .cheat').length, 1, `${topic} ${g} ${type}`);
       assert.ok(tt.$('#q .cheat, #q .cheatmark, #q .cheatline'), `${topic} ${g} ${type} har en pil`);
@@ -728,7 +727,7 @@ test('Beroenderegeln: frågorna per ämne och grad använder rätt sorts frågor
     ohm: [['choice'], ['choice', 'order', 'point'], ['point', 'order'], ['choice', 'build'], ['read']],
     tol: [['choice'], ['choice'], ['choice', 'order'], ['choice'], ['read', 'build']],
     tc: [['choice'], ['choice'], ['choice'], ['choice'], ['read', 'build']],
-    e: [['choice'], ['choice'], ['choice'], ['choice', 'series'], ['series']]
+    e: [['choice'], ['choice'], ['choice'], ['choice'], ['choice']]
   };
   for (const topic of TOPICS) for (let g = 0; g < 5; g++) {
     const t = atGrade(topic, g);

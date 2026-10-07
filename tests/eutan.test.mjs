@@ -229,3 +229,64 @@ test('Räcker säkert: tabellen visas före svaret, och vid fel tallinjen med st
   assert.ok(bars.slice(0, -1).every(b => b.classList.contains('bad')));
   assert.ok(t.$$('#q [data-c]')[t.g('S.cq.right')].classList.contains('land'));
 });
+
+test('Mästare: svåra motstånd (E192, sex band, vända), samma siffror och räcker säkert', () => {
+  const t = atGrade('e', 3), seen = new Set(), sers = new Set();
+  let six = false, flip = false;
+  for (let i = 0; i < 300; i++) {
+    t.g('next()'); seen.add(t.g('S.plan.eq'));
+    if (t.g("S.plan.eq === 'band'")) {
+      sers.add(t.g('S.cq.r.ser'));
+      six ||= t.g('S.cq.r.bands.length') === 6; flip ||= t.g('S.cq.r.flip');
+      assert.equal(t.$$('#q [data-c]').length, 6, 'E6–E192');
+    }
+  }
+  assert.deepEqual([...seen].sort(), ['band', 'multi', 'sakert']);
+  assert.ok(sers.has('E192') && six && flip);
+});
+
+test('Vänt motstånd med sex band: ringen sitter på toleransbandet efter att det vänts rätt', () => {
+  const t = atGrade('e', 3);
+  for (let i = 0; i < 500 && !(t.g("S.plan.eq === 'band'") && t.g('S.cq.r.flip') && t.g('S.cq.r.bands.length') === 6); i++) t.g('next()');
+  answer(t, false);
+  assert.ok(t.$('#q .eturn svg'), 'vänds rätt');
+  const ring = t.$('#q .res .ring.ok'), x = +ring.getAttribute('x') + +ring.getAttribute('width') / 2;
+  assert.ok(Math.abs(x - t.g('STD_X[6][4]')) < 1, 'ringen på band 5 av 6, rättvänt');
+  assert.match(t.$('#q .res').textContent, /inte tolerans/);
+});
+
+test('Stormästare: blandar serie ↔ tolerans, räcker, band, samma siffror och räcker säkert', () => {
+  const t = atGrade('e', 4), seen = new Set();
+  for (let i = 0; i < 300; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
+  assert.deepEqual([...seen].sort(), ['band', 'multi', 'racker', 'sakert', 'serietol']);
+});
+
+test('Inga värden behövs: ingen E-fråga har svaret Inte standard, och frågetypen series finns inte', () => {
+  for (let g = 0; g < 5; g++) {
+    const t = atGrade('e', g);
+    for (let i = 0; i < 60; i++) {
+      t.g('next()');
+      assert.equal(t.g('S.type'), 'choice');
+      assert.ok(!/Inte standard/.test(t.$('#q').textContent));
+    }
+  }
+  assert.equal(load().g("typeof genSeriesRead"), 'undefined');
+});
+
+test('Eldprovet och blandat spelar alla nya E-frågor utan fel', () => {
+  const t = golden('e');
+  for (let i = 0; i < 80; i++) { t.g('next()'); answer(t, i % 2 === 0); }
+  assert.deepEqual(t.errors, []);
+  const u = load({ storage: ALL_OPEN });
+  u.g("openTopic('ultra'); beginExam()");
+  for (let i = 0; i < 20; i++) { answer(u, i % 3 !== 0); if (u.g('S.answered') && !u.g('S.exam.done')) u.$('#q').click(); }
+  assert.deepEqual(u.errors, []);
+});
+
+test('Eldprovet: bandfrågan visar ingen ring efter svaret, eftersom provet inte visar facit', () => {
+  const t = load({ storage: ALL_OPEN });
+  t.g("openTopic('ultra'); beginExam(); GRADES.e[4] = () => bandQ({sers: SERS.slice(1, 5)}); S.exam.queue[S.exam.i] = {topic: 'e'}; next()");
+  assert.equal(t.g('S.plan.eq'), 'band');
+  answer(t, true);
+  assert.equal(t.$$('#q .ring').length, 0);
+});
