@@ -78,7 +78,8 @@ test('E-seriernas Lärling: Vilken serie är det här?, rätt svar stämmer med 
   assert.match(t.$('#q').textContent, /prickar på varvet/);
 });
 
-test('E-seriernas Gesäll: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
+// flyttas till Lärling i Task 4
+test.skip('E-seriernas Gesäll: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
   for (const ok of [false, true]) {
     const t = atGrade('e', 2);
     until(t, p => p.eq === 'staplar');
@@ -100,7 +101,8 @@ test('E-seriernas Gesäll: Vilken tolerans är serien gjord för?, tre stapelrad
   }
 });
 
-test('E-seriernas Gesäll blandar staplarna med serie ↔ tolerans', () => {
+// flyttas till Lärling i Task 4
+test.skip('E-seriernas Gesäll blandar staplarna med serie ↔ tolerans', () => {
   const t = atGrade('e', 2), seen = new Set();
   for (let i = 0; i < 60; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
   assert.deepEqual([...seen].sort(), ['serietol', 'staplar']);
@@ -164,7 +166,8 @@ test('Vilken serie: fel svar visar linjalen för serien som toleransen pekar ut,
 const live = (topic, grade) => load({ instant: false, storage: { ...ALL_OPEN, 'fargkoden2-topic': topic,
   'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }), 'fargkoden2-grade': JSON.stringify({ [topic]: grade }) } });
 
-test('Utrullningen: första linjalen rullas ut, nästa visas direkt', () => {
+// flyttas till Lärling i Task 4
+test.skip('Utrullningen: första linjalen rullas ut, nästa visas direkt', () => {
   const t = live('e', 2);
   // Första frågan som öppnas kan redan ha haft en linjal, och då är utrullningen förbrukad
   t.g('S.rolled = false');
@@ -178,7 +181,8 @@ test('Utrullningen: första linjalen rullas ut, nästa visas direkt', () => {
   assert.equal(t.g('S.rolled'), true);
 });
 
-test('Utrullningen hoppas över med S.instant men räknas ändå', () => {
+// flyttas till Lärling i Task 4
+test.skip('Utrullningen hoppas över med S.instant men räknas ändå', () => {
   const t = atGrade('e', 2);
   until(t, p => p.eq === 'staplar');
   assert.equal(t.$$('#q .eruler.unroll').length, 0);

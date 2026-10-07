@@ -73,3 +73,44 @@ test('Nykomling: Vad är E12? vid fel låser tills exemplen har tänts', () => {
   until(t, p => p.eq === 'vad');
   assert.ok(t.g('S.cq.anim.total') >= 2.4);
 });
+
+test('Gesäll: Vilken serie tillhör motståndet?, svaren E6–E96, toleransen står inte utskriven och motståndet sitter rättvänt', () => {
+  const t = atGrade('e', 2), seen = new Set();
+  for (let i = 0; i < 60; i++) {
+    t.g('next()');
+    assert.equal(t.g('S.plan.eq'), 'band');
+    assert.equal(t.$('#q .prompt').textContent.trim(), 'Vilken serie tillhör motståndet?');
+    assert.deepEqual(t.$$('#q [data-c]').map(b => b.textContent.trim()), ['E6','E12','E24','E48','E96']);
+    assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), t.g('serOfBands(S.cq.r.bands)'));
+    assert.equal(t.$('#q .etol'), null);
+    assert.equal(t.g('S.cq.r.flip'), false);
+    assert.ok([3, 4, 5].includes(t.g('S.cq.r.bands.length')));
+    seen.add(t.g('S.cq.r.ser'));
+  }
+  assert.equal(seen.size, 5);
+});
+
+test('Vilken serie tillhör motståndet?: efter svaret har toleransbandet en ring, vid fel lappen och pilen till serien', () => {
+  for (const ok of [true, false]) {
+    const t = atGrade('e', 2);
+    until(t, p => p.eq === 'band');
+    while (t.g('S.cq.r.bands.length') === 3) t.g('next()');
+    answer(t, ok);
+    assert.equal(t.$$('#q .res .ring.ok').length, 1, 'ringen');
+    assert.equal(!!t.$('#q .eband'), !ok, 'lappen och pilen vid fel');
+    if (!ok) {
+      const c = t.g('C[S.cq.r.bands[tolIdx(S.cq.r.bands.length)]].n');
+      assert.match(t.$('#q .eband').textContent, new RegExp(`${c} ±.* → ${t.g('S.cq.r.ser')}`));
+      assert.ok(t.$$('#q [data-c]')[t.g('S.cq.right')].classList.contains('land'), 'rätt knapp lyser upp');
+      assert.ok(t.g('S.lockUntil - S.revealAt') >= 0, 'låset sätts');
+    }
+  }
+});
+
+test('Vilken serie tillhör motståndet?: tre band visar platsen för det saknade bandet: Inget band ±20 %', () => {
+  const t = atGrade('e', 2);
+  for (let i = 0; i < 200 && !(t.g("S.plan.eq === 'band'") && t.g('S.cq.r.bands.length') === 3); i++) t.g('next()');
+  answer(t, false);
+  assert.match(t.$('#q .eband').textContent, /Inget band ±20 % → E6/);
+  assert.ok(t.$('#q .res rect[stroke-dasharray]'), 'det saknade bandet är streckat');
+});

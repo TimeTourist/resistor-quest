@@ -451,6 +451,10 @@ p.epre{margin:0}
 .estep.more{opacity:.6}
 .eneed{text-align:center;font-weight:700;margin:4px 0 0}
 .eex{text-align:center;font-weight:700;margin:6px 0 0}
+.etol{text-align:center;font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0}
+.eband{text-align:center;font-weight:700;font-size:1.1rem;margin:4px 0 0}
+.eband b{color:var(--ok)}
+@media (prefers-reduced-motion:no-preference){.eturn svg{animation:turn .45s ease-out both}}
 .ering{fill:none;stroke:var(--line);stroke-width:10}
 .etick{stroke:var(--line);stroke-width:2}
 .emid{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:34px;text-anchor:middle;fill:var(--ink)}
@@ -2067,23 +2071,8 @@ const GRADES = {
         res: () => S.answered ? dialSVG(n, {count: n <= 12, pop: true}) : dialSVG(n, {labels: false}),
         wrong: `${n} prickar på varvet, alltså E${n}. En prick ${n === 6 ? 'varannan timme' : n === 12 ? 'på varje timme' : 'på varje halvtimme'}.`};
     }, {eq: 'klocka'}),
-    // Gesäll: vilken tolerans är serien gjord för (staplar på linjalen), eller serie ↔ tolerans som text
-    () => rnd([() => choice(() => {
-      const n = rnd([6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
-      S.cq = {prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
-        opts: opts.map(v => ({html: fmtTol(v)})),
-        res: () => S.answered && !inExam() ? etolRows(n, tols) : rulerSVG(n, {roll: rollNow()}),
-        wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
-    }, {eq: 'staplar'}), () => choice(() => {
-      const s = rnd(Object.keys(SER_TOL)), t = SER_TOL[s], line = 'E6 ±20 %, E12 ±10 %, E24 ±5 %, E48 ±2 %, E96 ±1 %.';
-      if (Math.random() < .5) {
-        const vals = pick4(t, [], Object.values(SER_TOL));
-        S.cq = {prompt:`Vilken tolerans hör till ${s}?`, layout:'mc', right: vals.indexOf(t), opts: vals.map(v => ({html: fmtTol(v)})), wrong: line};
-      } else {
-        const ss = pick4(s, [], Object.keys(SER_TOL));
-        S.cq = {prompt:`Vilken serie hör till ${fmtTol(t)}?`, layout:'mc', right: ss.indexOf(s), opts: ss.map(x => ({html: x})), wrong: line};
-      }
-    }, {eq: 'serietol'})])(),
+    // Gesäll: vilken serie tillhör motståndet? Bara toleransbandet avgör.
+    () => bandQ({sers: SERS.slice(0, 5)}),
     // Mästare: vilket värde finns inte i E12 (värdena faller ner på linjalen), eller vilken serie med värdet utskrivet
     () => rnd([() => choice(() => {
       const right = rnd4(), pool = shuffle(E12.slice()).slice(0, 4);
@@ -3384,6 +3373,37 @@ function stairHTML({hl = null, need = null, at = .3, step = .3} = {}){
     `<b>${s}</b><span>${fmtTol(SER_T[s])}</span><i>${note(s)}</i></div>`).join('');
   const line = need == null ? '' : `<p class="eneed mk" style="animation-delay:${(at + SERS.length * step).toFixed(2)}s">Bygget tål ${fmtTol(need)}</p>`;
   return `<div class="estair" aria-hidden="true">${rows}</div>${line}`;
+}
+// Vilken serie tillhör motståndet? Bara toleransbandet avgör. showTol: toleransen står utskriven (Lärling).
+// Vid fel: ett vänt motstånd vänds rätt, ringen runt toleransbandet, lappen "Guld ±5 % → E24" och rätt knapp lyser upp.
+const BAND_T = {turn: .5, ring: .2, lab: .7, seq: 1.2, land: 1.5, total: 2.2};
+function bandQ({sers, six = false, flip = false, showTol = false}){
+  return choice(() => {
+    const r = bandResistor({sers, six: six && Math.random() < .5, flip: flip && Math.random() < .5});
+    const opts = sers.includes('E192') ? SERS : SERS.slice(0, 5), n = r.bands.length, ti = n === 3 ? 3 : tolIdx(n);
+    const tol = n === 3 ? 20 : C[r.bands[ti]].t;
+    const lab = n === 3 ? `Inget band ${fmtTol(20)}` : `${C[r.bands[ti]].n} ${fmtTol(tol)}`;
+    const sh = r.flip ? BAND_T.turn : 0, T = k => BAND_T[k] + sh;
+    S.cq = {r, prompt:'Vilken serie tillhör motståndet?', layout:'mc', right: opts.indexOf(r.ser), opts: opts.map(x => ({html: x})),
+      anim: {land: T('land'), total: T('total')},
+      res: () => {
+        const fx = S.answered && !S.ok && !inExam();
+        // Tre band: ett streckat tomt band där toleransbandet skulle ha suttit
+        const b = fx && n === 3 ? [...r.bands, null] : r.bands, st = {...(b.length === 4 && n === 3 ? stdStyle(4) : styleFor(b)), flip: fx ? false : r.flip};
+        const o = {style: st, label: `Motstånd med ${n} färgband`};
+        // Efter svaret: ring runt toleransbandet. Vid fel dyker den upp i animeringen, och på en trebandare runt det streckade bandet.
+        if (S.answered && (n > 3 || fx)) o.ring = [[ti, 'ok', fx ? T('ring') : null]];
+        if (fx) {
+          o.mark = [[ti, lab]]; o.markKind = 'ok'; o.markAnim = {start: T('lab'), step: 0};
+          if (n === 6) o.notes = [{i: 5, text: 'inte tolerans'}];
+        }
+        const pic = `<div class="${fx && r.flip ? 'eturn' : ''}">${svg(b, o)}</div>`;
+        return pic + (showTol ? `<p class="etol">${fmtTol(tol)}</p>` : '')
+          + (fx ? `<p class="eband mk" style="animation-delay:${T('seq').toFixed(2)}s">${lab} → <b>${r.ser}</b></p>` : '');
+      },
+      wrong: n === 3 ? 'Tre band: inget toleransband, alltså ±20 %, och ±20 % är E6.'
+        : `Titta på toleransbandet${n === 6 ? ', det näst sista' : ''}: ${C[r.bands[ti]].n.toLowerCase()} är ${fmtTol(tol)}, och ${fmtTol(tol)} är ${r.ser}.`};
+  }, {eq: 'band'});
 }
 function etolRows(n, [big, right, small]){
   const v = eVals(n), picked = S.cq.tols[S.pickC];
