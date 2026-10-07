@@ -158,7 +158,7 @@ test('Peka på band: Motståndets Stormästare frågar efter första bandet, äv
 });
 
 test('Text: rätt svar ger ingen text, fel svar ger exakt en rad', () => {
-  for (const [topic, g] of [['tol', 3], ['e', 2]]) {
+  for (const [topic, g] of [['tol', 3], ['tc', 2]]) {
     const t = atGrade(topic, g);
     t.g('next()'); answer(t, true);
     assert.equal(t.$$('#q .lesson').length, 0, `${topic} ${g} rätt`);
