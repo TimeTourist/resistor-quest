@@ -440,6 +440,16 @@ p.epre{margin:0}
 .eruler{display:block;width:100%;height:auto;overflow:visible}
 .res .edial{max-width:330px}
 .res .eruler{max-width:480px}
+.estair{display:grid;gap:4px;max-width:360px;margin:6px auto}
+.estep{display:grid;grid-template-columns:4em 4.5em 1fr;align-items:center;gap:8px;padding:4px 10px;border-radius:8px;
+  margin-left:calc(var(--k) * 10px);background:var(--surface);border:1px solid var(--line);font-size:.95rem}
+.estep b{font-family:var(--display);font-size:1.1rem}
+.estep i{font-style:normal;color:var(--muted);font-size:.85rem}
+.estep.hl{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.estep.bad{border-color:var(--bad);background:var(--bad-bg)}
+.estep.ok{border-color:var(--ok);background:var(--ok-bg);box-shadow:0 0 0 2px var(--ok)}
+.estep.more{opacity:.6}
+.eneed{text-align:center;font-weight:700;margin:4px 0 0}
 .ering{fill:none;stroke:var(--line);stroke-width:10}
 .etick{stroke:var(--line);stroke-width:2}
 .emid{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:34px;text-anchor:middle;fill:var(--ink)}
@@ -3339,6 +3349,31 @@ function rulerSVG(n, {tol = null, marks = [], roll = false} = {}){
 }
 // Gesäll: tre toleranser per serie, för stor, rätt och för liten
 const ETOL_Q = {6: [50, 20, 1], 12: [20, 10, 1], 24: [10, 5, 1]};
+// E-serierna utan värden: serien läses från toleransbandet. Tre band (inget toleransband) är ±20 %, alltså E6.
+const SERS = ['E6','E12','E24','E48','E96','E192'];
+const SER_T = {...SER_TOL, E192: 0.5};
+const serOfBands = b => b.length === 3 ? 'E6' : TOL_SER[C[b[tolIdx(b.length)]].t] || 'E192';
+// Ett motstånd ur en av serierna. E192 tar värdet ur E96 (som ingår i E192) och får ett grönt, blått eller violett band.
+// six: fembandare får ett temperaturband. flip: sitter vänt (inte trebandare).
+function bandResistor({sers, six = false, flip = false}){
+  const ser = rnd(sers), base = ser === 'E192' ? 'E96' : ser;
+  const {bands} = resistorFromSeries(base);
+  if (ser === 'E192') bands[bands.length - 1] = rnd(['green','blue','violet']);
+  if (six && bands.length === 5) bands.push(rnd(['brown','red','orange','yellow']));
+  return {bands, ser, flip: flip && bands.length > 3};
+}
+// Trappan: serierna i ordning, med dubbelt så många värden och smalare tolerans för varje steg.
+// hl: serien frågan gällde. need: toleransen bygget tål, då blir stegen för grova (bad), räcker (ok) eller fler än du behöver (more).
+const stairEnd = (at = .3, step = .3) => at + SERS.length * step + .3;
+function stairHTML({hl = null, need = null, at = .3, step = .3} = {}){
+  const enough = need == null ? null : SERS.find(s => SER_T[s] <= need);
+  const fit = s => need == null ? (s === hl ? ' hl' : '') : SER_T[s] > need ? ' bad' : s === enough ? ' ok' : ' more';
+  const note = s => need == null ? '' : SER_T[s] > need ? 'för grov' : s === enough ? 'räcker' : 'fler värden än du behöver';
+  const rows = SERS.map((s, i) => `<div class="estep${fit(s)} mk" style="animation-delay:${(at + i * step).toFixed(2)}s;--k:${i}">` +
+    `<b>${s}</b><span>${fmtTol(SER_T[s])}</span><i>${note(s)}</i></div>`).join('');
+  const line = need == null ? '' : `<p class="eneed mk" style="animation-delay:${(at + SERS.length * step).toFixed(2)}s">Bygget tål ${fmtTol(need)}</p>`;
+  return `<div class="estair" aria-hidden="true">${rows}</div>${line}`;
+}
 function etolRows(n, [big, right, small]){
   const v = eVals(n), picked = S.cq.tols[S.pickC];
   const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${rulerSVG(n, {tol: t})}</div>`;
