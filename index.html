@@ -470,6 +470,8 @@ p.epre{margin:0}
 .estep.more{opacity:.6}
 .eneed{text-align:center;font-weight:700;font-size:.9rem;margin:2px 0;padding-top:2px;border-top:2px dashed var(--ink)}
 .eex{text-align:center;font-weight:700;margin:6px 0 0}
+.e6note{font-size:.85rem;color:var(--muted);margin:-4px 0 8px}
+.eptab{text-align:center;font-size:.9rem;font-weight:600;font-variant-numeric:tabular-nums;margin:4px 0 0}
 .etol{text-align:center;font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0}
 .eband{text-align:center;font-weight:700;font-size:1.1rem;margin:4px 0 0}
 .eband b{color:var(--ok)}
@@ -2070,24 +2072,8 @@ const GRADES = {
     () => ({type: rnd(['read','build']), fmt:'hard', focus:'all', n:6, varied:true, flip:true})
   ],
   e: [
-    // Nykomling: vad en E-serie är. Klockan fylls efter svaret.
-    () => rnd([() => choice(() => {
-      const right = '10–100 är uppdelat i 12 steg';
-      const opts = shuffle([right, '±12 % tolerans', 'Värden upp till 12 kΩ', '12 färgband']);
-      S.cq = {prompt:'Vad betyder 12 i E12?', layout:'txt', right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
-        res: () => S.answered ? dialSVG(12, {count: true, pop: true}) : dialSVG(12, {dots: false}),
-        wrong: 'E12 delar 10–100 i 12 steg. Varje steg är ungefär 20 % större än det förra. Sedan börjar det om med en nolla till: 100, 120, 150 …'};
-    }, {eq: 'namn'}), () => choice(() => {
-      const right = 'Standardvärden som motstånd säljs i';
-      const opts = shuffle([right, 'En färgkod för motstånd', 'Ett motstånd på 12 Ω', 'En tolerans på ±12 %']);
-      // Vid fel: klockan fylls, sedan tänds samma värde med olika nollor
-      const ex = ['4,7 Ω', '47 Ω', '4,7 kΩ'], at = 1.3;
-      S.cq = {prompt:'Vad är E12?', layout:'txt', right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
-        anim: {total: at + ex.length * .4 + .6},
-        res: () => !S.answered ? dialSVG(12, {dots: false}) : dialSVG(12, {pop: true}) + (S.ok || inExam() ? ''
-          : `<p class="eex">Samma värde: ${ex.map((x, i) => `<span class="mk" style="animation-delay:${(at + i * .4).toFixed(2)}s">${x}</span>`).join(' · ')}</p>`),
-        wrong: 'E12 är en lista med standardvärden. Motstånd tillverkas inte i alla värden, bara i de här 12 och samma siffror gånger 10, 100, 1000 …'};
-    }, {eq: 'vad'})])(),
+    // Nykomling: vad E6 är, placera värdena på två skalor, och varför de glesnar
+    () => rnd([eVad, eGlesare])(),
     // Lärling: serie ↔ tolerans, vilken serie räcker, staplarna och motståndet med toleransen utskriven
     () => rnd([eSerieTol, eRacker, eStaplar, () => bandQ({sers: SERS.slice(0, 5), showTol: true})])(),
     // Gesäll: vilken serie tillhör motståndet? Bara toleransbandet avgör.
@@ -2261,7 +2247,7 @@ function choiceHTML(){
   const why = Q.anim && done && !S.ok && !inExam();
   const pd = i => why && i === Q.right ? ` style="${Q.anim.pop != null ? `--pd:${Q.anim.pop.toFixed(2)}s;` : ''}${Q.anim.land != null ? `animation-delay:${Q.anim.land.toFixed(2)}s` : ''}"` : '';
   const opts = Q.opts.map((o, i) => `<button class="opt${cls}${mk(i)}${cheat(i === Q.right)}${why && Q.anim.land != null && i === Q.right ? ' land' : ''}" data-c="${i}"${pd(i)}${disAttr()}>${o.draw ? o.draw() : o.html}${badge(o)}${done && o.ann ? `<small class="ann">${o.ann}</small>` : ''}</button>`).join('');
-  return `${Q.odd ? `<p class="oddhead">${BALLOON}Vilken ska bort?<span>Tre hör ihop, en ska bort.</span></p>` : ''}${topHTML(Q.prompt)}${Q.res ? `<div class="res">${Q.res()}</div>` : ''}
+  return `${Q.odd ? `<p class="oddhead">${BALLOON}Vilken ska bort?<span>Tre hör ihop, en ska bort.</span></p>` : ''}${topHTML(Q.prompt)}${Q.e6 && !inExam() ? `<p class="e6note">${E6_NOTE}</p>` : ''}${Q.res ? `<div class="res">${Q.res()}</div>` : ''}
     <div class="${grid}">${opts}</div>${done && Q.after && !inExam() ? `<div class="res after">${Q.after()}</div>` : ''}${done && !S.ok && Q.facit ? Q.facit() : ''}`;
 }
 
@@ -3514,6 +3500,31 @@ const eStaplar = () => choice(() => {
         res: () => S.answered && !inExam() ? etolRows(n, tols) : linSVG(n),
         wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
 }, {eq: 'staplar'});
+// E6 är ovanlig i dag, men har minst värden och är lättast att börja med
+const E6_NOTE = 'E6 är ovanlig i dag, men har bara sex värden och är lätt att börja med. Vanligast är E24 och E96.';
+function eVad(){
+  return choice(() => {
+    const right = 'Standardvärden som motstånd säljs i';
+    const opts = shuffle([right, 'En färgkod för motstånd', 'Ett motstånd på 6 Ω', 'En tolerans på ±6 %']);
+    const ex = ['4,7 Ω', '47 Ω', '4,7 kΩ'], at = linEnd(6) - .6;
+    S.cq = {e6: true, prompt:'Vad är E6?', layout:'txt', right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
+      anim: {total: at + ex.length * .4 + .6},
+      res: () => !S.answered ? '' : linSVG(6, {drop: !inExam()}) + (S.ok || inExam() ? ''
+        : `<p class="eex">Samma värde: ${ex.map((x, i) => `<span class="mk" style="animation-delay:${(at + i * .4).toFixed(2)}s">${x}</span>`).join(' · ')}</p>`),
+      wrong: 'E6 är en lista med standardvärden: 10, 15, 22, 33, 47 och 68. Motstånd tillverkas inte i alla värden, bara i de här och samma siffror gånger 10, 100, 1000 … E6 är ovanlig i dag, och vanligast är E24 och E96, men den har minst värden och är lättast att börja med.'};
+  }, {eq: 'vad'});
+}
+function eGlesare(){
+  return choice(() => {
+    const right = 'Toleransen är i procent, så stora värden täcker fler ohm';
+    const opts = shuffle([right, 'Stora motstånd är dyrare att tillverka', 'Färgkoden har inte plats för fler värden', 'Det är bara bestämt så']);
+    const tab = [10, 22, 47, 68].map(v => `${v} Ω ±${num(v * .2)} Ω`).join(' · ');
+    S.cq = {e6: true, prompt:'Varför ligger värdena glesare högre upp?', layout:'txt', right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
+      anim: {total: linEnd(6) + .4},
+      res: () => S.answered && !S.ok && !inExam() ? linSVG(6, {tol: 20, drop: true, grow: true, cover: true}) + `<p class="eptab mk" style="animation-delay:${linEnd(6).toFixed(2)}s">${tab}</p>` : linSVG(6),
+      wrong: '±20 % av 10 är ±2 Ω, men ±20 % av 68 är ±13,6 Ω. Därför kan stegen bli längre högre upp, och ändå når varje värde fram till grannen.'};
+  }, {eq: 'glesare'});
+}
 function etolRows(n, [big, right, small]){
   const v = eVals(n), picked = S.cq.tols[S.pickC];
   const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${linSVG(n, {tol: t})}</div>`;

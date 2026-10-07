@@ -47,3 +47,40 @@ test('Staplarfrågan: E6 i hälften av frågorna, rak linjal och E6 ±40 / ±20 
   answer(t, false);
   assert.equal(t.$$('#q .etrow svg.elin').length, 3);
 });
+test('Vad är E6?: standardvärden, raka linjalen efter svaret, och vid fel tänds samma värde med olika nollor', () => {
+  for (const ok of [true, false]) {
+    const t = atGrade('e', 0);
+    until(t, p => p.eq === 'vad');
+    assert.equal(t.$('#q .prompt').textContent.trim(), 'Vad är E6?');
+    assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), 'Standardvärden som motstånd säljs i');
+    assert.ok(t.$('#q .e6note'));
+    answer(t, ok);
+    assert.equal(t.$$('#q svg.elin .lval').length, 6);
+    assert.equal(t.$$('#q .eex .mk').length, ok ? 0 : 3);
+  }
+  const t = atGrade('e', 0);
+  until(t, p => p.eq === 'vad');
+  assert.match(t.g('S.cq.wrong'), /ovanlig.*E24 och E96/);
+});
+
+test('Varför glesare: rätt svar är procent, och vid fel faller värdena, staplarna växer och tabellen visas', () => {
+  const t = atGrade('e', 0);
+  until(t, p => p.eq === 'glesare');
+  assert.equal(t.$('#q .prompt').textContent.trim(), 'Varför ligger värdena glesare högre upp?');
+  assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), 'Toleransen är i procent, så stora värden täcker fler ohm');
+  assert.equal(t.$$('#q svg.elin .lbar').length, 0, 'inga staplar före svaret');
+  assert.ok(t.$('#q .e6note'));
+  answer(t, false);
+  assert.equal(t.$$('#q svg.elin .lbar').length, 6);
+  assert.ok(t.$('#q svg.elin .lcover'));
+  assert.match(t.$('#q .eptab').textContent, /68 Ω ±13,6 Ω/);
+  assert.ok(t.g('S.cq.anim.total') >= t.g('linEnd(6)'));
+});
+
+test('E6-raden syns inte på Gesäll, och inte på Eldprovet', () => {
+  const t = atGrade('e', 2);
+  for (let i = 0; i < 10; i++) { t.g('next()'); assert.equal(t.$('#q .e6note'), null); }
+  const u = load({ storage: ALL_OPEN });
+  u.g("openTopic('ultra'); beginExam(); GRADES.e[4] = eGlesare; S.exam.queue[S.exam.i] = {topic: 'e'}; next()");
+  assert.equal(u.$('#q .e6note'), null);
+});
