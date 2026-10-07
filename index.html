@@ -441,15 +441,15 @@ p.epre{margin:0}
 .res .edial{max-width:330px}
 .res .eruler{max-width:480px}
 .estair{display:grid;gap:4px;max-width:360px;margin:6px auto}
-.estep{display:grid;grid-template-columns:4em 4.5em 1fr;align-items:center;gap:8px;padding:4px 10px;border-radius:8px;
-  margin-left:calc(var(--k) * 10px);background:var(--surface);border:1px solid var(--line);font-size:.95rem}
+.estep{display:grid;grid-template-columns:3.4em 4.2em 1fr;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;
+  margin-left:calc(var(--k) * 6px);background:var(--surface);border:1px solid var(--line);font-size:.95rem}
 .estep b{font-family:var(--display);font-size:1.1rem}
 .estep i{font-style:normal;color:var(--muted);font-size:.85rem}
 .estep.hl{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .estep.bad{border-color:var(--bad);background:var(--bad-bg)}
 .estep.ok{border-color:var(--ok);background:var(--ok-bg);box-shadow:0 0 0 2px var(--ok)}
 .estep.more{opacity:.6}
-.eneed{text-align:center;font-weight:700;margin:4px 0 0}
+.eneed{text-align:center;font-weight:700;font-size:.9rem;margin:2px 0;padding-top:2px;border-top:2px dashed var(--ink)}
 .eex{text-align:center;font-weight:700;margin:6px 0 0}
 .etol{text-align:center;font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0}
 .eband{text-align:center;font-weight:700;font-size:1.1rem;margin:4px 0 0}
@@ -466,9 +466,9 @@ p.epre{margin:0}
 .esafe td{padding:2px 0}
 .esline{display:block;width:100%;max-width:480px;margin:6px auto}
 .esline .ewin{fill:var(--ok-bg);stroke:var(--ok);stroke-width:1.5;stroke-dasharray:4 3}
-.esline text{font-size:13px;text-anchor:middle;fill:var(--ink)}
+.esline text{font-size:18px;font-weight:600;text-anchor:middle;fill:var(--ink)}
 .esline .eaxis{fill:var(--muted)}
-.esline line{stroke-width:7;stroke-linecap:round}
+.esline line{stroke-width:9;stroke-linecap:round}
 .esline .in{stroke:var(--muted)}
 .esline .ok .in{stroke:var(--ok)}
 .esline .out{stroke:var(--bad)}
@@ -3325,11 +3325,12 @@ const stairEnd = (at = .3, step = .3) => at + SERS.length * step + .3;
 function stairHTML({hl = null, need = null, at = .3, step = .3} = {}){
   const enough = need == null ? null : SERS.find(s => SER_T[s] <= need);
   const fit = s => need == null ? (s === hl ? ' hl' : '') : SER_T[s] > need ? ' bad' : s === enough ? ' ok' : ' more';
-  const note = s => need == null ? '' : SER_T[s] > need ? 'för grov' : s === enough ? 'räcker' : 'fler värden än du behöver';
-  const rows = SERS.map((s, i) => `<div class="estep${fit(s)} mk" style="animation-delay:${(at + i * step).toFixed(2)}s;--k:${i}">` +
+  const note = s => need == null ? '' : SER_T[s] > need ? 'för grov' : s === enough ? 'räcker' : 'onödigt fin';
+  // Kravet är en streckad linje mellan de för grova stegen och det första som räcker
+  const line = `<p class="eneed mk" style="animation-delay:${(at + SERS.length * step).toFixed(2)}s">Bygget tål ${fmtTol(need)}</p>`;
+  const rows = SERS.map((s, i) => (s === enough ? line : '') + `<div class="estep${fit(s)} mk" style="animation-delay:${(at + i * step).toFixed(2)}s;--k:${i}">` +
     `<b>${s}</b><span>${fmtTol(SER_T[s])}</span><i>${note(s)}</i></div>`).join('');
-  const line = need == null ? '' : `<p class="eneed mk" style="animation-delay:${(at + SERS.length * step).toFixed(2)}s">Bygget tål ${fmtTol(need)}</p>`;
-  return `<div class="estair" aria-hidden="true">${rows}</div>${line}`;
+  return `<div class="estair" aria-hidden="true">${rows}</div>`;
 }
 // Vilken serie tillhör motståndet? Bara toleransbandet avgör. showTol: toleransen står utskriven (Lärling).
 // Vid fel: ett vänt motstånd vänds rätt, ringen runt toleransbandet, lappen "Guld ±5 % → E24" och rätt knapp lyser upp.
@@ -3409,14 +3410,14 @@ function safeTask(){
 function safeSVG(k){
   const {T, need} = k, rows = k.rows.slice(0, SAFE_SERS.indexOf(k.answer) + 1), half = Math.max(2.5 * need, 6) / 100;
   const x = v => Math.max(8, Math.min(392, 200 + (v - T) / (T * half) * 170)), lo = T * (1 - need / 100), hi = T * (1 + need / 100);
-  let h = `<rect class="ewin" x="${f1(x(lo))}" y="4" width="${f1(x(hi) - x(lo))}" height="${rows.length * 30 + 8}" rx="4"/>`;
+  let h = `<rect class="ewin" x="${f1(x(lo))}" y="4" width="${f1(x(hi) - x(lo))}" height="${rows.length * 44 + 4}" rx="4"/>`;
   rows.forEach((r, i) => {
-    const y = 22 + i * 30, a = r.v * (1 - r.ts / 100), b = r.v * (1 + r.ts / 100), d = (.3 + i * .5).toFixed(2);
+    const y = 38 + i * 44, a = r.v * (1 - r.ts / 100), b = r.v * (1 + r.ts / 100), d = (.3 + i * .5).toFixed(2);
     const seg = (p, q, cls) => q > p ? `<line class="${cls}" x1="${f1(x(p))}" x2="${f1(x(q))}" y1="${y}" y2="${y}"/>` : '';
-    h += `<g class="ebarr ${r.ok ? 'ok' : 'bad'} mk" style="animation-delay:${d}s"><text x="200" y="${y - 7}">${r.s} ${fmtVal(r.v)} ${fmtTol(r.ts)}</text>`
+    h += `<g class="ebarr ${r.ok ? 'ok' : 'bad'} mk" style="animation-delay:${d}s"><text x="200" y="${y - 12}">${r.s} ${fmtVal(r.v)} ${fmtTol(r.ts)}</text>`
       + seg(a, Math.min(b, lo), 'out') + seg(Math.max(a, lo), Math.min(b, hi), 'in') + seg(Math.max(a, hi), b, 'out') + '</g>';
   });
-  return `<svg class="esline" viewBox="0 0 400 ${rows.length * 30 + 30}" aria-hidden="true">${h}<text class="eaxis" x="200" y="${rows.length * 30 + 26}">${fmtVal(lo)} – ${fmtVal(hi)}</text></svg>`;
+  return `<svg class="esline" viewBox="0 0 400 ${rows.length * 44 + 34}" aria-hidden="true">${h}<text class="eaxis" x="200" y="${rows.length * 44 + 28}">${fmtVal(lo)} – ${fmtVal(hi)}</text></svg>`;
 }
 function safeQ(){
   return choice(() => {
