@@ -68,13 +68,13 @@ test('Förhandsvisningen från dev.html har inga nycklar och ingen snabbkoll', (
   assert.deepEqual(Array.from(t.g('S.seen')).sort(), ['body', 'e', 'ohm', 'tc', 'tol']);
 });
 
-test('Första besöket: nyckeln sitter i Motståndets lås och raden säger vad man ska göra', () => {
+test('Första besöket: nyckeln sitter i Motståndets lås, och raden ovanför är samma som annars så att korten inte flyttar sig', () => {
   const t = load({ start: true });
   const tile = t.$('#grid [data-id="body"]');
   assert.ok(tile.classList.contains('haskey'));
   assert.ok(tile.querySelector('.inkey svg'), 'nyckeln sitter i låset');
   assert.ok(!tile.querySelector('.inkey').classList.contains('arriving'));
-  assert.match(t.$('#lead').textContent, /Tryck på Motståndet för att vrida om nyckeln och låsa upp\./);
+  assert.equal(t.$('#lead').textContent, 'Lär dig läsa motstånd. Välj ett ämne.');
 });
 
 test('Ett tryck vrider om nyckeln: låset öppnas och nyckeln är förbrukad, men inget kort öppnas', () => {

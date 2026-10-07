@@ -196,6 +196,13 @@ html,body{overflow-x:clip}
 .cells{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;height:16px}
 .cells i{display:block;border-radius:3px;border:1.5px solid var(--line);background:var(--bg)}
 .gbar{--fresh:#8fe25f;--ripe:#2a9b48}
+.gbar.float{position:fixed;top:0;left:0;right:0;z-index:30;background:var(--surface);border-radius:0 0 14px 14px;padding-bottom:8px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+@media (prefers-reduced-motion:no-preference){
+  .gbar.float{animation:floatin .25s ease-out}
+  .gbar.float.leave{animation:floatout .25s ease-in forwards}
+  @keyframes floatin{from{transform:translateY(-100%)}}
+  @keyframes floatout{to{transform:translateY(-100%)}}
+}
 .cells i{transition:background .45s,border-color .45s}
 .cells i.on{background:var(--fresh);border-color:#6cc43c}
 .cells i.full,.cells i.ripe{background:var(--ripe);border-color:var(--ripe)}
@@ -1159,9 +1166,8 @@ function tileHTML(t){
     <span class="fog"></span>${chainsSVG()}${PADLOCK_SVG}${key ? `<span class="inkey${flying ? ' arriving' : ''}">${keySVG(TOPIC_LOOK[t].c)}</span>` : ''}</button>`;
 }
 function renderLead(){
-  const k = S.keys.find(t => !S.flying.includes(t) && !S.arriving.includes(t));
-  document.getElementById('lead').innerHTML = k ? `<b>Tryck på ${topicName(k)}</b> för att vrida om nyckeln och låsa upp.`
-    : 'Lär dig läsa motstånd. <b>Välj ett ämne.</b>';
+  // Samma rad med eller utan nyckel, så att korten under inte flyttar sig. Nyckeln i låset säger själv vad man ska göra.
+  document.getElementById('lead').innerHTML = 'Lär dig läsa motstånd. <b>Välj ett ämne.</b>';
 }
 function renderGrid(){
   document.getElementById('grid').innerHTML = ORDER.map(tileHTML).join('');
@@ -2330,8 +2336,25 @@ function clearBar(){
   barT.forEach(clearTimeout); barT.length = 0;
   const b = document.getElementById('gbar');
   b.className = 'gbar';
+  document.getElementById('gbargap')?.remove();
   noPick(b);
   document.querySelectorAll('.dust').forEach(d => d.remove());
+}
+// Har man skrollat ner till svaren ligger stapeln ovanför skärmen. Då glider den in överst medan den fylls,
+// och en lucka på dess plats håller kortet stilla.
+function floatBar(b){
+  if (b.getBoundingClientRect().top >= 0 || document.getElementById('gbargap')) return;
+  const gap = document.createElement('div');
+  gap.id = 'gbargap'; gap.style.height = b.offsetHeight + 'px';
+  b.before(gap);
+  b.classList.add('float');
+}
+function sinkBar(b){
+  if (!b.classList.contains('float')) return;
+  const done = () => { b.classList.remove('float', 'leave'); document.getElementById('gbargap')?.remove(); };
+  if (reduceMotion()) { done(); return; }
+  b.classList.add('leave');
+  later(.25, done);
 }
 function barDraw(st, topic, label){
   const b = document.getElementById('gbar');
@@ -2367,13 +2390,14 @@ function barDrawMix(topic, n, best, rec){
 function mixFX(P, startAt){
   const b = document.getElementById('gbar'), calm = reduceMotion();
   const num = () => { const e = b.querySelector('.streak b'); if (!e) return null; const r = e.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
-  later(startAt, () => { barDrawMix(P.topic, P.from.streak, P.to.best - (P.record ? 1 : 0), false); b.className = 'gbar show goldbar'; });
+  later(startAt, () => { barDrawMix(P.topic, P.from.streak, P.to.best - (P.record ? 1 : 0), false); b.className = 'gbar show goldbar'; floatBar(b); });
   if (P.ok) {
     later(startAt + .35, () => { if (!calm) dust(S.ledAt, num(), 10, 'in gold'); });
     later(startAt + .85, () => { barDrawMix(P.topic, P.to.streak, P.to.best, P.record); b.querySelector('.streak b').classList.add('pop'); if (P.record) b.classList.add('quake'); });
-    later(startAt + 1.55, () => b.classList.remove('show'));
+    later(startAt + 1.55, () => { b.classList.remove('show'); sinkBar(b); });
   } else {
     later(startAt + .25, () => { if (!calm && P.from.streak) dust(num(), null, 10, 'out gold'); barDrawMix(P.topic, 0, P.to.best, false); b.classList.add('shake'); });
+    later(startAt + 1.2, () => sinkBar(b));
   }
 }
 // Gyllene: en våg av guld går genom alla fack, och gnistor sprutar ur stapeln
@@ -2396,7 +2420,7 @@ function barFX(P, startAt){
   // Fack i en grad: g är graden (0–4), i facket (0–2)
   const cellEl = (g, i) => b.querySelectorAll('.gseg')[g]?.querySelectorAll('.cells i')[i];
   const cell = (g, i) => { const c = cellEl(g, i); if (!c) return null; const r = c.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
-  later(startAt, () => { barDraw(P.from, P.topic); b.className = 'gbar show'; });
+  later(startAt, () => { barDraw(P.from, P.topic); b.className = 'gbar show'; floatBar(b); });
   if (P.ok) {
     const slot = Math.min(P.from.up, 2), g = P.from.g;
     later(startAt + .35, () => { if (!calm) dust(S.ledAt, cell(g, slot), 10, 'in'); });
@@ -2409,9 +2433,9 @@ function barFX(P, startAt){
       // Graden mognar: de tre ljusgröna facken mörknar medan stapeln skakar
       later(startAt + 1.05, () => { b.classList.add('quake'); b.querySelectorAll('.gseg.cur .cells i').forEach(c => c.classList.add('ripe')); });
       later(startAt + 1.55, () => { b.classList.remove('quake'); barDraw(P.to, P.topic, P.moved === 'top' ? 'klart ✓' : null); b.classList.add('newgrade'); });
-      if (P.moved === 'top') { goldFX(b, startAt + 1.7); later(startAt + 3.9, () => b.classList.remove('show')); }
-      else later(startAt + 2.3, () => b.classList.remove('show'));
-    } else later(startAt + 1.5, () => b.classList.remove('show'));
+      if (P.moved === 'top') { goldFX(b, startAt + 1.7); later(startAt + 3.9, () => { b.classList.remove('show'); sinkBar(b); }); }
+      else later(startAt + 2.3, () => { b.classList.remove('show'); sinkBar(b); });
+    } else later(startAt + 1.5, () => { b.classList.remove('show'); sinkBar(b); });
   } else {
     const down = P.moved === 'down';
     later(startAt + .25, () => {
@@ -2429,7 +2453,8 @@ function barFX(P, startAt){
         barDraw(P.to, P.topic); b.classList.add('newgrade', 'fell');
       });
     }
-    // Vid fel ligger stapeln kvar tills man trycker vidare
+    // Vid fel ligger stapeln kvar tills man trycker vidare, men glider undan från skärmens överkant så att förklaringen syns
+    later(startAt + (down ? 1.9 : 1.3), () => sinkBar(b));
   }
 }
 // Ljuden skapas med Web Audio. Varje ljud är en egen funktion så att det kan bytas mot en ljudfil senare.
