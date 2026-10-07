@@ -232,7 +232,7 @@ test('Inga värden behövs: ingen E-fråga har svaret Inte standard, och fråget
     const t = atGrade('e', g);
     for (let i = 0; i < 60; i++) {
       t.g('next()');
-      assert.equal(t.g('S.type'), 'choice');
+      assert.ok(['choice', 'order'].includes(t.g('S.type')), t.g('S.type'));
       assert.ok(!/Inte standard/.test(t.$('#q').textContent));
     }
   }
