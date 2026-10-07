@@ -84,3 +84,34 @@ test('E6-raden syns inte på Gesäll, och inte på Eldprovet', () => {
   u.g("openTopic('ultra'); beginExam(); GRADES.e[4] = eGlesare; S.exam.queue[S.exam.i] = {topic: 'e'}; next()");
   assert.equal(u.$('#q .e6note'), null);
 });
+test('Ordna med värden: lapparna visar text, fel flyger som text, och rätt fyller lådorna i ordning', () => {
+  const t = atGrade('e', 0);
+  t.g(`ORDER_SETS.test = {keys: ['a','b','c'], init: () => ({v: 'x'}), chip: (k, o) => k.toUpperCase() + o.v,
+    prompt: o => 'Testa ' + o.v, wrong: 'fel', anim: () => ({total: 1.5}), after: () => '<p class="tafter">efter</p>',
+    layout: o => '<div class="tlay">' + o.keys.map(k => '<i class="obox' + (o.placed[k] ? ' ok' : '') + '" data-oslot="' + k + '">' + (o.placed[k] ? oswHTML(k) : '') + '</i>').join('') + '</div>'};
+    GRADES.e[0] = orderPlan('test'); next()`);
+  assert.equal(t.g('S.type'), 'order');
+  assert.equal(t.$('#q .prompt').textContent.trim(), 'Testa x');
+  assert.ok(t.$('#q .tlay'));
+  assert.deepEqual(t.$$('#q [data-ord]').map(b => b.textContent.trim()).sort(), ['Ax', 'Bx', 'Cx']);
+  assert.equal(t.$('#q [data-ord="a"]').getAttribute('aria-label'), 'Ax');
+  t.$('#q [data-ord="b"]').click();
+  assert.equal(t.g('S.ord.missed'), true);
+  for (const k of ['a', 'b', 'c']) t.$(`#q [data-ord="${k}"]`).click();
+  // Ett fel ger ett sista försök
+  assert.equal(t.g('S.ord.round'), 2);
+  t.$('#q [data-ord="c"]').click();
+  for (const k of ['a', 'b', 'c']) t.$(`#q [data-ord="${k}"]`).click();
+  assert.equal(t.g('S.answered'), true);
+  assert.equal(t.g('S.ok'), false);
+  assert.ok(t.$('#q .tafter'), 'felanimeringen');
+  assert.match(t.$('#q .obox[data-oslot="a"]').textContent, /Ax/);
+});
+
+test('Ordna med färger fungerar som förut: färgrutor, inga textlappar', () => {
+  const t = atGrade('ohm', 1);
+  until(t, p => p.type === 'order');
+  const chip = t.$('#q [data-ord]');
+  assert.equal(chip.textContent.trim(), '');
+  assert.match(chip.getAttribute('style'), /background/);
+});

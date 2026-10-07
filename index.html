@@ -92,6 +92,9 @@ html,body{overflow-x:clip}
 .ochip.gone{visibility:hidden}
 .ochip.hint{box-shadow:0 0 0 3px var(--surface),0 0 0 6px var(--ok),0 0 14px var(--ok)}
 .ofloat{position:absolute;z-index:60;border-radius:10px;border:2px solid var(--line);pointer-events:none}
+.ochip.val{width:auto;min-width:46px;height:auto;min-height:46px;padding:2px 8px;background:var(--surface);color:var(--ink);font:700 .9rem var(--text);font-variant-numeric:tabular-nums;display:grid;justify-items:center;gap:0}
+.ofloat.val{display:grid;place-items:center;background:var(--bad);border-color:var(--bad);color:var(--surface);font:700 .9rem var(--text)}
+.osw.val{display:grid;place-items:center;background:var(--ok);color:var(--surface);font:700 .8rem var(--text);white-space:nowrap}
 .ordnote{margin:6px 0 0;padding:8px 12px;border-radius:10px;background:var(--k-order-line);color:var(--surface);font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.25rem;text-align:center}
 .ochip.cheat::after{left:2px;top:1px}
 .kindtag{display:inline-block;margin:0 0 8px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--bg);color:var(--muted)}
@@ -1864,7 +1867,12 @@ const ORDER_SETS = {
     prompt: 'Klicka på toleransfärgerna från störst till minst tolerans.',
     wrong: 'Silver ±10 %, guld ±5 %, röd ±2 %, brun ±1 %, grön ±0,5 %, blå ±0,25 % och violett ±0,1 %.'}
 };
-const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ S.ord = {set, keys: ORDER_SETS[set].keys, pool: shuffle(ORDER_SETS[set].keys.slice()), placed: {}, landed: new Set(), away: new Set(), inflight: 0, round: 1, missed: false}; }});
+const orderPlan = set => () => ({type:'order', fmt:'mc', setup(){ const O = ORDER_SETS[set]; S.ord = {set, keys: O.keys, pool: shuffle(O.keys.slice()), placed: {}, landed: new Set(), away: new Set(), inflight: 0, round: 1, missed: false, ...(O.init ? O.init() : {})}; }});
+// Ordna med värden: chip ger lappens innehåll (html), label dess text för skärmläsare, boxLab texten i lådan när den landat.
+// Utan chip visas färgen som förut.
+const oswHTML = k => { const O = ORDER_SETS[S.ord.set]; return O.chip ? `<b class="osw val">${(O.boxLab || O.chip)(k, S.ord)}</b>` : `<b class="osw" style="${swStyle(k)}"></b>`; };
+const oLabel = (O, k, o) => O.label ? O.label(k, o) : O.chip ? O.chip(k, o) : C[k].n;
+const oval = (O, v, o) => typeof v === 'function' ? v(o) : v;
 
 const GRADES = {
   body: [
@@ -2112,7 +2120,7 @@ const cueNote = (st, k) => st.cues.includes('wide') ? {i: st.wideIdx, text: 'bre
   : st.cues.includes('group') ? {i: 0, j: k + 1, text: 'samlade', span: true} : null;
 // Peka på första bandet: ledtråden först, sedan glider pilen in och första bandet får en grön ring
 const POINT_T = {sweep: 1, ring: 1.6, total: 2.5};
-const qAnim = () => S.cq ? S.cq.anim : S.type === 'dir' ? {total: DIR_T.count + S.n * DIR_T.step + .6}
+const qAnim = () => S.cq ? S.cq.anim : S.type === 'order' && ORDER_SETS[S.ord.set].anim ? ORDER_SETS[S.ord.set].anim(S.ord) : S.type === 'dir' ? {total: DIR_T.count + S.n * DIR_T.step + .6}
   : S.type === 'point' && S.pointRole === 'first' ? POINT_T
   : S.type === 'point' && S.pointSupport ? {total: WALK_T.start + S.pointAt * WALK_T.step + 1.3}
   : hardV() && !inExam() ? hardAnim() : null;
@@ -2147,9 +2155,12 @@ function render(){
   let h = '';
   if (S.type === 'order') {
     const o = S.ord, O = ORDER_SETS[o.set], P = o.placed, want = o.keys.find(k => !P[k]);
-    h += `${topHTML(O.prompt)}${o.round === 2 ? '<p class="ordnote">Nästan! Du får ett sista försök – utan hjälp.</p>' : ''}<div class="ordrow ord-${S.ord.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
-      `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${P[k] ? (o.landed.has(k) ? ' ok' : ' fly') : ''}" data-oslot="${k}">${P[k] ? `<b class="osw" style="${swStyle(k)}"></b>` : ''}</i></div>`).join('')}</div>
-      <div class="opool">${o.pool.map(k => `<button class="ochip${P[k] || o.away.has(k) ? ' gone' : ''}${o.hint === k ? ' hint' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${C[k].n}" style="${swStyle(k)}"${P[k] || S.answered ? ' disabled' : ''}></button>`).join('')}</div>`;
+    const slots = O.layout ? O.layout(o) : `<div class="ordrow ord-${o.set}" style="--n:${O.keys.length}">${O.keys.map(k =>
+      `<div class="oslot"><span>${O.lab(k)}</span><i class="obox${P[k] ? (o.landed.has(k) ? ' ok' : ' fly') : ''}" data-oslot="${k}">${P[k] ? oswHTML(k) : ''}</i></div>`).join('')}</div>`;
+    const inner = k => O.chip ? O.chip(k, o) : '', look = k => O.chip ? '' : ` style="${swStyle(k)}"`;
+    h += `${topHTML(oval(O, O.prompt, o))}${O.e6 && !inExam() ? `<p class="e6note">${E6_NOTE}</p>` : ''}${o.round === 2 ? '<p class="ordnote">Nästan! Du får ett sista försök – utan hjälp.</p>' : ''}${slots}
+      <div class="opool">${o.pool.map(k => `<button class="ochip${O.chip ? ' val' : ''}${P[k] || o.away.has(k) ? ' gone' : ''}${o.hint === k ? ' hint' : ''}${cheat(k === want)}" data-ord="${k}" aria-label="${oLabel(O, k, o)}"${look(k)}${P[k] || S.answered ? ' disabled' : ''}>${inner(k)}</button>`).join('')}</div>
+      ${S.answered && !S.ok && !inExam() && O.after ? `<div class="res after">${O.after(o)}</div>` : ''}`;
   } else if (S.type === 'dir') {
     const right = S.style.flip ? 'right' : 'left';
     const dBtn = (d, txt, cls = '') => `<button class="opt${cls}${markCls(right === d, S.pickDir === d)}${cheat(right === d)}" data-dir="${d}"${disAttr()}>${txt}</button>`;
@@ -2632,7 +2643,7 @@ function lessonHTML(){
     return `<p class="examsign" role="status">${S.exam.i} av ${EXAM_N} besvarade · ${T.ok} poäng</p>`;
   }
   if (S.ok) return '';
-  const line = S.cq ? S.cq.wrong : S.type === 'point' ? pointWrong() : S.type === 'order' ? ORDER_SETS[S.ord.set].wrong : lessonText();
+  const line = S.cq ? S.cq.wrong : S.type === 'point' ? pointWrong() : S.type === 'order' ? oval(ORDER_SETS[S.ord.set], ORDER_SETS[S.ord.set].wrong, S.ord) : lessonText();
   // Rutan är som en dialogruta i ett spel: pilen ▼ studsar när förklaringen är klar, och ett tryck fortsätter.
   // De tre första gångerna visar en hand var man trycker.
   // Frågor med en egen förklaringsanimering visar inte raden, den läses bara upp för skärmläsare.
@@ -2899,7 +2910,7 @@ function orderPick(btn){
   const from = btn.getBoundingClientRect(), calm = calmOrder(), decoy = o.decoy;
   const box = oslot(k);
   box.classList.add('fly');
-  box.innerHTML = `<b class="osw" style="${swStyle(k)}"></b>`;
+  box.innerHTML = oswHTML(k);
   syncChips();
   o.inflight++;
   const land = () => {
@@ -2951,7 +2962,9 @@ function orderMiss(btn, k, want){
   const f = document.createElement('b');
   f.className = 'ofloat'; f.setAttribute('aria-hidden', 'true');
   // Placeras på sidan, inte på skärmen, så att den följer med om man skrollar
-  f.style.cssText = `left:${from.left + scrollX}px;top:${from.top + scrollY}px;width:${from.width}px;height:${from.height}px;${swStyle(k)}`;
+  const O = ORDER_SETS[o.set];
+  f.style.cssText = `left:${from.left + scrollX}px;top:${from.top + scrollY}px;width:${from.width}px;height:${from.height}px;${O.chip ? '' : swStyle(k)}`;
+  if (O.chip) { f.classList.add('val'); f.innerHTML = O.chip(k, o); }
   document.body.appendChild(f);
   const dx = to.left + to.width / 2 - (from.left + from.width / 2), dy = to.top + to.height / 2 - (from.top + from.height / 2), sc = to.width / from.width;
   const at = (x = 0) => `translate(${dx + x}px,${dy}px) scale(${sc})`;
