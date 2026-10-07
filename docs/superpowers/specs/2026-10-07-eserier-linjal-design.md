@@ -18,15 +18,20 @@ De lägre graderna ska visa skalan på två sätt:
 
 De lägre graderna börjar med E6. Ingen grad kräver att man kan värdena utantill, eftersom värdena alltid står i frågan.
 
+**E6 är ovanlig, och det ska spelet säga.** E6 (±20 %) används nästan aldrig i dag. De vanligaste serierna är E24 (±5 %) och E96 (±1 %), och E12 (±10 %) finns i många sortiment. Vi börjar med E6 för att den har minst värden och är lättast att se.
+- Alla E6-frågor på Nykomling och Lärling har en liten rad under frågan: "E6 är ovanlig i dag, men har bara sex värden och är lätt att börja med. Vanligast är E24 och E96."
+- "Vad är E6?" säger samma sak i raden vid fel.
+- På Eldprovet visas raden inte, eftersom provet inte har några förklaringar.
+
 ## Graderna
 
 | Grad | Frågor |
 |---|---|
 | Nykomling | Vad är E6? · Placera på skalan (logaritmisk) · Placera i lådorna (rak skala) · Varför ligger värdena glesare högre upp? |
 | Lärling | Vilken tolerans är E6 gjord för? (rak linjal) · Vilken serie hör till motståndet? (bandet inringat) · Vilken serie räcker? |
-| Gesäll | Som i dag: Vilken serie tillhör motståndet? |
-| Mästare | Som i dag |
-| Stormästare | Som i dag, men serie ↔ tolerans som text ersätts av Vilken serie hör till motståndet? |
+| Gesäll | Vilken serie tillhör motståndet? (som i dag: bara toleransbandet avgör) |
+| Mästare | Vilken serie tillhör motståndet? med E192, sex band och vända motstånd · Samma siffror, annan multiplikator · Vilken serie räcker säkert? ("Du behöver 3,4 kΩ ±10 % …", med tabell och tallinje) (alla som i dag) |
+| Stormästare | Vilken serie hör till motståndet? · Vilken serie räcker? · Mästares tre frågor |
 
 ### Nykomling
 
@@ -40,7 +45,7 @@ De lägre graderna börjar med E6. Ingen grad kräver att man kan värdena utant
   - "En tolerans på ±6 %"
 - **Bild efter svaret:** den raka linjalen med de sex E6-värdena som faller ner, i stället för klockan.
 - **Felanimeringen:** sedan tänds 4,7 Ω, 47 Ω och 4,7 kΩ, ett i taget: samma standardvärde med olika nollor.
-- **Raden vid fel:** "E6 är en lista med standardvärden: 10, 15, 22, 33, 47 och 68. Motstånd tillverkas inte i alla värden, bara i de här och samma siffror gånger 10, 100, 1000 …"
+- **Raden vid fel:** "E6 är en lista med standardvärden: 10, 15, 22, 33, 47 och 68. Motstånd tillverkas inte i alla värden, bara i de här och samma siffror gånger 10, 100, 1000 … E6 är ovanlig i dag, och vanligast är E24 och E96, men den har minst värden och är lättast att börja med."
 
 #### 1. Placera på skalan (logaritmisk)
 
@@ -167,3 +172,4 @@ Raderna för `e` i `CATALOG` uppdateras:
   - vid fel visas trappan med sex små motstånd
 - **Borttaget:** `dialSVG`, `rollNow` och `eSerieTol` finns inte. Ingen E-fråga visar en klocka.
 - **Eldprovet:** ingen facit eller animering på de nya frågorna.
+- **E6 är ovanlig:** E6-frågorna på Nykomling och Lärling har raden "E6 är ovanlig i dag …", och den syns inte på Eldprovet.
