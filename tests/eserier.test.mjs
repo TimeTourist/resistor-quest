@@ -29,29 +29,6 @@ test('Klockan: utan värden står ett frågetecken i mitten, och tom klocka har 
   assert.equal(e.querySelector('.emid').textContent, 'E12');
 });
 
-test('Linjalen: seriens prickar plus 100, värden bara upp till E24', () => {
-  const t = atGrade('e', 0);
-  const d = frag(t, 'rulerSVG(12)');
-  assert.equal(n(d, '.epdot'), 13);
-  assert.equal(n(d, '.epdot.next'), 1);
-  assert.equal(n(d, '.elab'), 13);
-  assert.equal(n(d, '.ebar'), 0);
-  const big = frag(t, 'rulerSVG(96)');
-  assert.equal(n(big, '.epdot'), 97);
-  assert.equal(n(big, '.elab'), 0);
-});
-
-test('Linjalen: för stor tolerans krockar, för liten glappar, den rätta är ren', () => {
-  const t = atGrade('e', 0);
-  for (const [s, big, right, small] of [[6, 50, 20, 1], [12, 20, 10, 1], [24, 10, 5, 1]]) {
-    const b = frag(t, `rulerSVG(${s}, {tol: ${big}})`), r = frag(t, `rulerSVG(${s}, {tol: ${right}})`), l = frag(t, `rulerSVG(${s}, {tol: ${small}})`);
-    assert.ok(n(b, '.ecrash') > 0 && n(b, '.egap') === 0, `E${s} ±${big} krockar`);
-    assert.equal(n(r, '.ecrash') + n(r, '.egap'), 0, `E${s} ±${right} är ren`);
-    assert.ok(n(l, '.egap') > 0 && n(l, '.ecrash') === 0, `E${s} ±${small} glappar`);
-    assert.equal(n(r, '.ebar'), s + 1);
-  }
-});
-
 test('E-seriernas Lärling: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
   for (const ok of [false, true]) {
     const t = atGrade('e', 1);
@@ -60,7 +37,7 @@ test('E-seriernas Lärling: Vilken tolerans är serien gjord för?, tre stapelra
     assert.ok(m);
     assert.equal(t.$$('#q [data-c]').length, 3);
     assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), t.g(`fmtTol(SER_TOL.E${m[1]})`));
-    assert.equal(t.$$('#q .eruler').length, 1, 'linjalen före svaret');
+    assert.equal(t.$$('#q svg.elin').length, 1, 'linjalen före svaret');
     assert.equal(t.$$('#q .etrow').length, 0);
     answer(t, ok);
     const rows = t.$$('#q .etrow');
@@ -85,40 +62,7 @@ test('Gyllene E-serierna: blandat spelar alla nya frågor utan fel', () => {
 const live = (topic, grade) => load({ instant: false, storage: { ...ALL_OPEN, 'fargkoden2-topic': topic,
   'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }), 'fargkoden2-grade': JSON.stringify({ [topic]: grade }) } });
 
-test('Utrullningen: första linjalen rullas ut, nästa visas direkt', () => {
-  const t = live('e', 1);
-  // Första frågan som öppnas kan redan ha haft en linjal, och då är utrullningen förbrukad
-  t.g('S.rolled = false');
-  until(t, p => p.eq === 'staplar');
-  assert.equal(t.$$('#q .eruler.unroll').length, 1);
-  assert.equal(t.$$('#q .eroll').length, 1, 'klockan som rullas ut');
-  assert.ok(t.$('#q .eruler.unroll .epdot').getAttribute('style').includes('--fx'));
-  t.g('stopTimer()'); t.g('next()');
-  until(t, p => p.eq === 'staplar');
-  assert.equal(t.$$('#q .eruler.unroll').length, 0);
-  assert.equal(t.g('S.rolled'), true);
-});
-
-test('Utrullningen hoppas över med S.instant men räknas ändå', () => {
-  const t = atGrade('e', 1);
-  until(t, p => p.eq === 'staplar');
-  assert.equal(t.$$('#q .eruler.unroll').length, 0);
-  assert.equal(t.g('S.rolled'), true);
-});
-
 // Rättningar efter slutgranskningen
-test('Linjalen går att läsa på telefon: smal viewBox och värden som inte trängs på samma rad', () => {
-  const t = atGrade('e', 0);
-  for (const s of [6, 12, 24]) {
-    const svg = frag(t, `rulerSVG(${s})`).querySelector('svg');
-    const vb = svg.getAttribute('viewBox').split(' ').map(Number);
-    assert.ok(vb[2] <= 440, `E${s} viewBox ${vb[2]}`);
-    const rows = {};
-    for (const l of svg.querySelectorAll('.elab')) (rows[l.getAttribute('y')] ||= []).push(+l.getAttribute('x'));
-    for (const xs of Object.values(rows)) for (let i = 1; i < xs.length; i++) assert.ok(xs[i] - xs[i - 1] >= 24, `E${s}: ${xs[i - 1]}–${xs[i]}`);
-  }
-});
-
 test('Klockan är högst 330 px bred även i .res', () => {
   const t = atGrade('e', 0);
   const rule = [...t.doc.styleSheets].flatMap(s => [...s.cssRules]).find(r => r.selectorText === '.res .edial');

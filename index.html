@@ -440,6 +440,25 @@ p.epre{margin:0}
 .eruler{display:block;width:100%;height:auto;overflow:visible}
 .res .edial{max-width:330px}
 .res .eruler{max-width:480px}
+.res .elin{display:block;width:100%;max-width:520px;margin:0 auto}
+.elin .eline{stroke:var(--ink);stroke-width:2}
+.elin .ltick{stroke:var(--muted)}
+.elin .ltl{fill:var(--muted);font-size:13px;text-anchor:middle}
+.elin .lval circle{fill:var(--accent)}
+.elin .lval text{fill:var(--ink);font-size:15px;font-weight:700;text-anchor:middle}
+.elin .lval text.sm{font-size:11px}
+.elin .lbar{fill:var(--accent);opacity:.55}.elin .lbar.alt{opacity:.35}
+.elin .ecrash{fill:var(--bad)}.elin .egap{fill:var(--gap)}
+.elin .lcover{fill:var(--ok)}
+.elin .lnext circle{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:3 2}
+.elin .lnext text{fill:var(--muted);font-size:12px;font-weight:600;text-anchor:end}
+@media (prefers-reduced-motion:no-preference){
+  .elin .drop{animation:ldrop .4s ease-out both}
+  @keyframes ldrop{from{transform:translateY(-30px);opacity:0}}
+  .elin .grow{transform-box:fill-box;transform-origin:center;animation:lgrow .5s ease-out both}
+  @keyframes lgrow{from{transform:scaleX(0)}}
+  .elin .sweep{transform-box:fill-box;transform-origin:left;animation:lgrow .8s ease-in-out both}
+}
 .estair{display:grid;gap:4px;max-width:360px;margin:6px auto}
 .estep{display:grid;grid-template-columns:3.4em 4.2em 1fr;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;
   margin-left:calc(var(--k) * 6px);background:var(--surface);border:1px solid var(--line);font-size:.95rem}
@@ -3256,6 +3275,39 @@ const ePos = v => Math.log10(v / 10);
 const eLab = v => String(v).replace('.', ',');
 const eVals = n => ESER['E' + n][0].map(x => x >= 100 ? x / 10 : x);
 const f1 = x => x.toFixed(1);
+// Den raka linjalen: 10–100 Ω med jämna steg. Värdena glesnar, och toleransstaplarna (i procent) blir bredare med värdet.
+// drop: värdena faller ner, grow: staplarna växer ut, cover: grön linje när allt täcks. at: när animeringen börjar.
+// Avrundningen i serierna ger upp till 4,3 % överlapp (33 och 47 i E6). Fel tolerans ger minst 17 %.
+const LX = v => 20 + (v - 10) / 90 * 400, LAY = 92, LIN_MIN = .05;
+const linStep = n => n > 12 ? .08 : .22;
+const linEnd = (n, at = .2) => at + eVals(n).length * linStep(n) + .9;
+function linSVG(n, {tol = null, drop = false, grow = false, cover = false, at = .2} = {}){
+  const vals = eVals(n), many = vals.length > 12, st = linStep(n), tb = at + vals.length * st + .1, tc = tb + .5;
+  const d = t => drop || grow || cover ? ` style="animation-delay:${t.toFixed(2)}s"` : '';
+  let h = `<line class="eline" x1="${LX(10)}" y1="${LAY}" x2="${LX(100)}" y2="${LAY}"/>`;
+  for (let v = 10; v <= 100; v += 10) h += `<line class="ltick" x1="${f1(LX(v))}" y1="${LAY}" x2="${f1(LX(v))}" y2="${LAY + 7}"/><text class="ltl" x="${f1(LX(v))}" y="${LAY + 22}">${v}</text>`;
+  let bad = 0;
+  if (tol != null) {
+    const bars = vals.concat([100]).map(v => [v * (1 - tol / 100), v * (1 + tol / 100)]);
+    vals.forEach((v, i) => {
+      const [a, b] = bars[i], x0 = LX(Math.max(10, a)), x1 = LX(Math.min(100, b));
+      h += `<rect class="lbar${i % 2 ? ' alt' : ''}${grow ? ' grow' : ''}"${grow ? d(tb + i * .04) : ''} x="${f1(x0)}" y="${i % 2 ? 54 : 64}" width="${f1(Math.max(2, x1 - x0))}" height="9" rx="3"/>`;
+      // Krock eller glapp mot grannen, relativt grannens värde
+      const nx = vals[i + 1] ?? 100, rel = (b - bars[i + 1][0]) / nx;
+      if (Math.abs(rel) < LIN_MIN) return;
+      bad++;
+      const lo = Math.min(b, bars[i + 1][0]), hi = Math.max(b, bars[i + 1][0]);
+      h += `<rect class="${rel > 0 ? 'ecrash' : 'egap'}${grow ? ' mk' : ''}"${grow ? d(tc) : ''} x="${f1(LX(Math.max(10, lo)))}" y="${LAY - 4}" width="${f1(Math.max(3, LX(Math.min(100, hi)) - LX(Math.max(10, lo))))}" height="8" rx="2"/>`;
+    });
+    if (cover && !bad) h += `<rect class="lcover${grow ? ' sweep' : ''}"${grow ? d(tc) : ''} x="${LX(10)}" y="${LAY - 3}" width="400" height="6" rx="3"/>`;
+  }
+  vals.forEach((v, i) => {
+    h += `<g class="lval${drop ? ' drop' : ''}"${drop ? d(at + i * st) : ''}><circle cx="${f1(LX(v))}" cy="${LAY}" r="${many ? 3.5 : 5}"/>` +
+      `<text x="${f1(LX(v))}" y="${many && i % 2 ? 22 : 40}"${many ? ' class="sm"' : ''}>${eLab(v)}</text></g>`;
+  });
+  h += `<g class="lnext${cover ? ' mk' : ''}"${cover ? d(tc) : ''}><circle cx="${LX(100)}" cy="${LAY}" r="5"/><text x="${LX(100)}" y="${LAY - 14}">100 → nästa varv</text></g>`;
+  return `<svg class="elin" viewBox="0 0 440 ${LAY + 34}" role="img" aria-label="Rak linjal 10–100 Ω med E${n}-värdena">${h}</svg>`;
+}
 function dialSVG(n, {dots = true, labels = true, count = false, pop = false} = {}){
   const R = 118, at = (s, r) => [150 + r * Math.sin(2 * Math.PI * s), 150 - r * Math.cos(2 * Math.PI * s)];
   let h = `<circle class="ering" cx="150" cy="150" r="${R}"/>`;
@@ -3305,7 +3357,7 @@ function rulerSVG(n, {tol = null, roll = false} = {}){
   return `<svg class="eruler${roll ? ' unroll' : ''}" viewBox="-20 0 440 ${many ? 88 : two ? 124 : 106}" role="img" aria-label="Linjalen för E${n}">${h}</svg>`;
 }
 // Gesäll: tre toleranser per serie, för stor, rätt och för liten
-const ETOL_Q = {6: [50, 20, 1], 12: [20, 10, 1], 24: [10, 5, 1]};
+const ETOL_Q = {6: [40, 20, 10], 12: [20, 10, 5], 24: [10, 5, 2]};
 // E-serierna utan värden: serien läses från toleransbandet. Tre band (inget toleransband) är ±20 %, alltså E6.
 const SERS = ['E6','E12','E24','E48','E96','E192'];
 const SER_T = {...SER_TOL, E192: 0.5};
@@ -3456,15 +3508,15 @@ const eRacker = () => choice(() => {
         wrong: `${fmtTol(need)} räcker, och ${right} är gjord för ${fmtTol(need)}.${coarse.length ? ` ${coarse[0]} är för grov (${fmtTol(SER_T[coarse[0]])}).` : ''} Finare serier fungerar också, men har fler värden än du behöver.`};
 }, {eq: 'racker'});
 const eStaplar = () => choice(() => {
-      const n = rnd([6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
+      const n = rnd([6, 6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
       S.cq = {prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
         opts: opts.map(v => ({html: fmtTol(v)})),
-        res: () => S.answered && !inExam() ? etolRows(n, tols) : rulerSVG(n, {roll: rollNow()}),
+        res: () => S.answered && !inExam() ? etolRows(n, tols) : linSVG(n),
         wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
 }, {eq: 'staplar'});
 function etolRows(n, [big, right, small]){
   const v = eVals(n), picked = S.cq.tols[S.pickC];
-  const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${rulerSVG(n, {tol: t})}</div>`;
+  const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${linSVG(n, {tol: t})}</div>`;
   return `<div class="etrows">${row(big, `för stor: staplarna krockar, ${v[0]} Ω kan vara ${v[1]} Ω`)}${row(right, 'lagom: staplarna möts ungefär kant i kant')}${row(small, 'för liten: glapp mellan värdena')}</div>`;
 }
 function seriesOf(m3){
