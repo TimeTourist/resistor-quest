@@ -80,3 +80,40 @@ test('Med S.instant byts frågan direkt utan vändning', () => {
   assert.equal(turns(t), 0);
   assert.equal(t.g('S.nexts'), 1);
 });
+
+// Kortet glider i sidled: animeringarna på kortet som flyttar det med translateX
+const slides = t => JSON.parse(t.g(`JSON.stringify(S.anims.filter(a => a.el.id === 'spel' && JSON.stringify(a.kf).includes('translateX')).map(a => a.kf.map(k => k.transform)))`));
+
+test('Upp en grad: kortet flyger ut åt vänster och det nya kommer från höger', () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 1 }), 'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }) } });
+  stubAnimate(t); countNext(t);
+  t.g('S.up = 2; S.down = 0');
+  answer(t, true);
+  assert.equal(t.g('S.moved'), 'up');
+  t.g('stopTimer(); S.instant = false; advance()');
+  assert.equal(turns(t), 0, 'ingen vändning');
+  let s = slides(t);
+  assert.equal(s.length, 1);
+  assert.match(s[0][1], /translateX\(-/, 'ut åt vänster');
+  finish(t);
+  assert.equal(t.g('S.nexts'), 1);
+  s = slides(t);
+  assert.equal(s.length, 2);
+  assert.match(s[1][0], /translateX\((?!-)/, 'in från höger');
+});
+
+test('Ner en grad: kortet flyger ut åt höger och det nya kommer från vänster', () => {
+  const t = load({ storage: { 'fargkoden2-topic': 'body', 'fargkoden2-grade': JSON.stringify({ body: 2 }), 'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }) } });
+  stubAnimate(t); countNext(t);
+  t.g('S.up = 0; S.down = 2');
+  answer(t, false);
+  assert.equal(t.g('S.moved'), 'down');
+  t.g('S.instant = false; S.lockUntil = 0');
+  cont(t);
+  let s = slides(t);
+  assert.equal(s.length, 1);
+  assert.match(s[0][1], /translateX\((?!-)/, 'ut åt höger');
+  finish(t);
+  s = slides(t);
+  assert.match(s[1][0], /translateX\(-/, 'in från vänster');
+});

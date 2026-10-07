@@ -1078,7 +1078,9 @@ function nextFlip(){
   if (S.flipping) return;
   const lv = S.open;
   S.flipping = true;
-  flipCard(() => {
+  // Ny grad: kortet flyger ut åt vänster och ett nytt kommer från höger, och tvärtom när man går ner
+  const dir = S.moved === 'up' ? -1 : S.moved === 'down' ? 1 : 0;
+  (dir ? fn => slideCard(dir, fn) : flipCard)(() => {
     S.flipping = false;
     if (S.screen !== 'play' || S.open !== lv) return false;
     next();
@@ -1259,6 +1261,14 @@ function flipCard(fn){
     // false: kortet har stängts under tiden och vänds inte tillbaka
     if (fn() === false) return;
     el.animate([{transform: 'perspective(1400px) rotateY(-90deg)'}, {transform: 'perspective(1400px) rotateY(0)'}], {duration: 260, easing: 'ease-out'});
+  };
+}
+function slideCard(dir, fn){
+  const el = document.getElementById('spel');
+  if (S.instant || reduceMotion() || !el.animate) { fn(); return; }
+  el.animate([{transform: 'translateX(0)', opacity: 1}, {transform: `translateX(${dir * 110}%)`, opacity: 0}], {duration: 280, easing: 'ease-in'}).onfinish = () => {
+    if (fn() === false) return;
+    el.animate([{transform: `translateX(${-dir * 110}%)`, opacity: 0}, {transform: 'translateX(0)', opacity: 1}], {duration: 320, easing: 'ease-out'});
   };
 }
 function kickPick(btn){
@@ -2274,7 +2284,7 @@ function reveal(){
   else if (!S.ok) sfx.wrong();
   else if (S.moved === 'top') sfx.gold();
   else if (party) sfx.fanfare();
-  else sfx.right();
+  else sfx.right(S.barPlan && !S.barPlan.mix ? S.barPlan.from.up : 0);
   if (!S.instant) outcomeFX(inExam() ? 'neutral' : S.ok ? 'won' : 'lost', party);
   if (!S.instant) barFX(S.barPlan, barStart);
   if (!S.instant && (S.ok || inExam())) { S.autoNext = true; S.timer = setTimeout(advance, inExam() ? EXAM_MS : S.moved === 'top' ? GOLD_MS : party ? PARTY_MS : NEXT_MS); }
@@ -2499,9 +2509,11 @@ const sfx = (() => {
       tone(a, 110, {f2: 440, d: .88, type: 'sawtooth', v: .035, at: .6});
     },
     // priing: en klockton
-    right(){
+    // step: prickar man redan har i graden. Pinget stiger en stor ters för varje.
+    right(step = 0){
       const a = ctx(); if (!a) return;
-      tone(a, 1318, {d: .9, v: .22, at: .005}); tone(a, 1976, {t0: .07, d: 1.1, v: .14, at: .005}); tone(a, 2637, {t0: .07, d: .5, v: .05, at: .005});
+      const k = 2 ** (step * 4 / 12);
+      tone(a, 1318 * k, {d: .9, v: .22, at: .005}); tone(a, 1976 * k, {t0: .07, d: 1.1, v: .14, at: .005}); tone(a, 2637 * k, {t0: .07, d: .5, v: .05, at: .005});
     },
     // boh-woh-uuh: sorgsen trombon
     wrong(){
