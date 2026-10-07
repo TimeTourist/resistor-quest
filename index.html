@@ -1063,7 +1063,19 @@ function advance(){
   if (S.keyWin) { closePlay(); return; }
   if (S.goldNow) { const lv = S.goldNow; S.goldNow = null; S.fresh = lv; closePlay(); }
   else if (S.unlockedNow) { const lv = S.unlockedNow; S.unlockedNow = null; showKeyWin(lv); }
-  else next();
+  else nextFlip();
+}
+// Ny fråga: kortet vänds, så att det syns att frågan är ny även när den är av samma sort.
+// Ett tryck till under vändningen tar inte en fråga till, och stängs kortet tas ingen ny fråga.
+function nextFlip(){
+  if (S.flipping) return;
+  const lv = S.open;
+  S.flipping = true;
+  flipCard(() => {
+    S.flipping = false;
+    if (S.screen !== 'play' || S.open !== lv) return false;
+    next();
+  });
 }
 // Mästare: nyckeln till nästa ämne visas på spelkortet, sedan minimeras kortet och nyckeln flyger till låset
 function showKeyWin(lv){
@@ -1238,7 +1250,8 @@ function flipCard(fn){
   const el = document.getElementById('spel');
   if (S.instant || reduceMotion() || !el.animate) { fn(); return; }
   el.animate([{transform: 'perspective(1400px) rotateY(0)'}, {transform: 'perspective(1400px) rotateY(90deg)'}], {duration: 230, easing: 'ease-in'}).onfinish = () => {
-    fn();
+    // false: kortet har stängts under tiden och vänds inte tillbaka
+    if (fn() === false) return;
     el.animate([{transform: 'perspective(1400px) rotateY(-90deg)'}, {transform: 'perspective(1400px) rotateY(0)'}], {duration: 260, easing: 'ease-out'});
   };
 }
