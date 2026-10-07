@@ -3490,8 +3490,11 @@ const eRacker = () => choice(() => {
       const coarse = ri > 0 ? [SERS[ri - 1]] : [], finer = SERS.slice(ri + 1);
       const rest = shuffle(SERS.filter(s => s !== right && !coarse.includes(s) && s !== finer[0]));
       const opts = shuffle([right, ...coarse, finer[0], ...rest].slice(0, 4));
-      S.cq = {prompt:`Motstånden får avvika högst ${fmtTol(need)} från sitt märkta värde. Vilken serie räcker, med så få värden som möjligt?`, layout:'mc',
+      // Ett motstånd med kravets toleransband inringat (samma som trappans exempel för serien)
+      const bands = MINI[right], ti = bands.length - 1, name = bands[ti] ? C[bands[ti]].n : 'Inget band';
+      S.cq = {bands, prompt:`Motstånden får avvika högst ${fmtTol(need)} från sitt märkta värde. Vilken serie räcker, med så få värden som möjligt?`, layout:'mc',
         right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
+        res: () => `<div>${svg(bands, {style: stdStyle(bands.length), ring: [[ti, 'accent']], label: `Motstånd med toleransen ${fmtTol(need)}`})}</div><p class="etol">${name} · ${fmtTol(need)}</p>`,
         anim: {total: stairEnd() + .4}, after: () => S.ok ? '' : stairHTML({need, minis: true}),
         wrong: `${fmtTol(need)} räcker, och ${right} är gjord för ${fmtTol(need)}.${coarse.length ? ` ${coarse[0]} är för grov (${fmtTol(SER_T[coarse[0]])}).` : ''} Finare serier fungerar också, men har fler värden än du behöver.`};
 }, {eq: 'racker'});

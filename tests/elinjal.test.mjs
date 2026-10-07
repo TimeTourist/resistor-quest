@@ -273,3 +273,18 @@ test('Staplarfrågans förklaring: inzoomad linjal med tre grannvärden, samma s
     assert.match(rows[0].textContent, new RegExp(`${vals[0]} Ω och ${vals[1]} Ω kan båda bli`));
   }
 });
+
+test('Vilken serie räcker?: ett motstånd med kravets toleransband inringat visas ovanför svaren', () => {
+  const t = atGrade('e', 1), seen = new Set();
+  for (let i = 0; i < 60; i++) {
+    until(t, p => p.eq === 'racker');
+    const need = +t.$('#q .prompt').textContent.match(/avvika högst ±(\d+)/)[1];
+    const b = JSON.parse(t.g('JSON.stringify(S.cq.bands)'));
+    assert.ok(t.$('#q .res svg'), 'ett motstånd');
+    assert.equal(t.$$('#q .res .ring').length, 1, 'toleransbandet inringat');
+    if (need === 20) assert.equal(b[b.length - 1], null, 'inget band för ±20 %');
+    else assert.equal(t.g(`C.${b[b.length - 1]}.t`), need);
+    seen.add(need);
+  }
+  assert.equal(seen.size, 5);
+});
