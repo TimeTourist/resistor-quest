@@ -39,3 +39,37 @@ test('Trappan: sex steg, det markerade lyser, och med ett krav blir stegen för 
   assert.deepEqual([...d.querySelectorAll('.estep')].map(e => e.className.replace(/estep|mk/g, '').trim()), ['bad', 'ok', 'more', 'more', 'more', 'more']);
   assert.match(d.querySelector('.eneed').textContent, /±10 %/);
 });
+
+test('Nykomling: Vad betyder 12 i E12? och Vad är E12?, båda förekommer', () => {
+  const t = atGrade('e', 0), seen = new Set();
+  for (let i = 0; i < 40; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
+  assert.deepEqual([...seen].sort(), ['namn', 'vad']);
+});
+
+test('Nykomling: 12 i E12 betyder att 10–100 är uppdelat i 12 steg', () => {
+  const t = atGrade('e', 0);
+  until(t, p => p.eq === 'namn');
+  assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), '10–100 är uppdelat i 12 steg');
+  answer(t, false);
+  assert.equal(t.$$('#q .edot').length, 12);
+  assert.match(t.g('S.cq.wrong'), /12 steg.*20 %/);
+});
+
+test('Nykomling: Vad är E12? Standardvärden, och vid fel tänds samma värde med olika nollor', () => {
+  for (const ok of [true, false]) {
+    const t = atGrade('e', 0);
+    until(t, p => p.eq === 'vad');
+    assert.equal(t.$('#q .prompt').textContent.trim(), 'Vad är E12?');
+    assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), 'Standardvärden som motstånd säljs i');
+    answer(t, ok);
+    assert.equal(t.$$('#q .edot').length, 12, 'klockan fylls');
+    assert.equal(t.$$('#q .eex .mk').length, ok ? 0 : 3, 'tre exempel vid fel');
+    if (!ok) assert.match(t.$('#q .eex').textContent, /4,7 Ω.*47 Ω.*4,7 kΩ/);
+  }
+});
+
+test('Nykomling: Vad är E12? vid fel låser tills exemplen har tänts', () => {
+  const t = atGrade('e', 0);
+  until(t, p => p.eq === 'vad');
+  assert.ok(t.g('S.cq.anim.total') >= 2.4);
+});

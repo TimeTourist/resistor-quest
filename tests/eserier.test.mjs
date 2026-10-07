@@ -60,23 +60,6 @@ test('Linjalen: värden släpps ner med bock eller kryss', () => {
   assert.match(d.querySelector('.emark.ok').textContent, /✓ 47/);
 });
 
-test('E-seriernas Nykomling: Vad betyder 12 i E12?, tom klocka före och 12 prickar efter, både rätt och fel', () => {
-  for (const ok of [true, false]) {
-    const t = atGrade('e', 0);
-    for (let i = 0; i < 10; i++) {
-      t.g('next()');
-      assert.equal(t.g('S.plan.eq'), 'namn');
-      assert.equal(t.$('#q .prompt').textContent.trim(), 'Vad betyder 12 i E12?');
-    }
-    assert.equal(t.$$('#q .edial').length, 1);
-    assert.equal(t.$$('#q .edot').length, 0, 'tom före svaret');
-    assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), '12 värden på varje varv');
-    answer(t, ok);
-    assert.equal(t.$$('#q .edot').length, 12);
-    assert.equal(t.$$('#q .enum').length, 12);
-  }
-});
-
 test('E-seriernas Lärling: Vilken serie är det här?, rätt svar stämmer med antalet prickar', () => {
   const t = atGrade('e', 1), seen = new Set();
   for (let i = 0; i < 30; i++) {
