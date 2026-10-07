@@ -3505,8 +3505,8 @@ const eStaplar = () => choice(() => {
         res: () => S.answered && !inExam() ? etolRows(n, tols) : linSVG(n),
         wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
 }, {eq: 'staplar'});
-// E6 är ovanlig i dag, men har minst värden och är lättast att börja med
-const E6_NOTE = 'E6 är ovanlig i dag, men har bara sex värden och är lätt att börja med. Vanligast är E24 och E96.';
+// E6 är ovanlig i dag, men har minst värden och är bra för att lära ut principen med serier
+const E6_NOTE = 'E6 är ovanlig i dag, men har bara sex värden och är bra för att lära ut principen med serier. Vanligast är E24 och E96.';
 function eVad(){
   return choice(() => {
     const right = 'Standardvärden som motstånd säljs i';
@@ -3516,7 +3516,7 @@ function eVad(){
       anim: {total: at + ex.length * .4 + .6},
       res: () => !S.answered ? '' : linSVG(6, {drop: !inExam()}) + (S.ok || inExam() ? ''
         : `<p class="eex">Samma värde: ${ex.map((x, i) => `<span class="mk" style="animation-delay:${(at + i * .4).toFixed(2)}s">${x}</span>`).join(' · ')}</p>`),
-      wrong: 'E6 är en lista med standardvärden: 10, 15, 22, 33, 47 och 68. Motstånd tillverkas inte i alla värden, bara i de här och samma siffror gånger 10, 100, 1000 … E6 är ovanlig i dag, och vanligast är E24 och E96, men den har minst värden och är lättast att börja med.'};
+      wrong: 'E6 är en lista med standardvärden: 10, 15, 22, 33, 47 och 68. Motstånd tillverkas inte i alla värden, bara i de här och samma siffror gånger 10, 100, 1000 … E6 är ovanlig i dag, och vanligast är E24 och E96, men den har minst värden och är bra för att lära ut principen med serier.'};
   }, {eq: 'vad'});
 }
 function eGlesare(){
