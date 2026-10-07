@@ -69,7 +69,7 @@ test('Varför glesare: rätt svar är procent, och vid fel faller värdena, stap
   assert.equal(t.$('#q .prompt').textContent.trim(), 'Varför ligger värdena glesare högre upp?');
   assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), 'Toleransen är i procent, så stora värden täcker fler ohm');
   assert.equal(t.$$('#q svg.elin .lbar').length, 0, 'inga staplar före svaret');
-  assert.ok(t.$('#q .e6note'));
+  assert.equal(t.$('#q .e6note'), null, 'E6-raden bara på Vad är E6?');
   answer(t, false);
   assert.equal(t.$$('#q svg.elin .lbar').length, 6);
   assert.ok(t.$('#q svg.elin .lcover'));
@@ -123,7 +123,7 @@ const placeAll = (t, ok) => {
   }
 };
 
-test('Placera på skalan: logaritmiska platser på nästan lika avstånd, tre varianter och E6-raden', () => {
+test('Placera på skalan: logaritmiska platser på nästan lika avstånd och tre varianter', () => {
   const t = atGrade('e', 0), vs = new Set();
   for (let i = 0; i < 30; i++) {
     until(t, p => p.type === 'order' && t.g("S.ord.set") === 'e6log');
@@ -135,7 +135,7 @@ test('Placera på skalan: logaritmiska platser på nästan lika avstånd, tre va
   const avg = steps.reduce((a, b) => a + b) / steps.length;
   steps.forEach(s => assert.ok(Math.abs(s - avg) / avg < .15, 'lika avstånd'));
   assert.ok(t.$('#q .escale.log'));
-  assert.ok(t.$('#q .e6note'));
+  assert.equal(t.$('#q .e6note'), null, 'E6-raden bara på Vad är E6?');
   assert.match(t.$('#q .escale').textContent, /logaritmisk skala/);
 });
 
@@ -171,7 +171,7 @@ test('Placera i lådorna: rak skala från 0, avstånden växer, varannan låda h
   steps.slice(1).forEach((s, i) => assert.ok(s > steps[i] - .01, 'avstånden växer'));
   keys.forEach((k, i) => assert.ok(t.$(`#q [data-oslot="${k}"]`).classList.contains('r' + (i % 3)), 'tre rader'));
   assert.match(t.$('#q .escale').textContent, /rak skala/);
-  assert.ok(t.$('#q .e6note'));
+  assert.equal(t.$('#q .e6note'), null, 'E6-raden bara på Vad är E6?');
   placeAll(t, false);
   assert.equal(t.$$('#q .ebarl').length, 6);
 });
@@ -233,12 +233,12 @@ test('Trappans motstånd har värden som finns i sin serie', () => {
   }
 });
 
-test('Staplarfrågan med E6 har E6-raden', () => {
+test('Staplarfrågan har inte E6-raden, den står bara på Vad är E6?', () => {
   const t = atGrade('e', 1);
   for (let i = 0; i < 30; i++) {
     until(t, p => p.eq === 'staplar');
     const n = +t.$('#q .prompt').textContent.match(/E(\d+)/)[1];
-    assert.equal(!!t.$('#q .e6note'), n === 6);
+    assert.equal(t.$('#q .e6note'), null, 'E6-raden bara på Vad är E6?');
   }
 });
 

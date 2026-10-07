@@ -1891,11 +1891,11 @@ const ORDER_SETS = {
   t: {keys: ['silver','gold','red','brown','green','blue','violet'], lab: c => num(C[c].t) + '%',
     prompt: 'Klicka på toleransfärgerna från störst till minst tolerans.',
     wrong: 'Silver ±10 %, guld ±5 %, röd ±2 %, brun ±1 %, grön ±0,5 %, blå ±0,25 % och violett ±0,1 %.'},
-  e6log: {keys: E6M, e6: true, init: () => ({v: rnd(['10', '1', 'k'])}), chip: e6Chip, label: (k, o) => e6Lab(k, o.v), boxLab: e6Box, layout: o => escaleHTML(o, 'log'),
+  e6log: {keys: E6M, init: () => ({v: rnd(['10', '1', 'k'])}), chip: e6Chip, label: (k, o) => e6Lab(k, o.v), boxLab: e6Box, layout: o => escaleHTML(o, 'log'),
     prompt: 'Placera E6-värdena på skalan. Börja med det minsta.',
     anim: () => ({total: .3 + 6 * .35 + .4}), after: e6arcs,
     wrong: 'Varje värde är ungefär ×1,5 av det förra. På en logaritmisk skala ligger de därför på lika avstånd, och efter 68 kommer 100 och samma värden igen.'},
-  e6lin: {keys: E6M, e6: true, init: () => ({v: rnd(['10', '1', 'k'])}), chip: e6Chip, label: (k, o) => e6Lab(k, o.v), boxLab: e6Box, layout: o => escaleHTML(o, 'lin'),
+  e6lin: {keys: E6M, init: () => ({v: rnd(['10', '1', 'k'])}), chip: e6Chip, label: (k, o) => e6Lab(k, o.v), boxLab: e6Box, layout: o => escaleHTML(o, 'lin'),
     prompt: 'Placera E6-värdena i lådorna. Börja med det minsta.',
     anim: () => ({total: 2.8}), after: e6bars,
     wrong: 'På en rak skala ligger E6-värdena tätt i början och glest i slutet. Toleransen är i procent, så stora värden täcker fler ohm.'}
@@ -3500,7 +3500,7 @@ const eRacker = () => choice(() => {
 }, {eq: 'racker'});
 const eStaplar = () => choice(() => {
       const n = rnd([6, 6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
-      S.cq = {e6: n === 6, prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
+      S.cq = {prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
         opts: opts.map(v => ({html: fmtTol(v)})),
         res: () => S.answered && !inExam() ? etolRows(n, tols) : linSVG(n),
         wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
@@ -3524,7 +3524,7 @@ function eGlesare(){
     const right = 'Toleransen är i procent, så stora värden täcker fler ohm';
     const opts = shuffle([right, 'Stora motstånd är dyrare att tillverka', 'Färgkoden har inte plats för fler värden', 'Det är bara bestämt så']);
     const tab = [10, 22, 47, 68].map(v => `${v} Ω ±${num(v * .2)} Ω`).join(' · ');
-    S.cq = {e6: true, prompt:'Varför ligger värdena glesare högre upp?', layout:'txt', right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
+    S.cq = {prompt:'Varför ligger värdena glesare högre upp?', layout:'txt', right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
       anim: {total: linEnd(6) + .4},
       res: () => S.answered && !S.ok && !inExam() ? linSVG(6, {tol: 20, drop: true, grow: true, cover: true}) + `<p class="eptab mk" style="animation-delay:${linEnd(6).toFixed(2)}s">${tab}</p>` : linSVG(6),
       wrong: '±20 % av 10 är ±2 Ω, men ±20 % av 68 är ±13,6 Ω. Därför kan stegen bli längre högre upp, och ändå når varje värde fram till grannen.'};
