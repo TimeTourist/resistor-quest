@@ -7,28 +7,6 @@ import { answer, until } from './answer.mjs';
 const frag = (t, expr) => { const d = t.doc.createElement('div'); d.innerHTML = t.g(expr); return d; };
 const n = (d, sel) => d.querySelectorAll(sel).length;
 
-test('Klockan: E12 med nummer har 12 prickar, 12 värden, 12 nummer och 24 streck', () => {
-  const t = atGrade('e', 0), d = frag(t, 'dialSVG(12, {count: true})');
-  assert.equal(n(d, '.edot'), 12);
-  assert.equal(n(d, '.elab'), 12);
-  assert.equal(n(d, '.enum'), 12);
-  assert.equal(n(d, '.etick'), 24);
-  assert.equal(d.querySelector('.emid').textContent, 'E12');
-  assert.match(d.querySelector('.esub').textContent, /100 = nytt varv/);
-  assert.deepEqual([...d.querySelectorAll('.elab')].map(x => x.textContent), ['10','12','15','18','22','27','33','39','47','56','68','82']);
-});
-
-test('Klockan: utan värden står ett frågetecken i mitten, och tom klocka har inga prickar', () => {
-  const t = atGrade('e', 0);
-  const q = frag(t, 'dialSVG(24, {labels: false})');
-  assert.equal(n(q, '.edot'), 24);
-  assert.equal(n(q, '.elab'), 0);
-  assert.equal(q.querySelector('.emid').textContent, '?');
-  const e = frag(t, 'dialSVG(12, {dots: false})');
-  assert.equal(n(e, '.edot'), 0);
-  assert.equal(e.querySelector('.emid').textContent, 'E12');
-});
-
 test('E-seriernas Lärling: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
   for (const ok of [false, true]) {
     const t = atGrade('e', 1);
@@ -63,9 +41,3 @@ const live = (topic, grade) => load({ instant: false, storage: { ...ALL_OPEN, 'f
   'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }), 'fargkoden2-grade': JSON.stringify({ [topic]: grade }) } });
 
 // Rättningar efter slutgranskningen
-test('Klockan är högst 330 px bred även i .res', () => {
-  const t = atGrade('e', 0);
-  const rule = [...t.doc.styleSheets].flatMap(s => [...s.cssRules]).find(r => r.selectorText === '.res .edial');
-  assert.ok(rule, 'regeln .res .edial finns');
-  assert.equal(rule.style.maxWidth, '330px');
-});

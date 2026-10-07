@@ -81,31 +81,6 @@ test('Vilken serie tillhör motståndet?: tre band visar platsen för det saknad
   assert.ok(t.$('#q .res rect[stroke-dasharray]'), 'det saknade bandet är streckat');
 });
 
-test('Lärling: serie ↔ tolerans, vilken serie räcker, staplarna och motståndet med toleransen utskriven', () => {
-  const t = atGrade('e', 1), seen = new Set();
-  for (let i = 0; i < 120; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
-  assert.deepEqual([...seen].sort(), ['band', 'racker', 'serietol', 'staplar']);
-});
-
-test('Lärling: motståndet har toleransen utskriven, och den stämmer med bandet', () => {
-  const t = atGrade('e', 1);
-  for (let i = 0; i < 20; i++) {
-    until(t, p => p.eq === 'band');
-    const b = JSON.parse(t.g('JSON.stringify(S.cq.r.bands)'));
-    const tol = b.length === 3 ? 20 : t.g(`C.${b[t.g(`tolIdx(${b.length})`)]}.t`);
-    assert.equal(t.$('#q .etol').textContent, t.g(`fmtTol(${tol})`));
-  }
-});
-
-test('Lärling: serie ↔ tolerans visar trappan vid fel med paret markerat', () => {
-  const t = atGrade('e', 1);
-  until(t, p => p.eq === 'serietol');
-  answer(t, false);
-  assert.equal(t.$$('#q .estep').length, 6);
-  assert.equal(t.$$('#q .estep.hl').length, 1);
-  assert.ok(t.g('S.cq.anim.total') >= t.g('stairEnd()'));
-});
-
 test('Lärling: vilken serie räcker, rätt svar är serien gjord för toleransen, med en grövre när det finns och alltid en finare', () => {
   const t = atGrade('e', 1);
   for (let i = 0; i < 60; i++) {
@@ -219,12 +194,6 @@ test('Vänt motstånd med sex band: ringen sitter på toleransbandet efter att d
   const ring = t.$('#q .res .ring.ok'), x = +ring.getAttribute('x') + +ring.getAttribute('width') / 2;
   assert.ok(Math.abs(x - t.g('STD_X[6][4]')) < 1, 'ringen på band 5 av 6, rättvänt');
   assert.match(t.$('#q .res').textContent, /inte tolerans/);
-});
-
-test('Stormästare: blandar serie ↔ tolerans, räcker, band, samma siffror och räcker säkert', () => {
-  const t = atGrade('e', 4), seen = new Set();
-  for (let i = 0; i < 300; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
-  assert.deepEqual([...seen].sort(), ['band', 'multi', 'racker', 'sakert', 'serietol']);
 });
 
 test('Inga värden behövs: ingen E-fråga har svaret Inte standard, och frågetypen series finns inte', () => {

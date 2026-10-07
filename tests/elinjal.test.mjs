@@ -181,3 +181,31 @@ test('Nykomling blandar alla fyra frågorna', () => {
   for (let i = 0; i < 120; i++) { t.g('next()'); seen.add(t.g('S.plan.eq') || t.g('S.ord.set')); }
   assert.deepEqual([...seen].sort(), ['e6lin', 'e6log', 'glesare', 'vad']);
 });
+test('Vilken serie hör till motståndet?: bandet inringat före svaret, färgen under, och trappan med motstånd vid fel', () => {
+  const t = atGrade('e', 1);
+  until(t, p => p.eq === 'bandring');
+  const r = JSON.parse(t.g('JSON.stringify(S.cq.r)'));
+  assert.equal(t.$$('#q .res .ring').length, 1, 'inringat före svaret');
+  assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), t.g(`serOfBands(${JSON.stringify(r.bands)})`));
+  assert.ok(t.$('#q .etol'));
+  answer(t, false);
+  assert.equal(t.$$('#q .estep .emini').length, 6, 'sex små motstånd');
+  assert.equal(t.$$('#q .estep.hl').length, 1);
+});
+
+test('Lärling: staplarna, motståndet med bandet och räcker', () => {
+  const t = atGrade('e', 1), seen = new Set();
+  for (let i = 0; i < 90; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
+  assert.deepEqual([...seen].sort(), ['bandring', 'racker', 'staplar']);
+});
+
+test('Stormästare: motståndet med bandet, räcker och Mästares tre, ingen serie ↔ tolerans som text', () => {
+  const t = atGrade('e', 4), seen = new Set();
+  for (let i = 0; i < 200; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
+  assert.deepEqual([...seen].sort(), ['band', 'bandring', 'multi', 'racker', 'sakert']);
+});
+
+test('Klockan och den logaritmiska linjalen är borta', () => {
+  const t = load();
+  for (const f of ['dialSVG', 'rollNow', 'rulerSVG', 'eSerieTol']) assert.equal(t.g(`typeof ${f}`), 'undefined', f);
+});
