@@ -25,7 +25,7 @@ test('E-seriernas Lärling: Vilken tolerans är serien gjord för?, tre stapelra
     assert.ok(rows[0].querySelector('.ecrash'), 'för stor krockar');
     assert.equal(rows[1].querySelectorAll('.ecrash, .egap').length, 0, 'den rätta är ren');
     assert.ok(rows[2].querySelector('.egap'), 'för liten glappar');
-    assert.match(rows[0].textContent, /10 Ω kan vara 1[125] Ω/);
+    assert.match(rows[0].textContent, /10 Ω och 1[125] Ω kan båda bli [\d,]+ Ω/);
   }
 });
 

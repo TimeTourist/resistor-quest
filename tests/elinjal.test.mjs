@@ -169,7 +169,7 @@ test('Placera i lådorna: rak skala från 0, avstånden växer, varannan låda h
   const keys = t.g('S.ord.keys.slice()'), left = k => parseFloat(t.$(`#q [data-oslot="${k}"]`).style.left);
   const steps = keys.slice(1).map((k, i) => left(k) - left(keys[i]));
   steps.slice(1).forEach((s, i) => assert.ok(s > steps[i] - .01, 'avstånden växer'));
-  keys.forEach((k, i) => assert.equal(t.$(`#q [data-oslot="${k}"]`).classList.contains('up'), i % 2 === 1, 'varannan rad'));
+  keys.forEach((k, i) => assert.ok(t.$(`#q [data-oslot="${k}"]`).classList.contains('r' + (i % 3)), 'tre rader'));
   assert.match(t.$('#q .escale').textContent, /rak skala/);
   assert.ok(t.$('#q .e6note'));
   placeAll(t, false);
@@ -208,4 +208,52 @@ test('Stormästare: motståndet med bandet, räcker och Mästares tre, ingen ser
 test('Klockan och den logaritmiska linjalen är borta', () => {
   const t = load();
   for (const f of ['dialSVG', 'rollNow', 'rulerSVG', 'eSerieTol']) assert.equal(t.g(`typeof ${f}`), 'undefined', f);
+});
+
+// Rättningar efter slutgranskningen
+test('Staplarfrågan: texten om för stor tolerans stämmer, det gemensamma värdet ligger inom båda staplarna', () => {
+  const t = load();
+  for (const n of [6, 12, 24]) {
+    t.g(`S.cq = {tols: ETOL_Q[${n}]}; S.pickC = 0`);
+    const d = frag(t, `etolRows(${n}, ETOL_Q[${n}])`), txt = d.querySelector('.etrow p').textContent;
+    const m = txt.match(/(\d+) Ω och (\d+) Ω kan båda bli ([\d,]+) Ω/);
+    assert.ok(m, txt);
+    const [a, b, c] = [+m[1], +m[2], +m[3].replace(',', '.')], big = t.g(`ETOL_Q[${n}][0]`) / 100;
+    assert.ok(c >= a * (1 - big) && c <= a * (1 + big) && c >= b * (1 - big) && c <= b * (1 + big), txt);
+  }
+});
+
+test('Trappans motstånd har värden som finns i sin serie', () => {
+  const t = load();
+  for (const s of ['E6','E12','E24','E48','E96','E192']) {
+    const b = JSON.parse(t.g(`JSON.stringify(MINI['${s}'])`)), k = b.length === 4 ? 2 : 3;
+    const d = +b.slice(0, k).map(c => t.g(`C.${c}.d`)).join('');
+    const list = JSON.parse(t.g(`JSON.stringify(ESER['${s === 'E192' ? 'E96' : s}'][0])`));
+    assert.ok(list.includes(d), `${s}: ${d}`);
+  }
+});
+
+test('Staplarfrågan med E6 har E6-raden', () => {
+  const t = atGrade('e', 1);
+  for (let i = 0; i < 30; i++) {
+    until(t, p => p.eq === 'staplar');
+    const n = +t.$('#q .prompt').textContent.match(/E(\d+)/)[1];
+    assert.equal(!!t.$('#q .e6note'), n === 6);
+  }
+});
+
+test('Placera på skalan: vid fel står → 100, nästa varv efter bågarna', () => {
+  const t = atGrade('e', 0);
+  until(t, p => p.type === 'order' && t.g("S.ord.set") === 'e6log');
+  t.g("S.ord.v = '10'; render()");
+  placeAll(t, false);
+  assert.match(t.$('#q .after').textContent, /→ 100, nästa varv/);
+});
+
+test('Lådorna på skalorna krockar inte med knappsatsens klass, och står i tre rader på den raka skalan', () => {
+  const t = atGrade('e', 0);
+  until(t, p => p.type === 'order' && t.g("S.ord.set") === 'e6lin');
+  assert.equal(t.$$('#q .escale .ebox').length, 0);
+  const keys = t.g('S.ord.keys.slice()');
+  keys.forEach((k, i) => assert.ok(t.$(`#q [data-oslot="${k}"]`).classList.contains('eslot') && t.$(`#q [data-oslot="${k}"]`).classList.contains('r' + (i % 3))));
 });

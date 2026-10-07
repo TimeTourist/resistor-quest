@@ -98,11 +98,14 @@ html,body{overflow-x:clip}
 .escale .eaxis{position:absolute;left:3%;right:3%;top:52px;height:2px;background:var(--ink)}
 .escale .etk{position:absolute;top:52px;width:1px;height:8px;background:var(--muted)}
 .escale .etk b{position:absolute;top:10px;left:50%;transform:translateX(-50%);font:400 .75rem var(--text);color:var(--muted);white-space:nowrap}
-.escale .ebox{position:absolute;top:30px;width:30px;height:22px;max-width:none;aspect-ratio:auto;transform:translateX(-50%);border-radius:6px}
-.escale.lin .ebox{top:18px}
-.escale.lin .ebox.up{top:-10px}
-.escale.lin .ebox::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:12px;margin-left:-1px;background:var(--accent)}
-.escale.lin .ebox.up::after{height:40px}
+.escale .eslot{position:absolute;top:30px;width:30px;height:22px;max-width:none;aspect-ratio:auto;transform:translateX(-50%);border-radius:6px}
+.escale.lin .eslot.r0{top:18px}
+.escale.lin .eslot.r1{top:-10px}
+.escale.lin .eslot.r2{top:-38px}
+.escale.lin .eslot::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:12px;margin-left:-1px;background:var(--accent)}
+.escale.lin .eslot.r1::after{height:40px}
+.escale.lin .eslot.r2::after{height:68px}
+.escale.lin{margin-top:56px}
 .escale .enext{position:absolute;top:44px;width:16px;height:16px;transform:translateX(-50%);border:2px dashed var(--muted);border-radius:50%}
 .escale .escap{position:absolute;right:3%;top:76px;margin:0;font-size:.75rem;color:var(--muted)}
 .escale.arcs{height:44px;margin-top:4px}
@@ -1865,14 +1868,14 @@ function escaleHTML(o, kind){
   const lab = d => kind === 'log' && (d === 7 || d === 9) ? '' : e6Tick(d, v);
   const t = ticks.map(d => `<i class="etk" style="left:${f1(pos(d || .0001))}%"><b>${lab(d)}</b></i>`).join('');
   const boxes = o.keys.map((k, i) => {
-    const row = kind === 'lin' && i % 2 ? ' up' : '';
-    return `<i class="obox ebox${row}${P[k] ? (o.landed.has(k) ? ' ok' : ' fly') : ''}" data-oslot="${k}" style="left:${f1(pos(+k))}%">${P[k] ? oswHTML(k) : ''}</i>`;
+    const row = kind === 'lin' ? ' r' + (i % 3) : '';
+    return `<i class="obox eslot${row}${P[k] ? (o.landed.has(k) ? ' ok' : ' fly') : ''}" data-oslot="${k}" style="left:${f1(pos(+k))}%">${P[k] ? oswHTML(k) : ''}</i>`;
   }).join('');
   const next = kind === 'log' ? `<i class="enext" style="left:${f1(pos(10))}%"></i>` : '';
   return `<div class="escale ${kind}"><div class="eaxis"></div>${t}${boxes}${next}<p class="escap">${kind === 'log' ? 'logaritmisk skala' : 'rak skala'}, ${E6VAR[v].u}</p></div>`;
 }
 const e6arcs = o => `<div class="escale log arcs">${E6M.concat(['10']).map((k, i, a) => i === a.length - 1 ? '' :
-  `<i class="earc mk" style="left:${f1(ePosLog(+k))}%;width:${f1(ePosLog(+a[i + 1]) - ePosLog(+k))}%;animation-delay:${(.3 + i * .35).toFixed(2)}s"><b>×${num(Math.round(+a[i + 1] / +k * 10) / 10)}</b></i>`).join('')}</div>`;
+  `<i class="earc mk" style="left:${f1(ePosLog(+k))}%;width:${f1(ePosLog(+a[i + 1]) - ePosLog(+k))}%;animation-delay:${(.3 + i * .35).toFixed(2)}s"><b>×${num(Math.round(+a[i + 1] / +k * 10) / 10)}</b></i>`).join('')}<p class="escap mk" style="animation-delay:${(.3 + 6 * .35).toFixed(2)}s">→ 100, nästa varv: samma värden med en nolla till</p></div>`;
 // Lapparna är små motstånd med rätt färgband (tre band, E6 har inget toleransband) och värdet under
 const e6Bands = (key, v) => seriesBands(+key * E6VAR[v].k * (v === 'k' ? 1000 : 1), Math.round(+key * 100), 'E6');
 const e6Chip = (key, o) => `<span class="eres">${svg(e6Bands(key, o.v), {style: STYLE3(), label: e6Lab(key, o.v)})}</span><span>${e6Lab(key, o.v)}</span>`;
@@ -3356,7 +3359,7 @@ function bandResistor({sers, six = false, flip = false}){
 const stairEnd = (at = .3, step = .3) => at + SERS.length * step + .3;
 // Trappans små motstånd: ett exempel per serie med toleransbandet inringat. E6 har ett streckat tomt band.
 const MINI = {E6: ['yellow','violet','red',null], E12: ['yellow','violet','red','silver'], E24: ['yellow','violet','red','gold'],
-  E48: ['red','orange','orange','brown','red'], E96: ['red','orange','orange','brown','brown'], E192: ['red','orange','orange','brown','green']};
+  E48: ['brown','black','black','brown','red'], E96: ['brown','black','black','brown','brown'], E192: ['brown','black','black','brown','green']};
 const miniRes = s => { const b = MINI[s]; return `<span class="emini">${svg(b, {style: stdStyle(b.length), ring: [[b.length - 1, 'ok']], label: `Motstånd i ${s}`})}</span>`; };
 function stairHTML({hl = null, need = null, at = .3, step = .3, minis = false} = {}){
   const enough = need == null ? null : SERS.find(s => SER_T[s] <= need);
@@ -3494,7 +3497,7 @@ const eRacker = () => choice(() => {
 }, {eq: 'racker'});
 const eStaplar = () => choice(() => {
       const n = rnd([6, 6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
-      S.cq = {prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
+      S.cq = {e6: n === 6, prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
         opts: opts.map(v => ({html: fmtTol(v)})),
         res: () => S.answered && !inExam() ? etolRows(n, tols) : linSVG(n),
         wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
@@ -3527,7 +3530,9 @@ function eGlesare(){
 function etolRows(n, [big, right, small]){
   const v = eVals(n), picked = S.cq.tols[S.pickC];
   const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${linSVG(n, {tol: t})}</div>`;
-  return `<div class="etrows">${row(big, `för stor: staplarna krockar, ${v[0]} Ω kan vara ${v[1]} Ω`)}${row(right, 'lagom: staplarna möts ungefär kant i kant')}${row(small, 'för liten: glapp mellan värdena')}</div>`;
+  // Ett värde som båda de två första värdena kan bli när toleransen är för stor: mitt i överlappet
+  const both = num(Math.round((v[0] * (1 + big / 100) + v[1] * (1 - big / 100)) / 2 * 10) / 10);
+  return `<div class="etrows">${row(big, `för stor: staplarna krockar, ${v[0]} Ω och ${v[1]} Ω kan båda bli ${both} Ω`)}${row(right, 'lagom: staplarna möts ungefär kant i kant')}${row(small, 'för liten: glapp mellan värdena')}</div>`;
 }
 function seriesOf(m3){
   const out = [];
