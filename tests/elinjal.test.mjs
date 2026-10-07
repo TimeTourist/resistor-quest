@@ -162,3 +162,22 @@ test('Placera: lapparna är små motstånd med rätt färgband och värdet under
   assert.equal(chip.getAttribute('aria-label'), '1,5 kΩ');
   assert.match(chip.textContent, /1,5 kΩ/);
 });
+test('Placera i lådorna: rak skala från 0, avstånden växer, varannan låda högre upp, och vid fel sex staplar', () => {
+  const t = atGrade('e', 0);
+  until(t, p => p.type === 'order' && t.g("S.ord.set") === 'e6lin');
+  assert.ok(t.$('#q .escale.lin'));
+  const keys = t.g('S.ord.keys.slice()'), left = k => parseFloat(t.$(`#q [data-oslot="${k}"]`).style.left);
+  const steps = keys.slice(1).map((k, i) => left(k) - left(keys[i]));
+  steps.slice(1).forEach((s, i) => assert.ok(s > steps[i] - .01, 'avstånden växer'));
+  keys.forEach((k, i) => assert.equal(t.$(`#q [data-oslot="${k}"]`).classList.contains('up'), i % 2 === 1, 'varannan rad'));
+  assert.match(t.$('#q .escale').textContent, /rak skala/);
+  assert.ok(t.$('#q .e6note'));
+  placeAll(t, false);
+  assert.equal(t.$$('#q .ebarl').length, 6);
+});
+
+test('Nykomling blandar alla fyra frågorna', () => {
+  const t = atGrade('e', 0), seen = new Set();
+  for (let i = 0; i < 120; i++) { t.g('next()'); seen.add(t.g('S.plan.eq') || t.g('S.ord.set')); }
+  assert.deepEqual([...seen].sort(), ['e6lin', 'e6log', 'glesare', 'vad']);
+});
