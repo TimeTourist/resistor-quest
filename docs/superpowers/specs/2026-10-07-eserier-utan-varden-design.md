@@ -91,6 +91,23 @@ Graden blandar två frågor.
 - Slumpas bland serie ↔ tolerans, vilken serie räcker och Mästares två frågor.
 - Facit vid fel är detsamma som på respektive grad.
 
+## Felanimeringar
+
+Varje fråga har en pedagogisk animering vid fel svar. Den visar varför det rätta svaret är rätt, och en textrad räcker inte. Animeringarna följer samma regler som spelets andra felanimeringar:
+- Låset vid fel väntar in animeringen.
+- Med minskad rörelse och i testerna visas slutläget direkt.
+- På Eldprovet visas ingen animering, eftersom provet inte visar facit.
+
+| Fråga | Animering vid fel |
+|---|---|
+| Vad betyder 12 i E12? | Som i dag: de 12 prickarna poppar in runt klockan, numrerade 1–12, och "100 = nytt varv, ×10" tänds över tolvslaget. |
+| Vad är E12? | Klockan fylls som ovan. Sedan tänds tre exempel på samma prick, ett i taget: 4,7 Ω, 47 Ω och 4,7 kΩ. De visar att samma standardvärde säljs med olika nollor. |
+| Serie ↔ tolerans | **Trappan:** E6 ±20 %, E12 ±10 %, E24 ±5 %, E48 ±2 % och E96 ±1 % kommer in ett steg i taget. Varje steg har dubbelt så många värden och smalare tolerans. Paret som frågan gällde lyser upp. |
+| Vilken serie räcker? | Trappan, och en streckad linje vid toleransen som bygget tål. Stegen över linjen blir röda: "för grov". Det första steget under linjen blir grönt: "räcker". Stegen under det blir grå: "räcker, men fler värden än du behöver". |
+| Vilken tolerans är E12 gjord för? | Som i dag: tre rader med toleransstaplar, med krock, kant i kant och glapp. |
+| Vilken serie tillhör motståndet? | Ringen runt toleransbandet pulserar, lappen "Guld ±5 %" glider ut, och pilen "→ E24" pekar på den rätta svarsknappen. Se Gesäll. På ett vänt motstånd vänds det först rätt, som i Ohms felanimering. På sex band markeras också temperaturbandet som "inte tolerans". |
+| Samma siffror, annan multiplikator | Ledtråden "3,3 Ω" står överst. Varje svar delas upp i siffror och multiplikator, som "3 3 × 10", och siffrorna glider upp under ledtråden. De tre som passar får en grön bock. Det udda, "2 9", hamnar bredvid med ett rött kryss. |
+
 ## Det som försvinner
 
 - **"Vilken serie är det här?" (räkna prickarna på klockan).** Klockan finns kvar i Nykomlings frågor.
@@ -147,3 +164,4 @@ Raderna för `e` i `CATALOG` skrivs om så att de stämmer med graderna ovan:
   - Motstånd med sex band och vända motstånd förekommer.
   - I multiplikatorfrågan har de tre rätta svaren samma siffror som ledtråden, och det udda finns inte i serien.
 - **Stormästare:** frågorna kommer från alla fyra frågetyperna ovan.
+- **Felanimeringar:** varje ny fråga har en animering vid fel, låset väntar in den, och med `S.instant` visas slutläget direkt. Trappan, linjen i "vilken serie räcker" och siffrorna i multiplikatorfrågan finns i slutläget.
