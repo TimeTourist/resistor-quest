@@ -455,6 +455,12 @@ p.epre{margin:0}
 .eband{text-align:center;font-weight:700;font-size:1.1rem;margin:4px 0 0}
 .eband b{color:var(--ok)}
 @media (prefers-reduced-motion:no-preference){.eturn svg{animation:turn .45s ease-out both}}
+.emrows{display:grid;gap:4px;max-width:360px;margin:6px auto;font-variant-numeric:tabular-nums}
+.emhint{text-align:center;margin:0 0 4px}
+.emrow{padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.emrow b{font-family:var(--display);font-size:1.15rem;letter-spacing:.1em}
+.emrow.ok{border-color:var(--ok)}
+.emrow.bad{border-color:var(--bad);background:var(--bad-bg)}
 .ering{fill:none;stroke:var(--line);stroke-width:10}
 .etick{stroke:var(--line);stroke-width:2}
 .emid{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:34px;text-anchor:middle;fill:var(--ink)}
@@ -3399,6 +3405,25 @@ function bandQ({sers, six = false, flip = false, showTol = false}){
       wrong: n === 3 ? 'Tre band: inget toleransband, alltså ±20 %, och ±20 % är E6.'
         : `Titta på toleransbandet${n === 6 ? ', det näst sista' : ''}: ${C[r.bands[ti]].n.toLowerCase()} är ${fmtTol(tol)}, och ${fmtTol(tol)} är ${r.ser}.`};
   }, {eq: 'band'});
+}
+// Samma siffror, annan multiplikator: ledtråden är ett värde ur serien, tre svar har samma siffror,
+// det udda har siffror nära ledtråden som inte finns i serien.
+const E_MULTS = [1, 10, 100, 1000, 10000, 100000];
+function multiQ(){
+  return choice(() => {
+    const ser = rnd(['E6', 'E12']), list = ESER[ser][0], hint = rnd(list);
+    let odd; do { odd = hint + rnd([-8,-7,-6,-5,-4,-3,-2,-1,1,2,3,4,5,6,7,8]); } while (odd < 10 || odd > 99 || list.includes(odd));
+    const right = rnd4(), ms = shuffle(E_MULTS.slice()).slice(0, 4);
+    const vals = ms.map((k, i) => Math.round((i === right ? odd : hint) / 10 * k * 100) / 100);
+    const dg = x => String(x).split('').join(' ');
+    const row = (v, i) => { const d = i === right ? odd : hint, k = v / (d / 10);
+      return `<div class="emrow ${i === right ? 'bad' : 'ok'} mk" style="animation-delay:${(.4 + i * .4).toFixed(2)}s"><b>${dg(d)}</b> ${fmtMult(k / 10)} = ${fmtVal(v)} ${i === right ? '✗' : '✓'}</div>`; };
+    S.cq = {odd: true, m: {ser, hint, odd}, vals, prompt:`${num(hint / 10)} Ω finns i ${ser}. Vilken av resistanserna finns inte i ${ser}?`,
+      layout:'mc', right, opts: vals.map(v => ({html: fmtVal(v)})),
+      anim: {total: .4 + 4 * .4 + .6},
+      after: () => S.ok ? '' : `<div class="emrows"><p class="emhint">${num(hint / 10)} Ω = <b>${dg(hint)}</b> ${fmtMult(0.1)}</p>${vals.map(row).join('')}</div>`,
+      wrong: `Samma siffror, ${String(hint).split('').join(' och ')}, med olika multiplikator finns alla i ${ser}. ${fmtVal(vals[right])} har siffrorna ${String(odd).split('').join(' och ')}.`};
+  }, {eq: 'multi'});
 }
 // Lärling: serie och tolerans hör ihop
 const eSerieTol = () => choice(() => {

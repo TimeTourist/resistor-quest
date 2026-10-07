@@ -156,3 +156,33 @@ test('Lärling: vilken serie räcker, rätt svar är serien gjord för toleranse
   assert.equal(t.$$('#q .estep.bad').length + t.$$('#q .estep.ok').length + t.$$('#q .estep.more').length, 6);
   assert.ok(t.$('#q .eneed'));
 });
+
+test('Samma siffror: tre svar har ledtrådens siffror, det udda finns inte i serien och har andra siffror', () => {
+  const t = atGrade('e', 0);
+  for (let i = 0; i < 200; i++) {
+      t.g('GRADES.e[0] = multiQ; next()');
+    const m = JSON.parse(t.g('JSON.stringify(S.cq.m)')), list = JSON.parse(t.g(`JSON.stringify(ESER['${m.ser}'][0])`));
+    assert.ok(list.includes(m.hint));
+    assert.ok(!list.includes(m.odd), `${m.odd} finns inte i ${m.ser}`);
+    assert.notEqual(m.odd, m.hint);
+    assert.ok(Math.abs(m.odd - m.hint) <= 8, 'siffror nära ledtråden');
+    assert.ok(['E6', 'E12'].includes(m.ser));
+    const vals = JSON.parse(t.g('JSON.stringify(S.cq.vals)'));
+    const digits = v => { let x = v; while (x >= 100) x /= 10; while (x < 10) x *= 10; return Math.round(x); };
+    vals.forEach((v, j) => assert.equal(digits(v), j === t.g('S.cq.right') ? m.odd : m.hint));
+    assert.equal(new Set(vals).size, 4);
+  }
+});
+
+test('Samma siffror: frågan har ledtråden, är Vilken ska bort?, och vid fel delas svaren upp i siffror och multiplikator', () => {
+  const t = atGrade('e', 0);
+  t.g('GRADES.e[0] = multiQ; next()');
+  const m = JSON.parse(t.g('JSON.stringify(S.cq.m)'));
+  assert.ok(t.$('#q .oddhead'));
+  assert.match(t.$('#q .prompt').textContent, new RegExp(`${t.g(`num(${m.hint} / 10)`)} Ω finns i ${m.ser}`));
+  answer(t, false);
+  const rows = t.$$('#q .emrow');
+  assert.equal(rows.length, 4);
+  assert.equal(t.$$('#q .emrow.ok').length, 3);
+  assert.match(t.$('#q .emrow.bad').textContent, new RegExp(String(m.odd).split('').join(' ')));
+});
