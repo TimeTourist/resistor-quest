@@ -26,7 +26,7 @@ E3 (±40 %) är inte med. Det finns inget toleransband för ±40 %, så serien g
 | Nykomling | Vad en E-serie är | Vad betyder 12 i E12? (klockan) · Vad är E12? |
 | Lärling | Serie och tolerans | Serie ↔ tolerans · Vilken serie räcker? · Vilken tolerans är E12 gjord för? (staplarna) · Vilken serie tillhör motståndet? med toleransen utskriven |
 | Gesäll | Toleransbandet visar serien | Vilken serie tillhör motståndet? Guld, silver, brun, röd och tre band. |
-| Mästare | Samma sak, svårare | Vilken serie tillhör motståndet? Också grön, blå och violett, sex band och vända motstånd · Samma siffror, annan multiplikator |
+| Mästare | Samma sak, svårare | Vilken serie tillhör motståndet? Också grön, blå och violett, sex band och vända motstånd · Samma siffror, annan multiplikator · Vilken serie räcker säkert? med tabell |
 | Stormästare | Allt blandat | Slumpas bland Lärlings, Gesälls och Mästares frågor i de svåraste varianterna |
 
 Eldprovet tar som förut frågorna från Stormästare.
@@ -73,7 +73,7 @@ Graden blandar fyra frågor.
 
 ### Mästare
 
-Graden blandar två frågor.
+Graden blandar tre frågor.
 
 1. **Vilken serie tillhör motståndet, svårare.** Samma fråga som på Gesäll, med tre skillnader:
    - E192 kommer med: grönt (±0,5 %), blått (±0,25 %) och violett (±0,1 %) toleransband. Värdet tas ur E96, som ingår i E192. Svaren är E6, E12, E24, E48, E96 och E192.
@@ -86,9 +86,20 @@ Graden blandar två frågor.
    - Efter svaret markeras det udda svaret som på de andra "Vilken ska bort?"-frågorna.
    - Raden vid fel: "Samma siffror, 3 och 3, med olika multiplikator: 33 Ω, 330 Ω och 3,3 kΩ finns alla i E6. 2,9 kΩ har siffrorna 2 och 9."
 
+3. **Vilken serie räcker säkert? (ny)**
+   - Frågan: "Du behöver 3,4 kΩ, och det får avvika högst ±10 %. Vilken är den grövsta serien som säkert räcker?" Svaren är E6, E12, E24, E48 och E96.
+   - **Fönstret:** det man får ha, här 3,06–3,74 kΩ.
+   - **När en serie räcker:** den har ett värde vars hela toleransintervall ryms i fönstret. Det räcker inte att värdet ligger nära. Exempel: E12 har 3,3 kΩ ±10 %, men det kan vara 2,97 kΩ, och det är under fönstret. E24 har 3,3 kΩ ±5 %, som är 3,14–3,47 kΩ, och det ryms. Rätt svar är E24.
+   - **Tabellen** visas ovanför svaren, så att man inte behöver kunna värdena. Den har en rad per serie, E6 till E96, med seriens tre värden närmast målet och seriens tolerans. Värdena står med samma multiplikator som målet, till exempel "E12 ±10 %: 2,7 kΩ · 3,3 kΩ · 3,9 kΩ".
+   - **Uppgifterna slumpas:**
+     - Målet är ett värde med två eller tre siffror och en multiplikator, som 3,4 kΩ eller 560 Ω.
+     - Kravet är ±20 %, ±10 %, ±5 % eller ±2 %.
+     - Rätt svar är den grövsta serien som räcker. Uppgiften slumpas om tills någon serie från E6 till E96 räcker och den rätta inte är E6, så att det finns en grövre serie som inte räcker.
+   - **Raden vid fel:** "E12 har 3,3 kΩ ±10 %, och det kan vara 2,97 kΩ, för lite. E24 har 3,3 kΩ ±5 %, som är 3,14–3,47 kΩ och ryms. Det räcker inte att värdet ligger nära: hela toleransen måste rymmas."
+
 ### Stormästare
 
-- Slumpas bland serie ↔ tolerans, vilken serie räcker och Mästares två frågor.
+- Slumpas bland serie ↔ tolerans, vilken serie räcker och Mästares tre frågor.
 - Facit vid fel är detsamma som på respektive grad.
 
 ## Felanimeringar
@@ -106,6 +117,7 @@ Varje fråga har en pedagogisk animering vid fel svar. Den visar varför det rä
 | Vilken serie räcker? | Trappan, och en streckad linje vid toleransen som bygget tål. Stegen över linjen blir röda: "för grov". Det första steget under linjen blir grönt: "räcker". Stegen under det blir grå: "räcker, men fler värden än du behöver". |
 | Vilken tolerans är E12 gjord för? | Som i dag: tre rader med toleransstaplar, med krock, kant i kant och glapp. |
 | Vilken serie tillhör motståndet? | Ringen runt toleransbandet pulserar, lappen "Guld ±5 %" glider ut, och pilen "→ E24" pekar på den rätta svarsknappen. Se Gesäll. På ett vänt motstånd vänds det först rätt, som i Ohms felanimering. På sex band markeras också temperaturbandet som "inte tolerans". |
+| Vilken serie räcker säkert? | En tallinje runt målet med fönstret i grönt. Seriernas toleransstaplar glider in en i taget, från E6 och nedåt, för det värde i serien som ligger bäst till. Staplar som sticker ut ur fönstret blir röda vid kanten de sticker ut. Den första stapeln som ryms helt blir grön och pekar på den rätta svarsknappen. |
 | Samma siffror, annan multiplikator | Ledtråden "3,3 Ω" står överst. Varje svar delas upp i siffror och multiplikator, som "3 3 × 10", och siffrorna glider upp under ledtråden. De tre som passar får en grön bock. Det udda, "2 9", hamnar bredvid med ett rött kryss. |
 
 ## Det som försvinner
@@ -136,6 +148,7 @@ Raderna för `e` i `CATALOG` skrivs om så att de stämmer med graderna ovan:
 | `e-band` (ny) | 2 |
 | `e-band-svar` (ny) | 3 |
 | `e-multi` (ny) | 3 |
+| `e-sakert` (ny) | 3 |
 | `e-blandat` (ny) | 4 |
 
 `e-klocka`, `e-e12`, `e-serie-hjalp` och `e-serie` tas bort.
@@ -163,5 +176,10 @@ Raderna för `e` i `CATALOG` skrivs om så att de stämmer med graderna ovan:
   - E192 förekommer, med grönt, blått eller violett band och ett värde ur E96.
   - Motstånd med sex band och vända motstånd förekommer.
   - I multiplikatorfrågan har de tre rätta svaren samma siffror som ledtråden, och det udda finns inte i serien.
+  - I frågan om vilken serie som räcker säkert:
+    - Det rätta svaret är den grövsta serien som har ett värde vars hela toleransintervall ryms i fönstret.
+    - Den närmast grövre serien räcker inte, och det rätta svaret är aldrig E6.
+    - Exemplet 3,4 kΩ ±10 % ger E24.
+    - Tabellen har en rad per serie med värden från serien.
 - **Stormästare:** frågorna kommer från alla fyra frågetyperna ovan.
 - **Felanimeringar:** varje ny fråga har en animering vid fel, låset väntar in den, och med `S.instant` visas slutläget direkt. Trappan, linjen i "vilken serie räcker" och siffrorna i multiplikatorfrågan finns i slutläget.
