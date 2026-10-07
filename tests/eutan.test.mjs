@@ -114,3 +114,45 @@ test('Vilken serie tillhör motståndet?: tre band visar platsen för det saknad
   assert.match(t.$('#q .eband').textContent, /Inget band ±20 % → E6/);
   assert.ok(t.$('#q .res rect[stroke-dasharray]'), 'det saknade bandet är streckat');
 });
+
+test('Lärling: serie ↔ tolerans, vilken serie räcker, staplarna och motståndet med toleransen utskriven', () => {
+  const t = atGrade('e', 1), seen = new Set();
+  for (let i = 0; i < 120; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
+  assert.deepEqual([...seen].sort(), ['band', 'racker', 'serietol', 'staplar']);
+});
+
+test('Lärling: motståndet har toleransen utskriven, och den stämmer med bandet', () => {
+  const t = atGrade('e', 1);
+  for (let i = 0; i < 20; i++) {
+    until(t, p => p.eq === 'band');
+    const b = JSON.parse(t.g('JSON.stringify(S.cq.r.bands)'));
+    const tol = b.length === 3 ? 20 : t.g(`C.${b[t.g(`tolIdx(${b.length})`)]}.t`);
+    assert.equal(t.$('#q .etol').textContent, t.g(`fmtTol(${tol})`));
+  }
+});
+
+test('Lärling: serie ↔ tolerans visar trappan vid fel med paret markerat', () => {
+  const t = atGrade('e', 1);
+  until(t, p => p.eq === 'serietol');
+  answer(t, false);
+  assert.equal(t.$$('#q .estep').length, 6);
+  assert.equal(t.$$('#q .estep.hl').length, 1);
+  assert.ok(t.g('S.cq.anim.total') >= t.g('stairEnd()'));
+});
+
+test('Lärling: vilken serie räcker, rätt svar är serien gjord för toleransen, med en grövre när det finns och alltid en finare', () => {
+  const t = atGrade('e', 1);
+  for (let i = 0; i < 60; i++) {
+    until(t, p => p.eq === 'racker');
+    const need = +t.$('#q .prompt').textContent.match(/tål ±(\d+)/)[1];
+    const opts = t.$$('#q [data-c]').map(b => b.textContent.trim()), right = opts[t.g('S.cq.right')];
+    assert.equal(right, t.g(`TOL_SER[${need}]`));
+    const idx = s => t.g(`SERS.indexOf('${s}')`);
+    if (need < 20) assert.ok(opts.some(s => idx(s) === idx(right) - 1), 'en grövre');
+    assert.ok(opts.some(s => idx(s) > idx(right)), 'en finare');
+    assert.equal(new Set(opts).size, 4);
+  }
+  answer(t, false);
+  assert.equal(t.$$('#q .estep.bad').length + t.$$('#q .estep.ok').length + t.$$('#q .estep.more').length, 6);
+  assert.ok(t.$('#q .eneed'));
+});

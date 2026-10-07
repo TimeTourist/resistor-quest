@@ -60,28 +60,9 @@ test('Linjalen: värden släpps ner med bock eller kryss', () => {
   assert.match(d.querySelector('.emark.ok').textContent, /✓ 47/);
 });
 
-test('E-seriernas Lärling: Vilken serie är det här?, rätt svar stämmer med antalet prickar', () => {
-  const t = atGrade('e', 1), seen = new Set();
-  for (let i = 0; i < 30; i++) {
-    t.g('next()');
-    assert.equal(t.g('S.plan.eq'), 'klocka');
-    const dots = t.$$('#q .edot').length;
-    assert.ok([6, 12, 24].includes(dots));
-    assert.equal(t.$$('#q .elab').length, 0, 'inga värden före svaret');
-    assert.equal(t.$('#q .emid').textContent, '?');
-    assert.equal(t.$$('#q [data-c]')[t.g('S.cq.right')].textContent.trim(), 'E' + dots);
-    seen.add(dots);
-  }
-  assert.equal(seen.size, 3, 'E6, E12 och E24 förekommer');
-  answer(t, false);
-  assert.ok(t.$$('#q .elab').length > 0, 'värdena visas efter svaret');
-  assert.match(t.$('#q').textContent, /prickar på varvet/);
-});
-
-// flyttas till Lärling i Task 4
-test.skip('E-seriernas Gesäll: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
+test('E-seriernas Lärling: Vilken tolerans är serien gjord för?, tre stapelrader efter svaret', () => {
   for (const ok of [false, true]) {
-    const t = atGrade('e', 2);
+    const t = atGrade('e', 1);
     until(t, p => p.eq === 'staplar');
     const m = t.$('#q .prompt').textContent.match(/Vilken tolerans är E(6|12|24) gjord för\?/);
     assert.ok(m);
@@ -101,12 +82,6 @@ test.skip('E-seriernas Gesäll: Vilken tolerans är serien gjord för?, tre stap
   }
 });
 
-// flyttas till Lärling i Task 4
-test.skip('E-seriernas Gesäll blandar staplarna med serie ↔ tolerans', () => {
-  const t = atGrade('e', 2), seen = new Set();
-  for (let i = 0; i < 60; i++) { t.g('next()'); seen.add(t.g('S.plan.eq')); }
-  assert.deepEqual([...seen].sort(), ['serietol', 'staplar']);
-});
 
 test('E-seriernas Mästare: Inte i E12, värdena faller ner på linjalen, både rätt och fel', () => {
   for (const ok of [false, true]) {
@@ -166,9 +141,8 @@ test('Vilken serie: fel svar visar linjalen för serien som toleransen pekar ut,
 const live = (topic, grade) => load({ instant: false, storage: { ...ALL_OPEN, 'fargkoden2-topic': topic,
   'fargkoden2-done': JSON.stringify({ body: 4, ohm: 4, tol: 4, tc: 4, e: 4 }), 'fargkoden2-grade': JSON.stringify({ [topic]: grade }) } });
 
-// flyttas till Lärling i Task 4
-test.skip('Utrullningen: första linjalen rullas ut, nästa visas direkt', () => {
-  const t = live('e', 2);
+test('Utrullningen: första linjalen rullas ut, nästa visas direkt', () => {
+  const t = live('e', 1);
   // Första frågan som öppnas kan redan ha haft en linjal, och då är utrullningen förbrukad
   t.g('S.rolled = false');
   until(t, p => p.eq === 'staplar');
@@ -181,9 +155,8 @@ test.skip('Utrullningen: första linjalen rullas ut, nästa visas direkt', () =>
   assert.equal(t.g('S.rolled'), true);
 });
 
-// flyttas till Lärling i Task 4
-test.skip('Utrullningen hoppas över med S.instant men räknas ändå', () => {
-  const t = atGrade('e', 2);
+test('Utrullningen hoppas över med S.instant men räknas ändå', () => {
+  const t = atGrade('e', 1);
   until(t, p => p.eq === 'staplar');
   assert.equal(t.$$('#q .eruler.unroll').length, 0);
   assert.equal(t.g('S.rolled'), true);

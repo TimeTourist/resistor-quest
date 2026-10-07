@@ -2064,13 +2064,8 @@ const GRADES = {
           : `<p class="eex">Samma värde: ${ex.map((x, i) => `<span class="mk" style="animation-delay:${(at + i * .4).toFixed(2)}s">${x}</span>`).join(' · ')}</p>`),
         wrong: 'E12 är en lista med standardvärden. Motstånd tillverkas inte i alla värden, bara i de här 12 och samma siffror gånger 10, 100, 1000 …'};
     }, {eq: 'vad'})])(),
-    // Lärling: vilken serie är det här? Räkna prickarna på klockan.
-    () => choice(() => {
-      const n = rnd([6, 12, 24]), opts = ['E6','E12','E24','E48'];
-      S.cq = {prompt:'Vilken serie är det här?', layout:'mc', right: opts.indexOf('E' + n), opts: opts.map(x => ({html: x})),
-        res: () => S.answered ? dialSVG(n, {count: n <= 12, pop: true}) : dialSVG(n, {labels: false}),
-        wrong: `${n} prickar på varvet, alltså E${n}. En prick ${n === 6 ? 'varannan timme' : n === 12 ? 'på varje timme' : 'på varje halvtimme'}.`};
-    }, {eq: 'klocka'}),
+    // Lärling: serie ↔ tolerans, vilken serie räcker, staplarna och motståndet med toleransen utskriven
+    () => rnd([eSerieTol, eRacker, eStaplar, () => bandQ({sers: SERS.slice(0, 5), showTol: true})])(),
     // Gesäll: vilken serie tillhör motståndet? Bara toleransbandet avgör.
     () => bandQ({sers: SERS.slice(0, 5)}),
     // Mästare: vilket värde finns inte i E12 (värdena faller ner på linjalen), eller vilken serie med värdet utskrivet
@@ -3405,6 +3400,36 @@ function bandQ({sers, six = false, flip = false, showTol = false}){
         : `Titta på toleransbandet${n === 6 ? ', det näst sista' : ''}: ${C[r.bands[ti]].n.toLowerCase()} är ${fmtTol(tol)}, och ${fmtTol(tol)} är ${r.ser}.`};
   }, {eq: 'band'});
 }
+// Lärling: serie och tolerans hör ihop
+const eSerieTol = () => choice(() => {
+      const s = rnd(Object.keys(SER_TOL)), t = SER_TOL[s], line = 'E6 ±20 %, E12 ±10 %, E24 ±5 %, E48 ±2 %, E96 ±1 %.';
+      const common = {anim: {total: stairEnd()}, after: () => S.ok ? '' : stairHTML({hl: s}), wrong: line};
+      if (Math.random() < .5) {
+        const vals = pick4(t, [], Object.values(SER_TOL));
+        S.cq = {...common, prompt:`Vilken tolerans hör till ${s}?`, layout:'mc', right: vals.indexOf(t), opts: vals.map(v => ({html: fmtTol(v)}))};
+      } else {
+        const ss = pick4(s, [], Object.keys(SER_TOL));
+        S.cq = {...common, prompt:`Vilken serie hör till ${fmtTol(t)}?`, layout:'mc', right: ss.indexOf(s), opts: ss.map(x => ({html: x}))};
+      }
+}, {eq: 'serietol'});
+const eRacker = () => choice(() => {
+      // Vilken serie räcker? Den grövsta serien vars tolerans är högst kravet.
+      const need = rnd([20, 10, 5, 2, 1]), right = TOL_SER[need], ri = SERS.indexOf(right);
+      const coarse = ri > 0 ? [SERS[ri - 1]] : [], finer = SERS.slice(ri + 1);
+      const rest = shuffle(SERS.filter(s => s !== right && !coarse.includes(s) && s !== finer[0]));
+      const opts = shuffle([right, ...coarse, finer[0], ...rest].slice(0, 4));
+      S.cq = {prompt:`Ditt bygge tål ${fmtTol(need)}. Vilken serie räcker, med så få värden som möjligt?`, layout:'mc',
+        right: opts.indexOf(right), opts: opts.map(x => ({html: x})),
+        anim: {total: stairEnd() + .4}, after: () => S.ok ? '' : stairHTML({need}),
+        wrong: `${fmtTol(need)} räcker, och ${right} är gjord för ${fmtTol(need)}.${coarse.length ? ` ${coarse[0]} är för grov (${fmtTol(SER_T[coarse[0]])}).` : ''} Finare serier fungerar också, men har fler värden än du behöver.`};
+}, {eq: 'racker'});
+const eStaplar = () => choice(() => {
+      const n = rnd([6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
+      S.cq = {prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
+        opts: opts.map(v => ({html: fmtTol(v)})),
+        res: () => S.answered && !inExam() ? etolRows(n, tols) : rulerSVG(n, {roll: rollNow()}),
+        wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
+}, {eq: 'staplar'});
 function etolRows(n, [big, right, small]){
   const v = eVals(n), picked = S.cq.tols[S.pickC];
   const row = (t, txt) => `<div class="etrow${t === picked ? ' pick' : ''}"><p><b>${fmtTol(t)}</b> ${txt}</p>${rulerSVG(n, {tol: t})}</div>`;
