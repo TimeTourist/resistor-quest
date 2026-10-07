@@ -1599,7 +1599,20 @@ function examQueue(){
   TOPICS.forEach(topic => { for (let i = 0; i < EXAM_PER; i++) q.push({topic}); });
   return shuffle(q);
 }
-function startExam(){ S.exam = {queue: examQueue(), i: 0, score: {}, done: false}; next(); }
+function startExam(){ S.exam = {queue: examQueue(), i: 0, score: {}, done: false}; saveExam(); next(); }
+// Ett pågående prov sparas, så att det finns kvar om sidan laddas om. Ett klart prov sparas inte.
+function saveExam(){
+  if (S.exam && !S.exam.done) save('fargkoden2-exam', JSON.stringify({queue: S.exam.queue, i: S.exam.i, score: S.exam.score}));
+  else try { localStorage.removeItem('fargkoden2-exam'); } catch(e) {}
+}
+function loadExam(){
+  try {
+    const x = JSON.parse(localStorage.getItem('fargkoden2-exam'));
+    const ok = x && Array.isArray(x.queue) && x.queue.length === EXAM_N && x.queue.every(q => q && TOPICS.includes(q.topic))
+      && Number.isInteger(x.i) && x.i >= 0 && x.i < EXAM_N && x.score && typeof x.score === 'object';
+    if (ok) S.exam = {queue: x.queue, i: x.i, score: x.score, done: false};
+  } catch(e) {}
+}
 const examTotals = () => Object.values(S.exam.score).reduce((a, x) => ({ok: a.ok + x.ok, n: a.n + x.n}), {ok:0, n:0});
 function recordExam(ok){
   const t = S.examItem.topic, sc = S.exam.score;
@@ -1607,6 +1620,7 @@ function recordExam(ok){
   S.examLast = {ok: ok ? 1 : 0, n: 1};
   S.exam.i++;
   if (S.exam.i >= EXAM_N) S.exam.done = true;
+  saveExam();
 }
 // 4 av 4 klarar ämnet, 3 av 4 ger Mästare
 const examEffect = t => { const x = S.exam.score[t]; return !x ? 0 : x.ok >= 4 ? 5 : x.ok >= 3 ? UNLOCK_AT : 0; };
@@ -3034,7 +3048,7 @@ document.getElementById('tReset').addEventListener('click', () => {
   if (S.screen === 'play') closePlay();
   TOPICS.forEach(t => { S.done[t] = 0; S.grade[t] = 0; });
   saveProgress();
-  S.up = 0; S.down = 0; S.streaks = {}; S.exam = null; S.plan = null; S.topic = 'body'; save('fargkoden2-topic', 'body');
+  S.up = 0; S.down = 0; S.streaks = {}; S.exam = null; saveExam(); S.plan = null; S.topic = 'body'; save('fargkoden2-topic', 'body');
   S.keys = ['body']; S.seen = []; S.flying = []; S.arriving = []; saveKeys();
   renderGrid();
 });
@@ -3429,6 +3443,7 @@ function seriesWhy(){
     : `${fmtTol(tol)} hör till ${ser}, och ${mantTxt(r.m3)} finns i ${ser}.`;
 }
 // Sidan öppnar på startsidan. Förhandsvisningen från dev.html går direkt till spelkortet.
+if (!S.pin) loadExam();
 renderGrid();
 if (S.pin) openTopic(S.pin.topic);
 </script>
