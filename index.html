@@ -3312,11 +3312,12 @@ const f1 = x => x.toFixed(1);
 const LX = v => 20 + (v - 10) / 90 * 400, LAY = 92, LIN_MIN = .05;
 const linStep = n => n > 12 ? .08 : .22;
 const linEnd = (n, at = .2) => at + eVals(n).length * linStep(n) + .9;
-function linSVG(n, {tol = null, drop = false, grow = false, cover = false, at = .2} = {}){
+// bare: utan siffror, bara prickar, streck och staplar
+function linSVG(n, {tol = null, drop = false, grow = false, cover = false, at = .2, bare = false} = {}){
   const vals = eVals(n), many = vals.length > 12, st = linStep(n), tb = at + vals.length * st + .1, tc = tb + .5;
   const d = t => drop || grow || cover ? ` style="animation-delay:${t.toFixed(2)}s"` : '';
   let h = `<line class="eline" x1="${LX(10)}" y1="${LAY}" x2="${LX(100)}" y2="${LAY}"/>`;
-  for (let v = 10; v <= 100; v += 10) h += `<line class="ltick" x1="${f1(LX(v))}" y1="${LAY}" x2="${f1(LX(v))}" y2="${LAY + 7}"/><text class="ltl" x="${f1(LX(v))}" y="${LAY + 22}">${v}</text>`;
+  for (let v = 10; v <= 100; v += 10) h += `<line class="ltick" x1="${f1(LX(v))}" y1="${LAY}" x2="${f1(LX(v))}" y2="${LAY + 7}"/>${bare ? '' : `<text class="ltl" x="${f1(LX(v))}" y="${LAY + 22}">${v}</text>`}`;
   let bad = 0;
   if (tol != null) {
     const bars = vals.concat([100]).map(v => [v * (1 - tol / 100), v * (1 + tol / 100)]);
@@ -3334,9 +3335,9 @@ function linSVG(n, {tol = null, drop = false, grow = false, cover = false, at = 
   }
   vals.forEach((v, i) => {
     h += `<g class="lval${drop ? ' drop' : ''}"${drop ? d(at + i * st) : ''}><circle cx="${f1(LX(v))}" cy="${LAY}" r="${many ? 3.5 : 5}"/>` +
-      `<text x="${f1(LX(v))}" y="${many && i % 2 ? 22 : 40}"${many ? ' class="sm"' : ''}>${eLab(v)}</text></g>`;
+      (bare ? '' : `<text x="${f1(LX(v))}" y="${many && i % 2 ? 22 : 40}"${many ? ' class="sm"' : ''}>${eLab(v)}</text>`) + '</g>';
   });
-  h += `<g class="lnext${cover ? ' mk' : ''}"${cover ? d(tc) : ''}><circle cx="${LX(100)}" cy="${LAY}" r="5"/><text x="${LX(100)}" y="${LAY - 14}">100 → nästa varv</text></g>`;
+  h += `<g class="lnext${cover ? ' mk' : ''}"${cover ? d(tc) : ''}><circle cx="${LX(100)}" cy="${LAY}" r="5"/>${bare ? '' : `<text x="${LX(100)}" y="${LAY - 14}">100 → nästa varv</text>`}</g>`;
   return `<svg class="elin" viewBox="0 0 440 ${LAY + 34}" role="img" aria-label="Rak linjal 10–100 Ω med E${n}-värdena">${h}</svg>`;
 }
 // Gesäll: tre toleranser per serie, för stor, rätt och för liten
@@ -3502,7 +3503,7 @@ const eStaplar = () => choice(() => {
       const n = rnd([6, 6, 12, 24]), tols = ETOL_Q[n], right = tols[1], opts = shuffle(tols.slice());
       S.cq = {prompt:`Vilken tolerans är E${n} gjord för?`, layout:'mc', right: opts.indexOf(right), tols: opts,
         opts: opts.map(v => ({html: fmtTol(v)})),
-        res: () => S.answered && !inExam() ? etolRows(n, tols) : linSVG(n),
+        res: () => S.answered && !inExam() ? etolRows(n, tols) : linSVG(n, {tol: right, bare: true}),
         wrong: `E${n} är gjord för ${fmtTol(right)}. Då når varje värde ungefär fram till grannen, och alla resistanser mellan 10 och 100 täcks. Röd är krock, gul är glapp.`};
 }, {eq: 'staplar'});
 // E6 är ovanlig i dag, men har minst värden och är bra för att lära ut principen med serier

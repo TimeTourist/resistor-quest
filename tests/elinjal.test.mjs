@@ -288,3 +288,15 @@ test('Vilken serie räcker?: ett motstånd med kravets toleransband inringat vis
   }
   assert.equal(seen.size, 5);
 });
+
+test('Staplarfrågan: före svaret visar linjalen den rätta toleransens staplar, utan siffror', () => {
+  const t = atGrade('e', 1);
+  for (let i = 0; i < 20; i++) {
+    until(t, p => p.eq === 'staplar');
+    const n = +t.$('#q .prompt').textContent.match(/E(\d+)/)[1], svg = t.$('#q .res svg.elin');
+    assert.ok(svg);
+    assert.equal(svg.querySelectorAll('.lbar').length, n, 'en stapel per värde');
+    assert.equal(svg.querySelectorAll('.ecrash, .egap').length, 0, 'den rätta toleransen: kant i kant');
+    assert.equal(svg.querySelectorAll('text').length, 0, 'inga siffror');
+  }
+});
