@@ -573,6 +573,13 @@ p.epre{margin:0}
   .padlock{width:48px;margin:-28px 0 0 -24px}
   .tile .fire{width:64px}
 }
+/* Smal skärm, till exempel en telefon med större text: en kolumn, så att namnen får plats */
+@media (max-width:399px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .tile{min-height:0}
+  .tline{-webkit-line-clamp:2}
+  .exam .tline{max-width:70%}
+}
 /* Omslaget: första gången man öppnar ett ämne. Visas en gång, sedan aldrig mer. */
 .play.cover{border-width:6px;box-shadow:0 24px 60px rgba(0,0,0,.3)}
 .play.cover #q{position:relative;background:transparent;border:0;padding:6px 4px 4px}
