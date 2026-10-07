@@ -58,3 +58,36 @@ test('Testraden: Dölj rätt svar tar bort pilarna, Visa rätt svar tar tillbaka
   assert.equal(u.$('#tCheat').textContent, 'Visa rätt svar');
   assert.equal(u.$('#q .cheat'), null);
 });
+
+test('Eldprovet: ett tryck var som helst på kortet räknas, inte bara på elden', () => {
+  const t = load({ storage: ALL_OPEN });
+  t.g("openTopic('ultra')");
+  t.$('#q .firecard .rule').click();
+  assert.match(t.$('#dare').textContent, /KAN DU TILLRÄCKLIGT\?/);
+  t.$('#q').click();
+  assert.match(t.$('#dare').textContent, /INGEN NÅD/);
+  // Också kanten runt frågerutan, men inte Byt ämne
+  t.$('#spel .pbody').click();
+  assert.ok(t.g('S.exam && !S.exam.done'), 'provet har börjat');
+});
+
+test('Eldprovet: Byt ämne räknas inte som ett tryck på elden', () => {
+  const t = load({ storage: ALL_OPEN });
+  t.g("openTopic('ultra')");
+  t.$('#closeBtn').click();
+  assert.equal(t.g('S.dare'), 0);
+});
+
+test('Elden på minikortet och i stora kortet har egna färger, så att stora elden har alla lager när minikortet är dolt', () => {
+  const t = load({ storage: ALL_OPEN, start: true });
+  t.g("openTopic('ultra')");
+  const tile = t.$('#grid [data-id="ultra"] svg.fire'), big = t.$('#dare svg.fire');
+  assert.ok(tile && big);
+  const ids = svg => [...svg.querySelectorAll('[id]')].map(e => e.id);
+  assert.ok(ids(big).length >= 2);
+  assert.ok(ids(big).every(id => !ids(tile).includes(id)), 'olika id');
+  // Varje låga hämtar sin färg från sin egen bild
+  for (const svg of [tile, big])
+    for (const p of svg.querySelectorAll('path[fill^="url"]'))
+      assert.ok(svg.querySelector(p.getAttribute('fill').slice(4, -1)), p.getAttribute('fill'));
+});

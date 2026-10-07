@@ -241,6 +241,7 @@ html,body{overflow-x:clip}
 /* Testläge: grön pil på rätt svar */
 .firecard .rule{color:#ffd6b0}
 .firecard{text-align:center}
+.examplay:has(#dare){cursor:pointer}
 .dare{position:relative;display:block;width:100%;border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:6px 0 10px;border-radius:14px}
 .dare .fire{width:150px;height:auto;display:block;margin:0 auto;filter:drop-shadow(0 0 18px rgba(255,170,60,.7))}
 .daretxt{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:clamp(1.9rem,8vw,2.8rem);line-height:1.05;letter-spacing:.02em;margin-top:8px;text-shadow:0 2px 0 rgba(0,0,0,.35)}
@@ -887,7 +888,7 @@ function animHTML(lv){
 // Eldprovets första sida: elden och tre tryck
 function examIntroHTML(){
   S.dare = 0;
-  return `<div class="lvcard firecard"><button class="dare" id="dare" aria-label="Starta eldprovet: ${DARE[0]}">${FIRE_SVG}<svg class="cracks" aria-hidden="true"></svg><span class="daretxt">${DARE[0]}</span></button>
+  return `<div class="lvcard firecard"><button class="dare" id="dare" aria-label="Starta eldprovet: ${DARE[0]}">${fireSVG('dare')}<svg class="cracks" aria-hidden="true"></svg><span class="daretxt">${DARE[0]}</span></button>
     <p class="rule">20 frågor, fyra från varje ämne, i svåraste varianten. 3 av 4 i ett ämne ger Mästare, 4 av 4 klarar ämnet. Provet kan bara höja.</p></div>`;
 }
 // Byte av grad i stapeln: först en fråga, sedan en animering som om man fått många fel (ner) eller rätt (upp) i rad
@@ -977,11 +978,13 @@ const KICK = {
 const centerOf = el => { const r = el.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
 // Eldprovets kort: en eld och tre tryck. Det knakar och spricker, texten byts, och tredje trycket krossar kortet.
 const DARE = ['VÅGAR DU???', 'KAN DU TILLRÄCKLIGT?', '20 FRÅGOR. INGEN HJÄLP. INGEN NÅD.'];
-const FIRE_SVG = `<svg class="fire" viewBox="0 0 120 140" aria-hidden="true"><defs>
-  <linearGradient id="fireo" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d1a"/><stop offset=".6" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ffb347"/></linearGradient>
-  <linearGradient id="firem" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff9a1f"/><stop offset="1" stop-color="#ffd23f"/></linearGradient></defs>
-  <path class="f1" fill="url(#fireo)" d="M60 136C30 136 14 114 16 90C18 70 30 60 34 42C36 54 42 60 48 60C44 40 52 18 66 4C66 24 78 34 88 48C96 60 104 74 104 92C104 116 88 136 60 136Z"/>
-  <path class="f2" fill="url(#firem)" d="M60 134C42 134 32 120 34 104C36 90 46 82 48 70C52 80 58 82 62 80C60 68 66 56 74 48C74 62 84 72 86 88C88 112 78 134 60 134Z"/>
+// Varje eld har egna id på färgerna. Delar två eldar id hämtar den stora sina färger från minikortet,
+// och när startsidan är dold ritar webbläsaren dem inte: då syns bara den innersta lågan.
+const fireSVG = k => `<svg class="fire" viewBox="0 0 120 140" aria-hidden="true"><defs>
+  <linearGradient id="fireo-${k}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d1a"/><stop offset=".6" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ffb347"/></linearGradient>
+  <linearGradient id="firem-${k}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff9a1f"/><stop offset="1" stop-color="#ffd23f"/></linearGradient></defs>
+  <path class="f1" fill="url(#fireo-${k})" d="M60 136C30 136 14 114 16 90C18 70 30 60 34 42C36 54 42 60 48 60C44 40 52 18 66 4C66 24 78 34 88 48C96 60 104 74 104 92C104 116 88 136 60 136Z"/>
+  <path class="f2" fill="url(#firem-${k})" d="M60 134C42 134 32 120 34 104C36 90 46 82 48 70C52 80 58 82 62 80C60 68 66 56 74 48C74 62 84 72 86 88C88 112 78 134 60 134Z"/>
   <path class="f3" fill="#fff3b0" d="M60 132C50 132 44 124 45 114C46 104 54 98 56 90C60 98 66 100 68 108C72 116 70 132 60 132Z"/></svg>`;
 // Taggiga sprickor från en punkt (i pixlar)
 function crackPaths(cx, cy, n, len){
@@ -1153,7 +1156,7 @@ function tileHTML(t){
     return `<button class="tile exam${S.fresh === t ? ' fresh' : ''}" data-id="ultra" style="${lookVars(t)}">
       <span class="thead"><span class="ticon">${topicIcon('ultra')}</span><span class="tname">Eldprovet</span></span>
       <span class="tline">${TOPIC_LINE.ultra}</span>
-      <span class="tfoot"><span class="tchip">${going ? `Pågår · fråga ${Math.min(S.exam.i + 1, EXAM_N)} av ${EXAM_N}` : 'Alltid öppet'}</span></span>${FIRE_SVG}</button>`;
+      <span class="tfoot"><span class="tchip">${going ? `Pågår · fråga ${Math.min(S.exam.i + 1, EXAM_N)} av ${EXAM_N}` : 'Alltid öppet'}</span></span>${fireSVG('tile')}</button>`;
   }
   const state = tileState(t), fresh = S.fresh === t ? ' fresh' : '';
   const head = `<span class="tpat"></span><span class="thead"><span class="ticon">${topicIcon(t)}</span><span class="tname">${topicName(t)}</span></span><span class="tline">${TOPIC_LINE[t]}</span>`;
@@ -2762,6 +2765,12 @@ function keyPress(k){
   render();
 }
 
+// Eldprovets första sida: också kanten runt frågerutan räknas som ett tryck på elden, men inte rubrikraden med Byt ämne
+document.getElementById('spel').addEventListener('click', e => {
+  const dare = document.getElementById('dare');
+  if (!dare || e.target.closest('#q, #phead, button')) return;
+  S.lastTap = dare; dareClick(dare);
+});
 document.getElementById('q').addEventListener('click', e => {
   // Nyckeln på spelkortet: ett tryck går direkt till startsidan
   if (S.keyWin) { closePlay(); return; }
@@ -2776,7 +2785,9 @@ document.getElementById('q').addEventListener('click', e => {
   // Peka på band: banden i motståndet är knappar
   const band = e.target.closest('[data-band]');
   if (band) { S.lastTap = band; pickBand(+band.dataset.band); return; }
-  const btn = e.target.closest('button');
+  let btn = e.target.closest('button');
+  // Eldprovets första sida: ett tryck var som helst på kortet räknas som ett tryck på elden
+  if (!btn) btn = document.getElementById('dare');
   if (!btn || btn.disabled) return;
   S.lastTap = btn;
   if (btn.id === 'coverClose') {
