@@ -39,3 +39,12 @@ Sammanställt 2026-10-06 när sessionen avslutades. Spelet ligger i `index.html`
 
 - Testlägets knapp "Dölj/Visa rätt svar" ritar om frågan direkt. Mitt under Ordna kan det avbryta färger som flyger. Det gäller bara testläget.
 - Specerna i `docs/superpowers/specs/` beskriver tidiga versioner. dev.html är den aktuella beskrivningen av frågetyperna.
+
+## Ackordkartan (tillagd 2026-10-09)
+
+Spec: `docs/superpowers/specs/2026-10-09-ackordkartan-design.md`. Omgång 1 är byggd: startsidan, Klaviaturen och Treklangerna.
+
+- **Nästa omgång:** Tonarterna och Stegen. Skalorna behöver en Ordna-frågetyp, som inte finns i ackord.html än.
+- **Öppen fråga:** B eller H? Spelet använder internationellt B (tonen under C). Det var ett antagande och är inte bekräftat.
+- **Länken "Alla spel"** i dev-sidans panel går till dev-sidan själv, eftersom startsidan inte är en fil där. Det är ofarligt men lite förvirrande.
+- **Telefonbredd:** två oktaver ger små tangenter och liten text. Ett alternativ är en oktav på smala skärmar.
