@@ -99,8 +99,46 @@ main{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
 .tile.exam{border:0;color:#ffe8d2;background:radial-gradient(120% 95% at 70% 115%,#ff9a3c,#d9381e 42%,#2a1712 86%)}
 .tile.exam .tline{color:#ffd6b0}
 .tile.exam .ticon{background:rgba(0,0,0,.35);color:#ffb347}
-.tile.exam.soon{filter:saturate(.35) brightness(.85)}
-.tile.exam .soonchip{background:#ffe8d2;color:#2a1712}
+.tile.exam .tline{max-width:62%}
+.tile.exam .tchip{background:#ffe8d2;color:#2a1712}
+.tile .fire{position:absolute;right:8px;bottom:6px;width:80px;height:auto;filter:drop-shadow(0 0 16px rgba(255,170,60,.75));pointer-events:none}
+@media (max-width:719px){.tile .fire{width:56px}.tile.exam .tline{max-width:72%}}
+.play.examplay{border:0;color:#ffe8d2;background:radial-gradient(120% 90% at 50% 110%,#ff9a3c,#d9381e 45%,#2a1712 85%)}
+.examplay .phead{background:rgba(0,0,0,.3);color:#ffe8d2}
+.examplay #q{color:var(--ink)}
+.examplay #q.bosscard{color:#ffe8d2}
+.examprog{font-family:var(--display);font-size:1.3rem;text-align:center;color:#ffe8d2}
+.card.bosscard{position:relative;color:#ffe8d2;border:0;background:transparent}
+.firecard{text-align:center}
+.firecard .rule{color:#ffd6b0;font-size:.9rem;margin:6px 0 0}
+.examplay:has(#dare){cursor:pointer}
+.dare{position:relative;display:block;width:100%;border:0;background:none;color:inherit;font:inherit;cursor:pointer;padding:6px 0 10px;border-radius:14px}
+.dare .fire{width:150px;height:auto;display:block;margin:0 auto;filter:drop-shadow(0 0 18px rgba(255,170,60,.7))}
+.daretxt{display:block;font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,8vw,2.8rem);line-height:1.05;letter-spacing:.02em;margin-top:8px;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.dare .cracks{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.cracks path{fill:none;stroke:#fff6e8;stroke-width:2;stroke-linejoin:round;filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
+.shatter{position:fixed;z-index:60;pointer-events:none}
+.shatter>.card{position:absolute;inset:0;margin:0;width:100%;height:100%;box-sizing:border-box;overflow:hidden}
+.shatter>svg{position:absolute;inset:0;width:100%;height:100%;z-index:2;overflow:visible}
+.shatter>svg path{fill:none;stroke:rgba(255,255,255,.9);stroke-width:1.5;filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}
+.examsign{margin:14px 0 0;font-family:var(--display);font-size:1.4rem;font-weight:600}
+.exam .prompt{font-weight:600}
+.exam .verdict{font-family:var(--display);font-weight:700;font-size:2.6rem;line-height:1.05;margin:4px 0 8px}
+.skills{list-style:none;padding:0;margin:12px 0;display:grid;gap:6px}
+.skills li{display:flex;gap:8px;align-items:baseline}
+.pill{flex:none;font-size:.75rem;font-weight:700;padding:1px 8px;border-radius:999px;color:#fff;min-width:3.2em;text-align:center}
+.p-ok{background:var(--ok)}.p-bad{background:var(--bad)}
+.exam-btns{display:flex;flex-wrap:wrap;gap:8px}
+@media (prefers-reduced-motion:no-preference){
+  .dare.quake{animation:quake .5s cubic-bezier(.36,.07,.19,.97)}
+  @keyframes quake{10%,90%{transform:translate(-2px,1px) rotate(-.5deg)}20%,80%{transform:translate(4px,-2px) rotate(1deg)}30%,50%,70%{transform:translate(-7px,2px) rotate(-1.5deg)}40%,60%{transform:translate(7px,-1px) rotate(1.5deg)}}
+  .fire .f1{transform-origin:60px 136px;animation:flick 1.6s ease-in-out infinite alternate}
+  .fire .f2{transform-origin:60px 136px;animation:flick 1.1s ease-in-out infinite alternate-reverse}
+  .fire .f3{transform-origin:60px 134px;animation:flick .8s ease-in-out infinite alternate}
+  @keyframes flick{0%{transform:scale(1,1) skewX(0)}35%{transform:scale(.97,1.05) skewX(2deg)}70%{transform:scale(1.03,.97) skewX(-2deg)}100%{transform:scale(.98,1.04) skewX(1deg)}}
+  .cracks path{stroke-dasharray:1;stroke-dashoffset:1;animation:crackdraw .22s ease-out forwards}
+  @keyframes crackdraw{to{stroke-dashoffset:0}}
+}
 .keyghost{position:fixed;z-index:100;width:70px;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
 .keyghost svg,.inkey svg{display:block;width:100%;height:auto}
 .inkey{position:absolute;left:calc(50% - 58px);top:calc(50% - 4px);width:62px;z-index:3;pointer-events:none;transform-origin:92% 50%;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));--kin:6px;--push:11px;clip-path:inset(-30px var(--kin) -30px -30px)}
@@ -454,11 +492,14 @@ const circleAcc = i => i <= 6 ? i : i - 12;
 const ROMAN = ['I','ii','iii','IV','V','vi','vii°'], DQ = ['maj','min','min','maj','maj','min','dim'];
 const FUNC = ['T','S','T','S','D','T','D'], FUNC_NAME = {T:'Tonika', S:'Subdominant', D:'Dominant'}, FUNC_MAIN = {T:0, S:3, D:4};
 // Ackordet på steg d: skalans toner d, d+2 och d+4. Det läggs en oktav ner om det inte ryms.
-function diat(tonic, d){
-  const base = scaleMidi(tonic), root = scale(tonic)[d], q = DQ[d];
+// Stegen i naturlig moll, som lånade ackord hämtas från
+const MIN_ROMAN = ['i','ii°','♭III','iv','v','♭VI','♭VII'], MQ = ['min','dim','maj','min','min','maj','maj'];
+const romanOf = (d, mode) => (mode === 'min' ? MIN_ROMAN : ROMAN)[d];
+function diat(tonic, d, mode = 'maj'){
+  const base = scaleMidi(tonic, mode), root = scale(tonic, mode)[d], q = (mode === 'min' ? MQ : DQ)[d];
   let ms = [d, d + 2, d + 4].map(k => base[k % 7] + 12 * Math.floor(k / 7));
   if (ms[2] > HI) ms = ms.map(m => m - 12);
-  return {root, q, roman: ROMAN[d], name: chordName(root, q), ms, names: spell(root, q).map(nName)};
+  return {root, q, roman: romanOf(d, mode), name: chordName(root, q), ms, names: spell(root, q).map(nName)};
 }
 // Ackorden i en durtonart som tonklass och sort, för att se vilka tonarter som rymmer en följd
 const diatSet = pc => DQ.map((q, d) => `${(pc + MODE.maj[d]) % 12}${q}`);
@@ -578,13 +619,20 @@ const sfx = (() => {
     clink(){ const a = audio(); if (!a) return; tone(a, 2200, {d: .25, v: .08, at: .003}); tone(a, 3300, {t0: .03, d: .2, v: .05, at: .003}); },
     insert(){ const a = audio(); if (!a) return; noise(a, .22, {hp: 3500, v: .1}); },
     turn(){ const a = audio(); if (!a) return; tone(a, 900, {f2: 500, d: .06, type: 'square', v: .08, at: .002}); noise(a, .05, {hp: 2500, v: .25, t0: .05}); },
-    chains(){ const a = audio(); if (!a) return; for (let i = 0; i < 7; i++) noise(a, .08, {hp: 3000, v: .12, t0: i * .07}); }
+    chains(){ const a = audio(); if (!a) return; for (let i = 0; i < 7; i++) noise(a, .08, {hp: 3000, v: .12, t0: i * .07}); },
+    // Eldprovet: svaret är registrerat
+    tick(){ const a = audio(); if (!a) return; tone(a, 660, {d: .09, type: 'square', v: .06, at: .005}); tone(a, 990, {t0: .07, d: .12, type: 'square', v: .05, at: .005}); },
+    // Knak: en spricka i glas
+    crack(){ const a = audio(); if (!a) return; noise(a, .14, {hp: 2200, v: .35}); tone(a, 95, {f2: 45, d: .18, type: 'triangle', v: .28, at: .003}); tone(a, 3400, {f2: 1600, d: .07, type: 'square', v: .04, at: .002}); },
+    // Krossat glas: ett brak och många små klingande skärvor
+    glass(){ const a = audio(); if (!a) return; noise(a, .9, {hp: 1600, v: .4}); tone(a, 70, {f2: 38, d: .35, type: 'triangle', v: .32, at: .003});
+      for (let i = 0; i < 18; i++) tone(a, 2400 + Math.random() * 4800, {t0: .02 + Math.random() * .7, d: .07 + Math.random() * .25, v: .025 + Math.random() * .04, at: .002}); }
   };
 })();
 
 // ===================== Ämnen och läge =====================
 const TOPICS = ['tangent','treklang','tonart','steg','fyrklang','vag','lan'];
-const BUILT = ['tangent','treklang','tonart','steg','fyrklang','vag'];
+const BUILT = ['tangent','treklang','tonart','steg','fyrklang','vag','lan'];
 const ORDER = [...TOPICS, 'ultra'];
 const TOPIC_NAME = {tangent:'Klaviaturen', treklang:'Treklangerna', tonart:'Tonarterna', steg:'Stegen', fyrklang:'Fyrklangerna', vag:'Vägarna', lan:'Lånade ackord', ultra:'Eldprovet'};
 const topicName = t => TOPIC_NAME[t];
@@ -596,7 +644,7 @@ const TOPIC_LINE = {
   fyrklang:'maj7, 7, m7 och m7♭5, omvändningar och närmaste greppet.',
   vag:'Vart kan du gå härifrån? Kvintfall, ii–V–I och sekundärdominanter.',
   lan:'Ackorden du lånar från moll: iv, ♭VI, ♭VII och ♭III.',
-  ultra:'Allt blandat, i svåraste varianten.'
+  ultra:'21 frågor från alla ämnen i svåraste varianten. Gör det när du vill. Klarar du ett ämne här låses det upp.'
 };
 const TOPIC_LOOK = {
   tangent:{c:'#2b2733', ci:'#f7f2e6'}, treklang:{c:'#b8572a', ci:'#fff'}, tonart:{c:'#2f6f9f', ci:'#fff'}, steg:{c:'#2d7a4f', ci:'#fff'},
@@ -629,7 +677,7 @@ const cheat = right => showCheat() && !S.answered && right ? ' cheat' : '';
 try {
   const tp = load('topic');
   S.firstVisit = !tp;
-  if (tp && BUILT.includes(tp)) S.topic = tp;
+  if (tp && (BUILT.includes(tp) || tp === 'ultra')) S.topic = tp;
   const clamp = (x, hi) => Math.max(0, Math.min(hi, Math.floor(+x || 0)));
   const dn = JSON.parse(load('done') || '{}') || {}, gr = JSON.parse(load('grade') || '{}') || {};
   TOPICS.forEach(t => { S.done[t] = clamp(dn[t], 5); S.grade[t] = Math.min(clamp(gr[t], MAX), S.done[t]); });
@@ -638,11 +686,11 @@ try {
 // Allt är öppet, inget sparas och trappan står still.
 {
   const u = new URLSearchParams(location.search), t = u.get('topic'), g = +u.get('grade');
-  if (TEST_MODE && BUILT.includes(t)) {
+  if (TEST_MODE && (BUILT.includes(t) || t === 'ultra')) {
     S.pin = {topic: t, grade: g >= 0 && g <= MAX ? Math.floor(g) : 0, q: u.get('q')};
     S.topic = t; S.firstVisit = false;
     TOPICS.forEach(x => { S.done[x] = MAX; });
-    S.grade[t] = S.pin.grade;
+    if (t !== 'ultra') S.grade[t] = S.pin.grade;
   }
 }
 S.mix = {streak: 0, best: {}};
@@ -665,7 +713,7 @@ function grantKey(t){
   S.keys.push(t); S.flying.push(t); saveKeys();
 }
 // Ett ämne som inte är byggt visas som Kommer snart och går inte att öppna, men en förtjänad nyckel sitter i låset
-const tileState = t => t === 'ultra' || !BUILT.includes(t) ? 'soon' : !unlocked(t) ? 'locked' : S.keys.includes(t) ? 'key' : cleared(t) ? 'done' : 'open';
+const tileState = t => t === 'ultra' ? 'exam' : !BUILT.includes(t) ? 'soon' : !unlocked(t) ? 'locked' : S.keys.includes(t) ? 'key' : cleared(t) ? 'done' : 'open';
 function ladder(s, ok){
   let {g, up, down, done} = s, moved = null;
   if (ok) {
@@ -770,12 +818,12 @@ function circleSvg(path = [], t = T0, step = STEP, counts = true, bad = null){
 // Vägen runt cirkeln från C till plats i: medsols för ♯, motsols för ♭
 const circlePath = i => { const n = circleAcc(i); return Array.from({length: Math.abs(n) + 1}, (_, k) => ((n > 0 ? k : -k) + 12) % 12); };
 // Stegräkningen: skalan tänds fram till steg d med stegsiffror under, och sedan staplas ackordet av skalans toner
-function stepWalk(tonic, d, t = T0){
-  const base = scaleMidi(tonic), sc = scale(tonic), upto = base.slice(0, d + 1), lit = {}, names = {};
+function stepWalk(tonic, d, t = T0, mode = 'maj'){
+  const base = scaleMidi(tonic, mode), sc = scale(tonic, mode), upto = base.slice(0, d + 1), lit = {}, names = {};
   upto.forEach((m, i) => { const at = t + i * SSTEP; lit[m] = {cls: i === d ? 'acc' : 'step', at}; names[m] = {text: nName(sc[i]), at}; });
-  const under = unders(upto, ROMAN.slice(0, d + 1), upto.map((_, i) => t + i * SSTEP), '');
+  const under = unders(upto, upto.map((_, i) => romanOf(i, mode)), upto.map((_, i) => t + i * SSTEP), '');
   under[d].cls = 'ok';
-  const D = diat(tonic, d), t2 = t + (d + 1) * SSTEP + .3;
+  const D = diat(tonic, d, mode), t2 = t + (d + 1) * SSTEP + .3;
   const clit = {}, cnames = {}, arcs = [];
   D.ms.forEach((m, i) => { const at = t2 + i * .5; clit[m] = {cls: 'ok', at}; cnames[m] = {text: D.names[i], at}; if (i) arcs.push({a: D.ms[i - 1], b: m, text: '+' + (m - D.ms[i - 1]), at: at - .25}); });
   const end = t2 + 1.2;
@@ -1410,7 +1458,123 @@ const Q_VAG = [
       anim(){ return secAnim(Q); }};
   }}]
 ];
-const GRADES = {tangent: Q_TANGENT, treklang: Q_TREKLANG, tonart: Q_TONART, steg: Q_STEG, fyrklang: Q_FYRKLANG, vag: Q_VAG};
+
+// ===================== Lånade ackord =====================
+// Lånen från parallell moll: iv, ♭VI, ♭VII och ♭III (stegen i moll)
+const BD = [3, 5, 6, 2];
+const BORROW_KEYS = ['C','G','D','A','E','B','F','B♭'];
+const minName = n => `${nName(n)}-moll`;
+// Tonerna i ett lånat ackord som inte finns i durskalan
+const foreign = (tonic, D) => D.names.filter(n => !scale(tonic).map(nName).includes(n));
+const lab = D => `${D.name} (${D.roman})`;
+function borrowAnim(tonic, d, pick){
+  const A = stepWalk(tonic, d, T0, 'min'), D = A.D, f = foreign(tonic, D);
+  return {...A, kb: pick ? {...A.kb, lit: layer(badKeys(pick, D.ms), A.kb.lit)} : A.kb,
+    note: `<span class="mk"${dl(A.end)}>${D.name} är <b>${D.roman}</b> i ${minName(tonic)}. ${f.join(' och ')} finns inte i ${majName(tonic)}, och därför låter det lånat.</span>`};
+}
+// Vanliga vägar vidare från ett lån: [steg, skala]
+const NEXT_B = {3: [[0, 'maj'], [4, 'maj'], [6, 'min']], 5: [[6, 'min'], [4, 'maj'], [3, 'min']], 6: [[0, 'maj'], [3, 'maj'], [5, 'min']], 2: [[3, 'min'], [6, 'min'], [3, 'maj']]};
+const Q_LAN = [
+  // Nykomling
+  [{id:'lan-hitta', make(){
+    const tonic = N(rnd(['C','G','F','D'])), b = rnd(BD), B = diat(tonic, b, 'min'), K = majName(tonic);
+    const opts = four(B.name, shuffle([1, 2, 3, 4, 5]).map(x => diat(tonic, x).name));
+    const S0 = stepScale(tonic);
+    return {kind:'mc', prompt:`I ${K}: vilket ackord är lånat från ${minName(tonic)}?`, show:S0, opts, right: opts.indexOf(B.name),
+      wrong:`${B.name} har ${foreign(tonic, B).join(' och ')}, som inte finns i ${K} men i ${minName(tonic)}.`,
+      anim(){ const f = foreign(tonic, B), t2 = T0 + .8;
+        const lit = layer(S0.lit, Object.fromEntries(B.ms.map(m => [m, {cls:'ok', at:T0}])), Object.fromEntries(B.ms.filter((m, i) => f.includes(B.names[i])).map(m => [m, {cls:'acc', at:t2}])));
+        return {kb:{lit, names:merge(S0.names, Object.fromEntries(B.ms.map((m, i) => [m, {text:B.names[i], at:T0}]))), under:S0.under},
+          note:`<span class="mk"${dl(t2)}>Skalan är ${K}. ${B.name} har <b>${f.join(' och ')}</b>, som inte finns där men i ${minName(tonic)}. ${B.name} är ${B.roman}, lånat från moll.</span>`,
+          sound:[{chord:B.ms, at:T0}, {chord:diat(tonic, 0).ms, at:t2 + .6}], total:t2 + 1.6}; }};
+  }}],
+  // Lärling
+  [{id:'lan-namn', make(){
+    const tonic = N(rnd(BORROW_KEYS)), b = rnd(BD), B = diat(tonic, b, 'min'), M = diat(tonic, b), K = majName(tonic);
+    const opts = four(B.name, shuffle([M.name, chordName(B.root, B.q === 'maj' ? 'min' : 'maj'), chordName(M.root, B.q)]).filter(okName));
+    return {kind:'mc', prompt:`I ${K}: vilket ackord är ${B.roman} (lånat från ${minName(tonic)})?`, show:rootShow(tonic), opts, right: opts.indexOf(B.name),
+      wrong:`Räkna i ${minName(tonic)}: ${B.roman} är ${B.name}. I ${K} är samma steg ${M.name}.`,
+      anim(){ return borrowAnim(tonic, b); }};
+  }}],
+  // Gesäll
+  [{id:'lan-ta', make(){
+    const tonic = N(rnd(BORROW_KEYS)), b = rnd(BD), B = diat(tonic, b, 'min'), K = majName(tonic);
+    return {kind:'keys', need:3, prompt:`I ${K}: ta ${B.roman} (lånat från ${minName(tonic)}).`, show:rootShow(tonic), check: sel => samePcs(sel, B.ms), answer: B.ms,
+      wrong:`${B.roman} i ${minName(tonic)} är ${B.name}: ${B.names.join(' ')}.`,
+      anim(pick){ return borrowAnim(tonic, b, pick); }};
+  }},
+  {id:'lan-vilket', make(){
+    const tonic = N(rnd(BORROW_KEYS)), b = rnd(BD), B = diat(tonic, b, 'min'), K = majName(tonic), opts = shuffle(BD.map(x => MIN_ROMAN[x]));
+    return {kind:'mc', prompt:`${B.name} i ${K}: vilket lånat steg är det?`, show:chordShow(B), sound:[{chord:B.ms}], opts, right: opts.indexOf(B.roman),
+      wrong:`${nName(B.root)} är ${ord(b + 1)} tonen i ${minName(tonic)}, så ${B.name} är ${B.roman}.`,
+      anim(){ return borrowAnim(tonic, b); }};
+  }}],
+  // Mästare
+  [{id:'lan-ton', make(){
+    const tonic = N(rnd(BORROW_KEYS)), b = rnd([3, 6]), B = diat(tonic, b, 'min'), K = majName(tonic), f = foreign(tonic, B)[0];
+    const twin = nName(scale(tonic).find(n => n.l === N(f).l));
+    const opts = four(f, shuffle([twin, ...B.names.filter(n => n !== f)]));
+    return {kind:'mc', prompt:`${B.name} (${B.roman}) i ${K}: vilken ton gör ackordet lånat?`, show:chordShow(B), sound:[{chord:B.ms}], opts, right: opts.indexOf(f),
+      wrong:`${f} finns inte i ${K}, där heter tonen ${twin}. ${f} kommer från ${minName(tonic)}.`,
+      anim(){ let fm = B.ms[B.names.indexOf(f)], tm = fm + 1; if (tm > HI) { fm -= 12; tm -= 12; }
+        const lit = layer(Object.fromEntries(B.ms.map(m => [m, 'acc'])), {[tm]:{cls:'step', at:T0}}, {[fm]:{cls:'ok', at:T0 + .7}});
+        return {kb:{lit, names:merge(Object.fromEntries(B.ms.map((m, i) => [m, B.names[i]])), {[tm]:{text:twin, at:T0}}),
+            arcs:[{a:tm, b:fm, text:'−1', at:T0 + .35, cls:'ok'}], under:[{m:fm, text:`${twin} ♭ = ${f}`, at:T0 + .7, cls:'ok'}]},
+          note:`<span class="mk"${dl(T0 + .9)}>I ${K} heter tonen ${twin}. I ${minName(tonic)} är den ett halvtonssteg lägre: <b>${f}</b>. Den tonen gör ${B.name} lånat.</span>`,
+          sound:[{notes:[tm, fm], step:.7, at:T0}, {chord:B.ms, at:T0 + 1.4}], total:T0 + 2.4}; }};
+  }},
+  {id:'lan-iv', make(){
+    const tonic = N(rnd(BORROW_KEYS)), IV = diat(tonic, 3), iv = diat(tonic, 3, 'min'), I = diat(tonic, 0), K = majName(tonic);
+    const opts = four(iv.name, shuffle([chordName(IV.root, 'sus2'), chordName(IV.root, 'dim'), diat(tonic, 1).name, chordName(IV.root, 'aug')]).filter(okName));
+    return {kind:'mc', prompt:`Du spelar ${IV.name} (IV) i ${K}. Sänk tersen ett halvtonssteg. Vad spelar du nu?`, show:chordShow(IV), sound:[{chord:IV.ms}], opts, right: opts.indexOf(iv.name),
+      wrong:`Tersen ${IV.names[1]} blir ${iv.names[1]}: ${iv.name}, iv lånat från ${minName(tonic)}.`,
+      anim(){ const old = IV.ms[1], nw = old - 1, t2 = T0 + .8;
+        return {kb:{lit:layer(Object.fromEntries(IV.ms.map(m => [m, 'step'])), {[old]:{cls:'bad', at:T0}}, Object.fromEntries(iv.ms.map(m => [m, {cls:'ok', at:t2}]))),
+            names:merge(Object.fromEntries(IV.ms.map((m, i) => [m, IV.names[i]])), Object.fromEntries(iv.ms.map((m, i) => [m, {text:iv.names[i], at:t2}]))),
+            arcs:[{a:old, b:nw, text:'−1', at:T0 + .4, cls:'ok'}]},
+          note:`<span class="mk"${dl(t2)}>${IV.name} → <b>${iv.name}</b>: samma grundton, men tersen ${iv.names[1]} kommer från ${minName(tonic)}. IV → iv → I är ett av de vanligaste lånen.</span>`,
+          sound:[{chord:IV.ms, at:T0 - .2}, {chord:iv.ms, at:t2}, {chord:I.ms, at:t2 + 1}], total:t2 + 2}; }};
+  }}],
+  // Stormästare
+  [{id:'lan-pikardisk', make(){
+    const tonic = N(rnd(MIN_KEYS.filter(k => Math.abs(accCount(N(k), 'min')) <= 4))), i = diat(tonic, 0, 'min'), right = chordName(tonic, 'maj');
+    const opts = four(right, shuffle([i.name, diat(tonic, 2, 'min').name, chordName(upN(tonic, 7, 4), 'maj')]));
+    return {kind:'mc', prompt:`En låt i ${minName(tonic)} slutar på ett durackord med samma grundton (pikardisk ters). Vilket?`, show:chordShow(i), sound:[{chord:i.ms}], opts, right: opts.indexOf(right),
+      wrong:`Pikardisk ters: tersen i ${i.name} höjs ett halvtonssteg, och sista ackordet blir ${right}.`,
+      anim(){ const M = chordLit(tonic, 'maj'), old = i.ms[1], t2 = T0 + .8, vm = M.vs, sp = spell(tonic, 'maj').map(nName);
+        return {kb:{lit:layer(Object.fromEntries(i.ms.map(m => [m, 'step'])), {[old]:{cls:'bad', at:T0}}, Object.fromEntries(vm.map(m => [m, {cls:'ok', at:t2}]))),
+            names:merge(Object.fromEntries(i.ms.map((m, k) => [m, i.names[k]])), Object.fromEntries(vm.map((m, k) => [m, {text:sp[k], at:t2}]))),
+            arcs:[{a:old, b:old + 1, text:'+1', at:T0 + .4, cls:'ok'}]},
+          note:`<span class="mk"${dl(t2)}>${i.name} → <b>${right}</b>: mollen slutar i dur. Tersen ${i.names[1]} höjs till ${sp[1]}, ett ljust slut lånat från ${majName(tonic)}.</span>`,
+          sound:[{chord:i.ms, at:T0 - .2}, {chord:vm, at:t2}], total:t2 + 1.4}; }};
+  }},
+  {id:'lan-mario', make(){
+    const tonic = N(rnd(BORROW_KEYS)), K = majName(tonic), seq = [diat(tonic, 5, 'min'), diat(tonic, 6, 'min'), diat(tonic, 0)], right = seq.map(x => x.name).join(' ');
+    const dia = [5, 6, 0].map(d => diat(tonic, d).name).join(' '), other = [diat(tonic, 5, 'min'), diat(tonic, 4), diat(tonic, 0)].map(x => x.name).join(' ');
+    const flip = [diat(tonic, 6, 'min'), diat(tonic, 5, 'min'), diat(tonic, 0)].map(x => x.name).join(' ');
+    const opts = four(right, shuffle([dia, other, flip]));
+    return {kind:'mc', prompt:`♭VI–♭VII–I i ${K}: vilka ackord? (♭VI och ♭VII lånas från ${minName(tonic)}.)`, show:rootShow(tonic), opts, right: opts.indexOf(right), txt:true,
+      wrong:`♭VI = ${seq[0].name}, ♭VII = ${seq[1].name}, I = ${seq[2].name}.`,
+      anim(){ const lit = {}, names = {};
+        seq.forEach((D, k) => D.ms.forEach((m, i) => { lit[m] = [].concat(lit[m] || [], {cls:'ok', at:T0 + k * .9}); names[m] = {text:D.names[i], at:T0 + k * .9}; }));
+        return {kb:{lit, names, under:seq.map((D, k) => ({m:D.ms[0], text:D.roman, at:T0 + k * .9, cls:'ok', row:k % 2}))},
+          note:seq.map((D, k) => `<span class="mk"${dl(T0 + k * .9)}>${D.name} = <b>${D.roman}</b></span>`).join(' → ') + `<br><span class="mk"${dl(T0 + 2.7)}>♭VI → ♭VII → I går upp helton för helton till tonikan. Ett starkt, triumferande slut.</span>`,
+          sound:seq.map((D, k) => ({chord:D.ms, at:T0 + k * .9})), total:T0 + 3.4}; }};
+  }},
+  {id:'lan-vad', make(){
+    const tonic = N(rnd(['C','G','F','D'])), b = rnd(BD), B = diat(tonic, b, 'min'), M = diat(tonic, b), K = majName(tonic);
+    const decoy = shuffle(BD.filter(x => x !== b)).slice(0, 2).map(x => lab(diat(tonic, x, 'min')));
+    const opts = four(lab(B), shuffle([lab(M), ...decoy]));
+    const nx = NEXT_B[b].map(([d, mode]) => diat(tonic, d, mode));
+    return {kind:'mc', prompt:`Du hör det här ackordet i ${K}. Vad är det?`, show:{lit:Object.fromEntries(B.ms.map(m => [m, 'acc']))}, sound:[{chord:B.ms}], opts, right: opts.indexOf(lab(B)), txt:true,
+      wrong:`Det är ${lab(B)}, lånat från ${minName(tonic)}. Vanliga vägar vidare: ${nx.map(x => `${B.name} → ${lab(x)}`).join(', ')}.`,
+      anim(){ const A = borrowAnim(tonic, b), t3 = A.total;
+        const paths = nx.map((x, k) => `<span class="mk"${dl(t3 + k * 1.2)}>${B.name} → <b>${lab(x)}</b></span>`).join(' · ');
+        return {...A, note:`${A.note}<br><span class="mk"${dl(t3)}>Vart härifrån?</span> ${paths}`,
+          sound:[...A.sound, ...nx.flatMap((x, k) => [{chord:B.ms, at:t3 + k * 1.2}, {chord:x.ms, at:t3 + k * 1.2 + .5}])], total:t3 + nx.length * 1.2 + .4}; }};
+  }}]
+];
+const GRADES = {tangent: Q_TANGENT, treklang: Q_TREKLANG, tonart: Q_TONART, steg: Q_STEG, fyrklang: Q_FYRKLANG, vag: Q_VAG, lan: Q_LAN};
 const allTypes = t => GRADES[t].flatMap((list, g) => list.map(x => ({...x, g})));
 
 // Snabbkollen på omslaget. Första valet är det rätta.
@@ -1420,7 +1584,8 @@ const KICK = {
   tonart:{q:'Hur många olika toner har en durskala?', opts:['7','8','5','12']},
   steg:{q:'Vilket steg är hemma, där en låt brukar sluta?', opts:['I','V','IV','vi']},
   fyrklang:{q:'Hur många toner har en fyrklang?', opts:['4','3','5','7']},
-  vag:{q:'Vart vill V (dominanten) helst gå?', opts:['I','IV','ii','vii°']}
+  vag:{q:'Vart vill V (dominanten) helst gå?', opts:['I','IV','ii','vii°']},
+  lan:{q:'Varifrån lånar man ackorden?', opts:['Från moll med samma grundton','Från dominantens tonart','Från en annan låt','Från kromatiska skalan']}
 };
 // Omslagets bild: en klaviatur som visar ämnet
 function coverKb(t){
@@ -1428,6 +1593,7 @@ function coverKb(t){
   if (t === 'tonart') { const W = scaleWalk(N('C'), 'maj', .2); return kbd({lit:W.lit, names:W.names, arcs:W.arcs, label:'C-durskalan: hel, hel, halv, hel, hel, hel, halv'}); }
   if (t === 'steg') { const S0 = stepScale(N('C')), D = diat(N('C'), 4); return kbd({lit:layer(S0.lit, Object.fromEntries(D.ms.map(m => [m, 'acc']))), names:S0.names, under:S0.under, label:'Stegen i C-dur, med G-dur (V) tänt'}); }
   if (t === 'fyrklang') { const A = stack(N('C'), 'maj7', .2); return kbd({lit:A.lit, names:A.names, arcs:A.arcs, under:A.under, label:'Cmaj7 byggs: C, E, G, B'}); }
+  if (t === 'lan') { const S0 = stepScale(N('C')), B = diat(N('C'), 3, 'min'); return kbd({lit:layer(S0.lit, Object.fromEntries(B.ms.map(m => [m, 'acc']))), names:merge(S0.names, Object.fromEntries(B.ms.map((m, i) => [m, B.names[i]]))), under:S0.under, label:'C-dur med det lånade Fm tänt'}); }
   if (t === 'vag') { const V = diat(N('C'), 4), I = nearest(V.ms, N('C'), 'maj')[0], G = glide(V.ms, V.names, I.ms, I.names, .2); return kbd({...G.kb, label:'G-dur går hem till C-dur'}); }
   const A = stack(N('C'), 'maj', .2); return kbd({lit:A.lit, names:A.names, arcs:A.arcs, under:A.under, label:'C-dur byggs: C, E, G'});
 }
@@ -1455,7 +1621,8 @@ function miniBar(t){
 function tileHTML(t){
   const state = tileState(t), fresh = S.fresh === t ? ' fresh' : '';
   const head = `<span class="tpat"></span><span class="thead"><span class="ticon">${topicIcon(t)}</span><span class="tname">${topicName(t)}</span></span><span class="tline">${TOPIC_LINE[t]}</span>`;
-  if (t === 'ultra') return `<button class="tile exam soon" data-id="ultra" style="${lookVars(t)}" aria-label="Eldprovet: kommer snart">${head}<span class="soonchip">Kommer snart</span></button>`;
+  if (t === 'ultra') { const going = S.exam && !S.exam.done;
+    return `<button class="tile exam${fresh}" data-id="ultra" style="${lookVars(t)}">${head}<span class="tfoot"><span class="tchip">${going ? `Pågår · fråga ${Math.min(S.exam.i + 1, EXAM_N)} av ${EXAM_N}` : 'Alltid öppet'}</span></span>${fireSVG('tile')}</button>`; }
   if (state === 'done') return `<button class="tile done${fresh}" data-id="${t}" style="${lookVars(t)}">${head}
     <span class="tfoot"><span class="tstate">Klart ✓ · rekord ${S.mix.best[t] || 0} i rad</span><span class="tchip">Spela blandat</span></span></button>`;
   if (state === 'open') return `<button class="tile open${fresh}" data-id="${t}" style="${lookVars(t)}">${head}
@@ -1522,7 +1689,7 @@ function showScreen(){
   document.getElementById('lead').hidden = play;
   el.hidden = !play;
   if (!play) return;
-  el.className = 'play' + (cleared(lv) ? ' goldplay' : '') + (S.cover ? ' cover' : '');
+  el.className = 'play' + (lv === 'ultra' ? ' examplay' : cleared(lv) ? ' goldplay' : '') + (S.cover ? ' cover' : '');
   el.setAttribute('style', lookVars(lv));
   el.setAttribute('aria-label', topicName(lv));
   document.getElementById('phead').hidden = !!S.cover;
@@ -1549,7 +1716,7 @@ function openTopic(lv){
   const tile = S.screen === 'grid' && document.querySelector(`#grid [data-id="${lv}"]`), from = tile ? tile.getBoundingClientRect() : null;
   if (S.fresh === lv) S.fresh = null;
   S.screen = 'play'; S.open = lv; S.keyWin = null;
-  S.cover = !cleared(lv) && !S.seen.includes(lv) ? lv : null;
+  S.cover = lv !== 'ultra' && !cleared(lv) && !S.seen.includes(lv) ? lv : null;
   showScreen(); updateHead();
   if (S.cover) drawCover(lv); else goTopic(lv);
   if (from) zoomIn(from);
@@ -1608,7 +1775,7 @@ function closePlay(){
   const lv = S.open, el = document.getElementById('spel'), from = el.getBoundingClientRect();
   stopTimer(); clearBar();
   if (S.answered) S.Q = null;
-  S.keyWin = null; S.cover = null; S.kick = null; S.busy = false; S.unlockedNow = null; S.goldNow = null;
+  S.keyWin = null; S.cover = null; S.kick = null; S.busy = false; S.unlockedNow = null; S.goldNow = null; S.examCard = false;
   S.screen = 'grid'; S.open = null;
   renderGrid();
   const tile = document.querySelector(`#grid [data-id="${lv}"]`);
@@ -1660,13 +1827,162 @@ function showKeyWin(lv){
   S.timer = setTimeout(closePlay, 2200);
 }
 
+// ===================== Eldprovet =====================
+// Tre frågor per ämne i Stormästare-variant, i blandad ordning. Inget facit under provet, och provet kan bara höja.
+const EXAM_PER = 3, EXAM_N = EXAM_PER * TOPICS.length;
+const inExam = () => S.topic === 'ultra';
+const centerOf = el => { const r = el.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+function examQueue(){
+  const q = [];
+  TOPICS.forEach(topic => { for (let i = 0; i < EXAM_PER; i++) q.push({topic}); });
+  return shuffle(q);
+}
+function startExam(){ S.exam = {queue: examQueue(), i: 0, score: {}, done: false}; saveExam(); next(); }
+// Ett pågående prov sparas, så att det finns kvar om sidan laddas om. Ett klart prov sparas inte.
+function saveExam(){
+  if (S.exam && !S.exam.done) save('exam', JSON.stringify({queue: S.exam.queue, i: S.exam.i, score: S.exam.score}));
+  else if (!S.pin) try { localStorage.removeItem(PFX + 'exam'); } catch(e) {}
+}
+function loadExam(){
+  try {
+    const x = JSON.parse(load('exam'));
+    const ok = x && Array.isArray(x.queue) && x.queue.length === EXAM_N && x.queue.every(q => q && TOPICS.includes(q.topic))
+      && Number.isInteger(x.i) && x.i >= 0 && x.i < EXAM_N && x.score && typeof x.score === 'object';
+    if (ok) S.exam = {queue: x.queue, i: x.i, score: x.score, done: false};
+  } catch(e) {}
+}
+const examTotals = () => Object.values(S.exam.score).reduce((a, x) => ({ok: a.ok + x.ok, n: a.n + x.n}), {ok: 0, n: 0});
+function recordExam(ok){
+  const t = S.examItem.topic, sc = S.exam.score;
+  sc[t] = sc[t] || {ok: 0, n: 0}; sc[t].n++; if (ok) sc[t].ok++;
+  S.exam.i++;
+  if (S.exam.i >= EXAM_N) S.exam.done = true;
+  saveExam();
+}
+// 3 av 3 klarar ämnet, 2 av 3 ger Mästare
+const examEffect = t => { const x = S.exam.score[t]; return !x ? 0 : x.ok >= EXAM_PER ? 5 : x.ok >= EXAM_PER - 1 ? UNLOCK_AT : 0; };
+function applyExam(){
+  if (S.exam.applied) return;
+  S.exam.applied = true; S.exam.before = {...S.done};
+  const was = TOPICS.filter(unlocked);
+  TOPICS.forEach(t => {
+    const d = examEffect(t);
+    if (d > S.done[t]) S.done[t] = d;
+    if (Math.min(d, MAX) > S.grade[t]) S.grade[t] = Math.min(d, MAX);
+  });
+  TOPICS.filter(t => unlocked(t) && !was.includes(t)).forEach(grantKey);
+  saveProgress();
+}
+const DARE = ['VÅGAR DU???', 'KAN DU TILLRÄCKLIGT?', `${EXAM_N} FRÅGOR. INGEN HJÄLP. INGEN NÅD.`];
+// Varje eld har egna id på färgerna, så att minikortets eld och den stora inte delar dem
+const fireSVG = k => `<svg class="fire" viewBox="0 0 120 140" aria-hidden="true"><defs>
+  <linearGradient id="fireo-${k}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff4d1a"/><stop offset=".6" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ffb347"/></linearGradient>
+  <linearGradient id="firem-${k}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff9a1f"/><stop offset="1" stop-color="#ffd23f"/></linearGradient></defs>
+  <path class="f1" fill="url(#fireo-${k})" d="M60 136C30 136 14 114 16 90C18 70 30 60 34 42C36 54 42 60 48 60C44 40 52 18 66 4C66 24 78 34 88 48C96 60 104 74 104 92C104 116 88 136 60 136Z"/>
+  <path class="f2" fill="url(#firem-${k})" d="M60 134C42 134 32 120 34 104C36 90 46 82 48 70C52 80 58 82 62 80C60 68 66 56 74 48C74 62 84 72 86 88C88 112 78 134 60 134Z"/>
+  <path class="f3" fill="#fff3b0" d="M60 132C50 132 44 124 45 114C46 104 54 98 56 90C60 98 66 100 68 108C72 116 70 132 60 132Z"/></svg>`;
+// Eldprovets första sida: elden och tre tryck. Sista sidan: resultatet per ämne.
+function showExamCard(){
+  const q = document.getElementById('q');
+  S.examCard = true; S.answered = true; S.Q = null;
+  let h;
+  if (!S.exam) {
+    S.dare = 0;
+    h = `<div class="firecard"><button class="dare" id="dare" aria-label="Starta eldprovet: ${DARE[0]}">${fireSVG('dare')}<svg class="cracks" aria-hidden="true"></svg><span class="daretxt">${DARE[0]}</span></button>
+      <p class="rule">${EXAM_N} frågor, ${EXAM_PER} från varje ämne, i svåraste varianten. 2 av 3 i ett ämne ger Mästare, 3 av 3 klarar ämnet. Provet kan bara höja.</p></div>`;
+  } else {
+    applyExam();
+    const T = examTotals();
+    const rows = TOPICS.map(t => {
+      const x = S.exam.score[t] || {ok: 0, n: 0}, d = examEffect(t), was = S.exam.before[t];
+      const res = d > was ? (d === 5 ? 'klart ✓' : 'upplåst till Mästare') : 'ingen ändring';
+      return `<li><span class="pill ${x.ok >= EXAM_PER - 1 ? 'p-ok' : 'p-bad'}">${x.ok} av ${x.n}</span><span><b>${topicName(t)}</b>: ${res}</span></li>`;
+    }).join('');
+    h = `<div class="exam"><p class="prompt">Eldprovet är klart</p><p class="verdict">${T.ok} av ${T.n} rätt</p>
+      <ul class="skills">${rows}</ul><p>2 av 3 i ett ämne ger Mästare, 3 av 3 klarar ämnet. Ett sämre resultat tar aldrig bort något.</p>
+      <div class="exam-btns"><button class="primary" id="examStart">Gör om eldprovet</button></div></div>`;
+  }
+  q.className = 'card' + (S.exam ? '' : ' bosscard');
+  q.innerHTML = h;
+  barIdle();
+}
+function beginExam(){
+  if (S.topic !== 'ultra') { S.up = 0; S.down = 0; S.topic = 'ultra'; save('topic', 'ultra'); }
+  startExam();
+}
+// Taggiga sprickor från en punkt (i pixlar)
+function crackPaths(cx, cy, n, len){
+  let d = '';
+  for (let j = 0; j < n; j++) {
+    let a = Math.random() * Math.PI * 2, x = cx, y = cy;
+    d += `<path pathLength="1" d="M${x.toFixed(1)} ${y.toFixed(1)}`;
+    const steps = 3 + Math.floor(Math.random() * 3), step = len * (.7 + Math.random() * .6) / steps;
+    for (let k = 0; k < steps; k++) { a += (Math.random() - .5) * .9; x += Math.cos(a) * step; y += Math.sin(a) * step; d += ` L${x.toFixed(1)} ${y.toFixed(1)}`; }
+    d += '"/>';
+  }
+  return d;
+}
+function dareClick(btn){
+  S.dare = (S.dare || 0) + 1;
+  const at = centerOf(btn);
+  if (S.dare >= DARE.length) { sfx.glass(); shatter(beginExam, at); return; }
+  sfx.crack();
+  btn.querySelector('.daretxt').textContent = DARE[S.dare];
+  btn.setAttribute('aria-label', 'Starta eldprovet: ' + DARE[S.dare]);
+  // Båda omgångarna spricker från samma punkt
+  const box = btn.getBoundingClientRect(), w = box.width || 300, h = box.height || 300, cr = btn.querySelector('.cracks');
+  if (S.dare === 1) S.dareAt = [w * (.35 + Math.random() * .3), h * (.3 + Math.random() * .25)];
+  const [cx, cy] = S.dareAt;
+  cr.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  cr.insertAdjacentHTML('beforeend', crackPaths(cx, cy, S.dare === 1 ? 4 : 7, Math.min(w, h) * (S.dare === 1 ? .25 : .5)));
+  btn.classList.remove('quake'); void btn.offsetWidth; btn.classList.add('quake');
+}
+// Kortet spricker i skärvor som faller och avslöjar det som renderas under (fn)
+function shatter(fn, at){
+  const q = document.getElementById('q');
+  if (S.instant || reduceMotion() || !q.animate) { fn(); return; }
+  const r = q.getBoundingClientRect(), ghost = q.cloneNode(true);
+  ghost.removeAttribute('id'); ghost.removeAttribute('aria-live');
+  ghost.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+  fn();
+  const box = document.createElement('div');
+  box.className = 'shatter'; box.setAttribute('aria-hidden', 'true');
+  box.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px`;
+  const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const cx = cl(((at ? at.x : r.left + r.width / 2) - r.left) / r.width * 100, 10, 90);
+  const cy = cl(((at ? at.y : r.top + r.height / 2) - r.top) / r.height * 100, 10, 90);
+  // Punkter runt kanten (hörnen med), medurs. Varje skärva är en triangel från träffpunkten.
+  const ps = [0, 1, 2, 3].concat(Array.from({length: 12}, () => Math.random() * 4)).sort((a, b) => a - b);
+  const pt = p => p < 1 ? [p * 100, 0] : p < 2 ? [100, (p - 1) * 100] : p < 3 ? [(3 - p) * 100, 100] : [0, (4 - p) * 100];
+  const rim = ps.map(pt);
+  box.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none">${rim.map(([x, y]) => `<path vector-effect="non-scaling-stroke" d="M${cx} ${cy} L${x} ${y}"/>`).join('')}</svg>`;
+  rim.forEach((a, i) => {
+    const b = rim[(i + 1) % rim.length];
+    if (Math.abs(a[0] - b[0]) < .01 && Math.abs(a[1] - b[1]) < .01) return;
+    const sh = ghost.cloneNode(true);
+    sh.style.clipPath = `polygon(${cx}% ${cy}%, ${a[0]}% ${a[1]}%, ${b[0]}% ${b[1]}%)`;
+    box.appendChild(sh);
+    const mx = (cx + a[0] + b[0]) / 3 - cx, my = (cy + a[1] + b[1]) / 3 - cy, len = Math.hypot(mx, my) || 1;
+    const dx = mx / len * (40 + Math.random() * 80), dy = 260 + Math.random() * 260, rot = (Math.random() - .5) * 70;
+    sh.animate([{transform: 'none', opacity: 1}, {transform: `translate(${dx * .5}px,${-20 - Math.random() * 30}px) rotate(${rot * .3}deg)`, opacity: 1, offset: .25},
+      {transform: `translate(${dx}px,${dy}px) rotate(${rot}deg)`, opacity: 0}],
+      {duration: 900 + Math.random() * 400, delay: 120 + Math.random() * 80, easing: 'cubic-bezier(.4,0,.9,.5)', fill: 'both'});
+  });
+  box.querySelector('svg').animate([{opacity: 1}, {opacity: 0}], {duration: 200, delay: 100, fill: 'forwards'});
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 1700);
+}
+
 // ===================== Frågan =====================
 function next(){
   stopTimer(); clearBar();
-  const topic = S.topic;
-  // Blandat: en slumpad grad, oftare de svåra
-  const g = isMix(topic) ? rnd([0, 1, 2, 3, 3, 4, 4]) : S.grade[topic];
-  const list = GRADES[topic][g], pinned = S.pin && S.pin.q && allTypes(topic).find(x => x.id === S.pin.q);
+  S.examCard = false;
+  if (S.topic === 'ultra' && (!S.exam || S.exam.done)) { showExamCard(); return; }
+  S.examItem = inExam() ? S.exam.queue[S.exam.i] : null;
+  const topic = S.examItem ? S.examItem.topic : S.topic;
+  // Blandat: en slumpad grad, oftare de svåra. Eldprovet: alltid Stormästare.
+  const g = S.examItem ? MAX : isMix(topic) ? rnd([0, 1, 2, 3, 3, 4, 4]) : S.grade[topic];
+  const list = GRADES[topic][g], pinned = !S.examItem && S.pin && S.pin.q && allTypes(topic).find(x => x.id === S.pin.q);
   const type = pinned || rnd(list);
   S.Q = {...type.make(), id: type.id};
   S.sel = []; S.pick = null; S.answered = false; S.ok = null; S.pickC = null;
@@ -1685,14 +2001,14 @@ function playShown(){
 const PLAY_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>';
 const HAND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V4.5a1.5 1.5 0 0 1 3 0V10l.4-.1a1.5 1.5 0 0 1 2.1 1.1l.1-.1a1.5 1.5 0 0 1 2.3 1.2l.1-.1a1.5 1.5 0 0 1 2.4 1.2V17a5 5 0 0 1-5 5h-1.6a5 5 0 0 1-3.9-1.9l-3-3.8a1.6 1.6 0 0 1 2.4-2.1L9 15z" fill="#fff" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
 function render(){
-  const Q = S.Q, q = document.getElementById('q'), done = S.answered, why = done && !S.ok;
+  const Q = S.Q, q = document.getElementById('q'), done = S.answered, exam = inExam(), why = done && !S.ok && !exam;
   const A = why ? S.anim : null;
   const canReplay = Q.sound || A;
   let h = `<p class="kindtag">${Q.tag || (Q.kind === 'keys' ? (Q.need > 1 ? 'Ta ackordet' : 'Peka på tangenten') : 'Välj rätt svar')}</p>
     <div class="qtop"><p class="prompt">${Q.prompt}</p>${canReplay ? `<button class="replay" id="replay" type="button">${PLAY_ICON}Spela igen</button>` : ''}</div>`;
   let kb;
   if (A) kb = A.kb;
-  else if (Q.kind === 'keys') kb = done ? {...Q.show, lit: merge(Q.show.lit || {}, Object.fromEntries(S.sel.map(m => [m, 'ok'])))}
+  else if (Q.kind === 'keys') kb = done ? {...Q.show, lit: merge(Q.show.lit || {}, Object.fromEntries(S.sel.map(m => [m, exam ? 'acc' : 'ok'])))}
     : {...Q.show, tap: true, sel: S.sel, cheat: showCheat() ? Q.answer : []};
   // Flerval har en klaviatur att pröva på: tangenterna klingar och markeras, men de är inte svaret
   else kb = done ? (Q.show || {}) : {...(Q.show || {}), tap: true, sel: S.sel};
@@ -1700,12 +2016,14 @@ function render(){
   if (Q.kind === 'mc' && !done) h += `<p class="tryline">Pröva gärna på tangenterna. Svaret väljer du nedanför.</p>`;
   if (A && A.note) h += `<div class="animnote">${A.note}</div>`;
   if (Q.kind === 'mc') {
-    const mk = i => !done ? '' : (i === Q.right ? ' ok' : S.pickC === i ? ' bad' : '') + (S.pickC === i ? ' chosen' : '');
+    const mk = i => !done ? '' : exam ? (S.pickC === i ? ' chosen' : '') : (i === Q.right ? ' ok' : S.pickC === i ? ' bad' : '') + (S.pickC === i ? ' chosen' : '');
     h += `<div class="opts">${Q.opts.map((o, i) => `<button class="opt${Q.txt ? ' txt' : ''}${mk(i)}${cheat(i === Q.right)}" data-c="${i}"${done ? ' aria-disabled="true"' : ''}>${o}</button>`).join('')}</div>`;
   }
   if (Q.kind === 'keys' && Q.need > 1 && !done)
     h += `<div class="submitrow"><button class="primary" id="submit"${S.sel.length === Q.need ? '' : ' disabled'}>Svara</button><span class="count">${S.sel.length} av ${Q.need} tangenter</span></div>`;
   if (Q.kind === 'keys' && showCheat() && !done) h += `<p class="cheatline">Svar: ${pcSet(Q.answer).map(p => pcName(p)).join(', ')}</p>`;
+  // Eldprovet: inget facit, bara hur långt man har kommit
+  if (done && exam) h += `<p class="examsign" role="status">${S.exam.i} av ${EXAM_N} besvarade</p>`;
   if (why) {
     const wait = Math.max(0, ((S.lockUntil || 0) - (S.revealAt || 0)) / 1000);
     h += `<p class="${A ? 'sr' : 'lesson'}" role="status">${Q.wrong}</p><button type="button" class="tapcue" id="cont" aria-label="Fortsätt" style="--wait:${wait.toFixed(2)}s">${HAND}</button>`;
@@ -1739,13 +2057,15 @@ function answerMC(i){
 }
 
 // Svaret: en gnista, sedan utfallet. Rätt går vidare av sig själv. Fel visar förklaringen tills man trycker.
-const SPARK_MS = 900, NEXT_MS = 1700, PARTY_MS = 2600, GOLD_MS = 4200;
+const SPARK_MS = 900, NEXT_MS = 1700, PARTY_MS = 2600, GOLD_MS = 4200, EXAM_MS = 1100;
 const stopTimer = () => { clearTimeout(S.timer); S.timer = null; S.autoNext = false; };
 function finish(ok){
   S.answered = true; S.ok = ok;
   S.unlockedNow = null; S.goldNow = null; S.moved = null; S.barPlan = null;
-  S.anim = !ok && S.Q.anim ? S.Q.anim(Array.isArray(S.pick) ? S.pick : [S.pick]) : null;
-  if (isMix(S.topic)) {
+  S.anim = !ok && !inExam() && S.Q.anim ? S.Q.anim(Array.isArray(S.pick) ? S.pick : [S.pick]) : null;
+  if (inExam()) {
+    if (S.exam && !S.exam.done) recordExam(ok);
+  } else if (isMix(S.topic)) {
     const t = S.topic, from = S.mix.streak;
     S.mix.streak = ok ? from + 1 : 0;
     const record = S.mix.streak > (S.mix.best[t] || 0);
@@ -1775,8 +2095,10 @@ function reveal(){
   // Vid fel måste man se hela förklaringen och stapeln innan man kan gå vidare
   const barStart = S.ok ? .1 : A && !reduceMotion() ? A.total : .3;
   const barDur = !S.barPlan || S.ok ? 0 : S.barPlan.moved === 'down' ? BAR_DOWN : BAR_WRONG;
-  S.lockUntil = S.revealAt + (S.instant ? 0 : S.ok ? 600 : (barStart + barDur) * 1000);
+  S.lockUntil = S.revealAt + (S.instant ? 0 : S.ok || inExam() ? 600 : (barStart + barDur) * 1000);
   render();
+  // Eldprovet: ett neutralt ljud, inget rätt eller fel, och nästa fråga av sig själv
+  if (inExam()) { sfx.tick(); barIdle(); if (!S.instant) { S.autoNext = true; S.timer = setTimeout(advance, EXAM_MS); } return; }
   const party = S.moved === 'up' || S.moved === 'top';
   if (!S.ok) { sfx.wrong(); if (A) piano.plan(A.sound); }
   else if (party) { sfx.right(2); const fan = S.moved === 'top' ? sfx.gold : sfx.fanfare; if (S.instant) fan(); else setTimeout(fan, 450); }
@@ -1869,6 +2191,7 @@ function barIdle(){
   const lv = S.open;
   clearBar();
   if (!lv) return;
+  if (lv === 'ultra') { gbarEl.innerHTML = S.exam && !S.exam.done ? `<div class="examprog">Fråga <b>${Math.min(S.exam.i + 1, EXAM_N)}</b> av <b>${EXAM_N}</b></div>` : ''; return; }
   if (isMix(lv)) { barDrawMix(lv, S.mix.streak, S.mix.best[lv] || 0, false); gbarEl.className = 'gbar goldbar'; return; }
   barDraw({g: S.grade[lv], up: S.up, down: S.down, done: S.done[lv]}, lv);
   if (S.answered || S.pin || lv !== S.topic) return;
@@ -1980,6 +2303,13 @@ document.addEventListener('click', e => { if (!gbarEl.contains(e.target)) gbarEl
 document.getElementById('q').addEventListener('click', e => {
   if (S.keyWin) { closePlay(); return; }
   if (e.target.closest('#replay')) { playShown(); return; }
+  if (S.examCard) {
+    const b = e.target.closest('button');
+    if (b && b.id === 'dare') dareClick(b);
+    else if (b && b.id === 'examStart') beginExam();
+    else if (b && b.id === 'coverClose') closePlay();
+    return;
+  }
   if (S.busy) { reveal(); return; }
   if (S.autoNext) { advance(); return; }
   if (S.answered && !S.cover) { if (Date.now() < (S.lockUntil || 0)) return; advance(); return; }
@@ -2002,7 +2332,7 @@ document.addEventListener('keydown', e => {
   if (S.busy && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); reveal(); return; }
   if (S.autoNext && e.key === 'Enter') { e.preventDefault(); advance(); return; }
   if (e.key !== 'Enter' || e.target.tagName === 'BUTTON' || e.target.closest?.('[data-key]')) return;
-  if (S.screen !== 'play' || S.cover) return;
+  if (S.screen !== 'play' || S.cover || S.examCard) return;
   if (S.answered) { if (Date.now() >= (S.lockUntil || 0)) advance(); return; }
   submitKeys();
 });
@@ -2036,9 +2366,11 @@ document.getElementById('tReset').addEventListener('click', () => {
   saveProgress();
   S.up = 0; S.down = 0; S.streaks = {}; S.Q = null; S.topic = 'tangent'; save('topic', 'tangent');
   S.keys = ['tangent']; S.seen = []; S.flying = []; S.arriving = []; saveKeys();
+  S.exam = null; saveExam();
   renderGrid();
 });
 // Sidan öppnar på startsidan. Förhandsvisningen från dev.html går direkt till spelkortet.
+if (!S.pin) loadExam();
 renderGrid();
 if (S.pin) openTopic(S.pin.topic);
 </script>

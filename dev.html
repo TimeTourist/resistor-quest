@@ -234,7 +234,7 @@ const FARG_CATALOG = {
 
 // Ackordkartan (ackord.html). Raderna har samma id som frågetyperna i spelet, så Visa öppnar exakt den frågan.
 const ACK = 'Gnista längs klaviaturen, grön lampa och priing, nästa fråga själv';
-const ACKORD_TABS = [{id:'tangent', name:'Klaviaturen'}, {id:'treklang', name:'Treklangerna'}, {id:'tonart', name:'Tonarterna'}, {id:'steg', name:'Stegen'}, {id:'fyrklang', name:'Fyrklangerna'}, {id:'vag', name:'Vägarna'}];
+const ACKORD_TABS = [{id:'tangent', name:'Klaviaturen'}, {id:'treklang', name:'Treklangerna'}, {id:'tonart', name:'Tonarterna'}, {id:'steg', name:'Stegen'}, {id:'fyrklang', name:'Fyrklangerna'}, {id:'vag', name:'Vägarna'}, {id:'lan', name:'Lånade ackord'}, {id:'ultra', name:'Eldprovet'}];
 const ACKORD_CATALOG = {
   tangent: [
     r('tangent-namn', 0, 'Vit tangent', 'En vit tangent är markerad. Vad heter den? C-tangenterna har sina namn som stöd.', 'Flerval', ACK,
@@ -339,6 +339,33 @@ const ACKORD_CATALOG = {
       'Från målackordet en kvint upp till septimackordet. Tersen får en båge +1 till målets grundton och etiketten "ledton". Målet, dominanten och målet klingar.'),
     r('vag-sekundar-namn', 4, 'Känna igen V/x', 'D7 i C-dur: vad är det? V/ii, V/iii, V/IV, V/V eller V/vi.', 'Flerval', ACK,
       'Samma som Sekundärdominant.')
+  ],
+  lan: [
+    r('lan-hitta', 0, 'Hitta lånet', 'I C-dur: vilket ackord är lånat från C-moll? C-durskalan visas med stegen. Tonarterna C, G, F, D.', 'Flerval', ACK,
+      'Ackordet tänds på C-durskalan, och tonen som inte finns i skalan lyser. Raden: den finns i C-moll. Lånet och I klingar.'),
+    r('lan-namn', 1, 'Namnge lånet', 'I C-dur: vilket ackord är ♭VI (lånat från C-moll)? iv, ♭VI, ♭VII, ♭III.', 'Flerval', ACK,
+      'Mollskalan tänds ton för ton med mollstegen under (i ii° ♭III iv v ♭VI ♭VII), och ackordet staplas av mollskalans toner.'),
+    r('lan-ta', 2, 'Ta lånet', 'I G-dur: ta ♭VII (lånat från G-moll). Tre tangenter, sedan Svara.', 'Tre tangenter + Svara', ACK,
+      'Fel tangenter blir röda, sedan mollstegen och staplingen.'),
+    r('lan-vilket', 2, 'Vilket lån', 'E♭ i C-dur: vilket lånat steg är det? Ackordet visas och spelas.', 'Flerval (iv, ♭VI, ♭VII, ♭III)', ACK,
+      'Mollstegen fram till ackordets grundton, och staplingen.'),
+    r('lan-ton', 3, 'Tonen som lånas', 'Fm (iv) i C-dur: vilken ton gör ackordet lånat?', 'Flerval', ACK,
+      'Durskalans ton (A) tänds, och en båge −1 till den lånade (A♭). Raden: A ♭ = A♭, från C-moll.'),
+    r('lan-iv', 3, 'IV blir iv', 'Du spelar F (IV) i C-dur. Sänk tersen ett halvtonssteg. Vad spelar du nu?', 'Flerval', ACK,
+      'Tersen blir röd och glider −1. Det nya ackordet blir grönt. IV → iv → I klingar.'),
+    r('lan-pikardisk', 4, 'Pikardisk ters', 'En låt i A-moll slutar på ett durackord med samma grundton. Vilket?', 'Flerval', ACK,
+      'Tersen i Am glider +1, och A-dur blir grönt. Am → A klingar.'),
+    r('lan-mario', 4, '♭VI–♭VII–I', '♭VI–♭VII–I i C-dur: vilka ackord?', 'Flerval', ACK,
+      'Ackorden tänds och spelas ett i taget med sina steg, och raden om att de går upp helton för helton till tonikan.'),
+    r('lan-vad', 4, 'Vad är det, och vart?', 'Du hör det här ackordet i C-dur (inga namn). Vad är det? Fel alternativ är andra lån och durens ackord på samma steg.', 'Flerval', ACK,
+      'Mollstegen och staplingen. Sedan tre vanliga vägar vidare, som spelas en i taget: Fm → C, Fm → G, Fm → B♭.')
+  ],
+  ultra: [
+    r('ultra-start', 0, 'Starten', 'Eldkortet: tre tryck på elden (VÅGAR DU??? …), sedan spricker kortet och provet börjar.', 'Tre tryck', 'Knak och sprickor, sedan krossat glas', '–'),
+    r('ultra-fragor', 0, 'Frågorna', '3 frågor per ämne, 21 totalt, i blandad ordning, alla i Stormästare-variant.', 'Som i ämnet',
+      'Neutralt: ett registrerat-ljud, inget rätt eller fel, nästa fråga själv', 'Samma som rätt (man ser inte om det blev fel)'),
+    r('ultra-resultat', 0, 'Resultatet', '2 av 3 i ett ämne ger Mästare, 3 av 3 klarar ämnet. Provet kan bara höja. Ett pågående prov sparas.', 'Resultatkort',
+      'Resultatkortet listar varje ämne', '–')
   ]
 };
 

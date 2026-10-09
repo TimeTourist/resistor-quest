@@ -130,7 +130,7 @@ test('dev.html: spelväljaren byter till Ackordkartan, med egen katalog, egna fl
   d.$('[data-game="ackord"]').click();
   assert.equal(d.$('[data-game="ackord"]').getAttribute('aria-pressed'), 'true');
   assert.match(d.$('#title').textContent, /Ackordkartan/);
-  assert.deepEqual(d.$$('[role=tab]').map(b => b.dataset.tab), ['tangent', 'treklang', 'tonart', 'steg', 'fyrklang', 'vag']);
+  assert.deepEqual(d.$$('[role=tab]').map(b => b.dataset.tab), ['tangent', 'treklang', 'tonart', 'steg', 'fyrklang', 'vag', 'lan', 'ultra']);
   edit(d, d.$('tr[data-id="tangent-namn"] [data-f="comment"]'), 'Fler namn');
   d.$('#gen').click();
   const p = d.$('#prompt').value;
@@ -148,8 +148,8 @@ test('dev.html: Ackordkartans katalog har exakt spelets frågetyper på rätt gr
   const game = loadA({ start: true }), d = dev({ 'dev-game': 'ackord' });
   const types = JSON.parse(game.g("JSON.stringify(BUILT.flatMap(t => allTypes(t).map(x => ({t, id: x.id, g: x.g}))))"));
   const cat = JSON.parse(d.g('JSON.stringify(CATALOG)'));
-  assert.deepEqual(Object.keys(cat).sort(), JSON.parse(game.g('JSON.stringify(BUILT)')).sort());
-  const rows = Object.entries(cat).flatMap(([t, rs]) => rs.filter(r => r.g < 5).map(r => ({t, id: r.id, g: r.g})));
+  assert.deepEqual(Object.keys(cat).filter(k => k !== 'ultra').sort(), JSON.parse(game.g('JSON.stringify(BUILT)')).sort());
+  const rows = Object.entries(cat).filter(([t]) => t !== 'ultra').flatMap(([t, rs]) => rs.filter(r => r.g < 5).map(r => ({t, id: r.id, g: r.g})));
   const key = x => `${x.t}/${x.id}/${x.g}`;
   assert.deepEqual(rows.map(key).sort(), types.map(key).sort());
   d.$('[data-tab="treklang"]').click();

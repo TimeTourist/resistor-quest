@@ -1,6 +1,6 @@
 # Ackordkartan: ett spel om ackord, steg och lånade ackord
 
-Datum: 2026-10-09. Status: godkänd i chatten. Omgång 1–3 är byggda.
+Datum: 2026-10-09. Status: godkänd i chatten. Alla fyra omgångarna är byggda.
 
 ## Syfte
 
@@ -178,6 +178,30 @@ Funktionskedjan är tonika → subdominant → dominant → tonika. Kvintfall ä
 | Stormästare | Flerval | D7 i C-dur: vad är det? V/ii, V/iii, V/IV, V/V eller V/vi. | Dominanten och målackordet en kvint ner, med ledtonen. |
 
 Snabbkoll: "Vart vill V (dominanten) helst gå?" Svaren är I (rätt), IV, ii och vii°.
+
+## Omgång 4: frågekatalog
+
+Lånade ackord hämtas från parallell moll, alltså moll med samma grundton: iv, ♭VI, ♭VII och ♭III. Mollens steg är i ii° ♭III iv v ♭VI ♭VII. Tonarterna är C G D A E B F B♭, så att lånen aldrig kräver dubbeltecken.
+
+### Lånade ackord (`lan`)
+
+| Grad | Frågetyp | Fråga | Felanimering |
+|---|---|---|---|
+| Nykomling | Flerval | I C-dur: vilket ackord är lånat från C-moll? C-durskalan visas med stegen. | Ackordet tänds på skalan, och tonen som inte finns i C-dur lyser. Lånet och I klingar. |
+| Lärling | Flerval | I C-dur: vilket ackord är ♭VI? | Mollskalan tänds ton för ton med mollstegen under, och ackordet staplas av mollskalans toner. |
+| Gesäll | Peka (tre tangenter) | I G-dur: ta ♭VII. | Samma som Lärling. |
+| Gesäll | Flerval | E♭ i C-dur: vilket lånat steg är det? | Samma som Lärling. |
+| Mästare | Flerval | Fm (iv) i C-dur: vilken ton gör ackordet lånat? | Durens ton (A) och en båge −1 till den lånade (A♭). |
+| Mästare | Flerval | Du spelar F (IV). Sänk tersen. Vad spelar du nu? | Tersen glider −1 och Fm blir grönt. IV → iv → I klingar. |
+| Stormästare | Flerval | En låt i A-moll slutar på ett durackord med samma grundton (pikardisk ters). Vilket? | Tersen glider +1 och A-dur blir grönt. |
+| Stormästare | Flerval | ♭VI–♭VII–I i C-dur: vilka ackord? | Ackorden tänds och spelas ett i taget med sina steg. |
+| Stormästare | Flerval | Du hör det här ackordet i C-dur (inga namn). Vad är det? | Mollstegen och staplingen, och sedan **tre vanliga vägar vidare** som spelas en i taget, till exempel Fm → C, Fm → G och Fm → B♭. Det är reflexen "vad är det här, och vart kan jag gå?". |
+
+Snabbkoll: "Varifrån lånar man ackorden?" Svaren är "Från moll med samma grundton" (rätt), "Från dominantens tonart", "Från en annan låt" och "Från kromatiska skalan".
+
+### Eldprovet (`ultra`)
+
+Eldprovet är byggt som i Färgkoden, men har tre frågor per ämne: 21 frågor i blandad ordning, alla i Stormästare-variant. 2 av 3 rätt i ett ämne ger Mästare och 3 av 3 klarar ämnet. Provet kan bara höja. Det är alltid öppet, och man startar det med tre tryck på elden (VÅGAR DU??? …), varefter kortet spricker. Under provet visas inget facit: ett neutralt ljud hörs och nästa fråga kommer av sig själv. Ett pågående prov sparas, och resultatkortet listar varje ämne.
 
 ## Testning
 
