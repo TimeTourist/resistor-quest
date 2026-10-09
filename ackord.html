@@ -225,7 +225,7 @@ main{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
 .arc.acc path{stroke:var(--accent)}.arc.acc circle,.arc.acc text{fill:var(--accent)}
 .arc.ok path{stroke:var(--ok)}.arc.ok circle,.arc.ok text{fill:var(--ok)}
 .arc.bad path{stroke:var(--bad)}.arc.bad circle,.arc.bad text{fill:var(--bad)}
-.under{font:600 12px var(--text);fill:var(--muted);text-anchor:middle}
+.under{font:600 12px var(--text);fill:var(--muted)}
 .under.ok{fill:var(--ok)}.under.bad{fill:var(--bad)}
 .cheatmark{fill:var(--ok)}
 .animnote{margin:12px 0 0;padding:10px 14px;border-radius:10px;background:var(--bg);line-height:1.45}
@@ -431,6 +431,8 @@ function keyX(m){
   const o = Math.floor((m - LO) / 12), p = ((m % 12) + 12) % 12;
   return isBlack(m) ? o * 7 * KW + (NAT.indexOf(p - 1) + 1) * KW : o * 7 * KW + NAT.indexOf(p) * KW + KW / 2;
 }
+// Etiketter vid klaviaturens kanter hänger inåt i stället för utanför
+const edge = m => ` text-anchor="${keyX(m) < 45 ? 'start' : keyX(m) > WHITES.length * KW - 45 ? 'end' : 'middle'}"`;
 const dl = at => at != null ? ` style="animation-delay:${at.toFixed(2)}s"` : '';
 const mkc = at => at != null ? ' mk' : '';
 function kbd(o = {}){
@@ -449,15 +451,18 @@ function kbd(o = {}){
     return `<text class="kn ${b ? 'onb' : 'onw'}${mkc(t.at)}"${dl(t.at)} text-anchor="middle">${parts.map((p, i) => `<tspan x="${keyX(m)}" y="${y0 + i * 12}">${p}</tspan>`).join('')}</text>`;
   }).join('');
   const arcs = (o.arcs || []).map(({a, b, text, at, cls = 'acc'}) => {
-    const xa = keyX(a), xb = keyX(b), h = Math.min(28, 10 + Math.abs(xb - xa) / 4), mx = (xa + xb) / 2;
+    const xa = keyX(a), xb = keyX(b), h = Math.min(28, 10 + Math.abs(xb - xa) / 4), mx = (xa + xb) / 2, tx = Math.abs(xb - xa) < 40 ? xa : mx;
     return `<g class="arc ${cls}${mkc(at)}"${dl(at)}><path d="M${xa} -3 Q${mx} ${-3 - 2 * h} ${xb} -3" fill="none"/><circle cx="${xb}" cy="-3" r="3.2"/>` +
-      (text ? `<text x="${mx}" y="${-8 - h}">${text}</text>` : '') + '</g>';
+      (text ? `<text x="${tx}" y="${-8 - h}">${text}</text>` : '') + '</g>';
   }).join('');
   const under = (o.under || []).map(({m, text, at, cls = '', row = 0}) =>
-    `<text class="under ${cls}${mkc(at)}"${dl(at)} x="${keyX(m)}" y="${KH + 17 + row * 15}">${text}</text>`).join('');
+    `<text class="under ${cls}${mkc(at)}"${dl(at)} x="${keyX(m)}" y="${KH + 17 + row * 15}"${edge(m)}>${text}</text>`).join('');
   const marks = cheat.map(m => `<path class="cheatmark" d="M${keyX(m) - 6} -14 L${keyX(m) + 6} -14 L${keyX(m)} -5 Z"/>`).join('');
   const label = o.label || 'Klaviatur';
-  return `<svg viewBox="0 -48 ${WHITES.length * KW} ${KH + 40 + 48}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}">` +
+  // Plats ovanför för bågar och pilar, och under för etiketter, bara när de finns
+  const top = (o.arcs || []).length ? 48 : cheat.length ? 18 : 4, rows = Math.max(-1, ...(o.under || []).map(u => u.row || 0));
+  const bottom = rows < 0 ? 4 : 26 + rows * 15;
+  return `<svg viewBox="0 ${-top} ${WHITES.length * KW} ${KH + bottom + top}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}">` +
     WHITES.map(key).join('') + BLACKS.map(key).join('') + nameEls + arcs + under + marks + '</svg>';
 }
 
@@ -635,8 +640,8 @@ function neighbours(m, t = T0){
   return {
     lit: {[lft]: {cls: 'step', at: t}, [rgt]: {cls: 'step', at: t + 1.1}, [m]: {cls: 'ok', at: t + 2.1}},
     names: {[lft]: {text: SHARP[lft % 12], at: t}, [rgt]: {text: FLAT[rgt % 12], at: t + 1.1}, [m]: {text: `${SHARP[p]}/${FLAT[p]}`, at: t + 2.1}},
-    arcs: [{a: lft, b: m, text: '♯ +1', at: t + .4}, {a: rgt, b: m, text: '♭ −1', at: t + 1.5}],
-    under: [{m: lft, text: `${SHARP[lft % 12]} + ♯`, at: t + .4}, {m: rgt, text: `${FLAT[rgt % 12]} + ♭`, at: t + 1.5}],
+    arcs: [{a: lft, b: m, text: '♯', at: t + .4}, {a: rgt, b: m, text: '♭', at: t + 1.5}],
+    under: [{m: lft, text: `${SHARP[lft % 12]} + ♯ = ${SHARP[m % 12]}`, at: t + .4}, {m: rgt, text: `${FLAT[rgt % 12]} + ♭ = ${FLAT[m % 12]}`, at: t + 1.5, row: 1}],
     sound: [{notes: [lft, m], step: .35, at: t + .2}, {notes: [rgt, m], step: .35, at: t + 1.3}],
     total: t + 2.7
   };
