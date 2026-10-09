@@ -1,0 +1,1484 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ackordkartan</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='4' width='28' height='24' rx='3' fill='%231c1a22'/%3E%3Cg fill='%23f7f2e6'%3E%3Crect x='4' y='6' width='5.5' height='20' rx='1'/%3E%3Crect x='10.5' y='6' width='5.5' height='20' rx='1'/%3E%3Crect x='16' y='6' width='5.5' height='20' rx='1'/%3E%3Crect x='22.5' y='6' width='5.5' height='20' rx='1'/%3E%3C/g%3E%3Crect x='4' y='6' width='5.5' height='20' rx='1' fill='%23e3a23b'/%3E%3Crect x='16' y='6' width='5.5' height='20' rx='1' fill='%23e3a23b'/%3E%3Cg fill='%231c1a22'%3E%3Crect x='8' y='6' width='4' height='12'/%3E%3Crect x='14.5' y='6' width='4' height='12'/%3E%3Crect x='26.5' y='6' width='3' height='12'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Samma spelform som Färgkoden: rutnät av ämneskort som zoomas upp till ett spelkort.
+   Ackordkartans värld: notlinjer i bakgrunden, elfenben och ebenholts, ackord som lyser i bärnsten. */
+:root{
+  --bg:#e7e6ec;--staff:rgba(60,48,90,.09);--surface:#fff;--ink:#211d2b;--muted:#5d5869;--line:#cdc9d6;
+  --accent:#6b3fa0;--accent-ink:#fff;--ok:#24803a;--ok-bg:#e3f3e6;--bad:#b83227;--bad-bg:#f8e4e1;--tip-bg:#fbefcf;
+  --ivory:#fbf8f0;--ivory-line:#a79f8d;--ebony:#1c1a22;--chord:#e3a23b;--chord-soft:#f6dcae;--keyname:#3a3326;
+  --fog:rgba(220,218,228,.92);--fresh:#8fe25f;--ripe:#2a9b48;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;--text:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15131b;--staff:rgba(170,150,220,.07);--surface:#1f1c27;--ink:#ebe8f2;--muted:#a49eb2;--line:#3a3546;
+    --accent:#b48be6;--accent-ink:#17121f;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;
+    --ivory:#ece6d6;--ivory-line:#7d7563;--ebony:#0c0b10;--chord:#e9a24a;--chord-soft:#c9a874;--keyname:#2a2418;--fog:rgba(40,36,52,.92);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15131b;--staff:rgba(170,150,220,.07);--surface:#1f1c27;--ink:#ebe8f2;--muted:#a49eb2;--line:#3a3546;
+  --accent:#b48be6;--accent-ink:#17121f;--ok:#6fcf86;--ok-bg:#183222;--bad:#ef8a7e;--bad-bg:#3a1d1a;--tip-bg:#3a3117;
+  --ivory:#ece6d6;--ivory-line:#7d7563;--ebony:#0c0b10;--chord:#e9a24a;--chord-soft:#c9a874;--keyname:#2a2418;--fog:rgba(40,36,52,.92);color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;color:var(--ink);background-color:var(--bg);
+  /* Fem notlinjer, sedan ett mellanrum */
+  background-image:repeating-linear-gradient(180deg,transparent 0 10px,var(--staff) 10px 11px,transparent 11px 20px,var(--staff) 20px 21px,transparent 21px 30px,var(--staff) 30px 31px,transparent 31px 40px,var(--staff) 40px 41px,transparent 41px 50px,var(--staff) 50px 51px,transparent 51px 96px);
+  font:16px/1.5 var(--text)}
+html,body{overflow-x:clip}
+main{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
+.top{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.home{align-self:flex-start;font-size:.85rem;font-weight:600;color:var(--muted);text-decoration:none}
+.home:hover{color:var(--accent)}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-family:var(--display);font-weight:700;font-size:clamp(1.9rem,7vw,2.6rem);line-height:1;margin:0;display:flex;align-items:center;gap:10px}
+.brand svg{width:1.1em;height:auto}
+.soundbtn{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0;flex:none}
+.soundbtn svg{width:22px;height:22px}
+.soundbtn[aria-pressed="false"]{color:var(--muted)}
+.lead{margin:10px 0 20px;color:var(--muted);max-width:60ch}
+.lead[hidden],.grid[hidden]{display:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Startsidan: åtta minikort */
+.grid{display:grid;gap:14px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.tile{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:8px;min-height:190px;padding:14px;text-align:left;cursor:pointer;font:inherit;color:var(--ink);
+  border:2px solid var(--c);border-radius:16px;background:color-mix(in srgb,var(--c) 10%,var(--surface));transition:transform .2s,box-shadow .2s}
+.tile:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.14)}
+.tpat{position:absolute;inset:0;background-image:var(--pat);pointer-events:none}
+.thead{position:relative;display:flex;align-items:center;gap:10px}
+.ticon{flex:none;width:40px;height:40px;border-radius:11px;background:var(--c);color:var(--ci);display:grid;place-items:center}
+.ticon svg{width:28px;height:28px}
+.tname{font-family:var(--display);font-weight:700;font-size:1.5rem;line-height:1;text-wrap:balance;min-width:0;overflow-wrap:anywhere}
+.tline{position:relative;display:block;color:var(--muted);font-size:.86rem;line-height:1.35}
+.tfoot{position:relative;margin-top:auto;display:grid;gap:5px}
+.tstate{font-size:.8rem;font-weight:600}
+.tchip{display:inline-block;justify-self:start;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:999px;background:var(--c);color:var(--ci)}
+.gb{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.gb .cells{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;height:12px}
+.gb i{display:block;border-radius:2px;border:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent);background:var(--surface)}
+.gb i.on{background:var(--fresh);border-color:#6cc43c}
+.gb i.full{background:var(--ripe);border-color:var(--ripe)}
+.gb .cur .cells{outline:2px solid var(--ink);outline-offset:2px;border-radius:3px}
+.tile.locked{border-color:var(--line);background:var(--surface)}
+.locked .ticon{background:var(--line);color:var(--muted)}
+.locked .thead,.locked .tline{opacity:.5}
+.soonchip{position:relative;z-index:3;align-self:flex-start;margin-top:auto;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:999px;background:var(--ink);color:var(--surface)}
+.fog{position:absolute;inset:-30%;pointer-events:none;
+  background:radial-gradient(closest-side at 30% 35%,var(--fog),transparent),radial-gradient(closest-side at 70% 65%,var(--fog),transparent),radial-gradient(closest-side at 50% 50%,var(--fog),transparent 120%);
+  opacity:.8;transition:opacity 1s ease}
+@media (prefers-reduced-motion:no-preference){.fog{animation:drift 7s ease-in-out infinite alternate}@keyframes drift{to{transform:translate(8%,-6%) scale(1.08)}}}
+.chains{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transition:transform .9s ease-in .25s,opacity .9s ease-in .25s}
+.padlock{position:absolute;left:50%;top:50%;width:56px;margin:-34px 0 0 -28px;transition:transform .8s cubic-bezier(.5,0,.9,.6) .45s,opacity .8s .45s;filter:drop-shadow(0 4px 6px rgba(0,0,0,.25))}
+.padlock .shackle{transition:transform .35s ease .1s}
+@media (prefers-reduced-motion:no-preference){.tile.nope{animation:nope .4s ease-in-out}@keyframes nope{25%{transform:translateX(-7px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}}
+.tile.opening .shackle{transform:translateY(-12px)}
+.tile.opening .padlock{transform:translateY(160px) rotate(25deg);opacity:0}
+.tile.opening .chains{transform:translateY(60px);opacity:0}
+.tile.opening .fog{opacity:0}
+.tile.fresh{animation:lightup 1.4s ease-out}
+@media (prefers-reduced-motion:reduce){.tile.fresh{animation:none}}
+@keyframes lightup{0%{filter:saturate(0) brightness(1.1)}50%{box-shadow:0 0 0 10px color-mix(in srgb,var(--c) 30%,transparent)}100%{filter:none}}
+.newflag{position:absolute;top:10px;right:10px;font-family:var(--display);font-weight:700;font-size:.95rem;letter-spacing:.05em;text-transform:uppercase;background:var(--c);color:var(--ci);border-radius:999px;padding:2px 10px}
+.tile.done{border-color:#b8860b;color:#3a2a00;background:linear-gradient(150deg,#fff1b0,#e8b923 55%,#c8961a)}
+.done .tline{color:#5a4300}
+.done .ticon{background:#3a2a00;color:#f2c94c}
+.done .tchip{background:#3a2a00;color:#f2c94c}
+.tile.exam{border:0;color:#ffe8d2;background:radial-gradient(120% 95% at 70% 115%,#ff9a3c,#d9381e 42%,#2a1712 86%)}
+.tile.exam .tline{color:#ffd6b0}
+.tile.exam .ticon{background:rgba(0,0,0,.35);color:#ffb347}
+.tile.exam.soon{filter:saturate(.35) brightness(.85)}
+.tile.exam .soonchip{background:#ffe8d2;color:#2a1712}
+.keyghost{position:fixed;z-index:100;width:70px;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
+.keyghost svg,.inkey svg{display:block;width:100%;height:auto}
+.inkey{position:absolute;left:calc(50% - 58px);top:calc(50% - 4px);width:62px;z-index:3;pointer-events:none;transform-origin:92% 50%;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));--kin:6px;--push:11px;clip-path:inset(-30px var(--kin) -30px -30px)}
+.inkey.arriving{visibility:hidden}
+@media (prefers-reduced-motion:no-preference){
+  .inkey{animation:keyrattle 1.6s ease-in-out infinite}
+  @keyframes keyrattle{0%,55%,100%{transform:none}60%{transform:rotate(-8deg)}65%{transform:rotate(7deg)}70%{transform:rotate(-5deg)}75%{transform:rotate(4deg)}80%{transform:rotate(-2deg)}}
+  .tile.turning .inkey{animation:pushturn .75s ease-in forwards}
+  @keyframes pushturn{0%{transform:none;clip-path:inset(-30px var(--kin) -30px -30px)}40%,55%{transform:translateX(var(--push));clip-path:inset(-30px calc(var(--kin) + var(--push)) -30px -30px)}100%{transform:translateX(var(--push)) rotateX(80deg);clip-path:inset(-30px calc(var(--kin) + var(--push)) -30px -30px)}}
+}
+.tile.haskey{box-shadow:0 0 0 3px var(--c),0 0 26px color-mix(in srgb,var(--c) 60%,transparent)}
+.tile.haskey .kh{fill:var(--c)}
+.tile.opening .inkey{opacity:0;transition:opacity .3s .3s}
+@media (max-width:899px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media (max-width:719px){
+  .tile{min-height:170px;padding:12px;gap:6px;border-radius:14px}
+  .ticon{width:34px;height:34px}.ticon svg{width:24px;height:24px}
+  .tname{font-size:1.3rem}
+  .tline{font-size:.8rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .padlock{width:46px;margin:-28px 0 0 -23px}
+  .inkey{left:calc(50% - 48px);width:52px;--kin:4px;--push:9px}
+}
+@media (max-width:379px){.grid{grid-template-columns:minmax(0,1fr)}.tile{min-height:0}}
+
+/* Spelkortet */
+.play{container-type:inline-size;position:relative;margin-top:4px;display:flex;flex-direction:column;overflow:hidden;border:3px solid var(--c);border-radius:18px;
+  background:color-mix(in srgb,var(--c) 9%,var(--surface));box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.play[hidden]{display:none}
+.phead{position:relative;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--c);color:var(--ci)}
+.phead[hidden],.gbar[hidden]{display:none}
+.phead .ticon{background:rgba(0,0,0,.18);color:var(--ci)}
+.pname{font-family:var(--display);font-weight:700;font-size:clamp(1.3rem,6cqi,1.8rem);line-height:1;min-width:0;overflow-wrap:anywhere}
+.pmode{font-family:var(--display);font-weight:600;font-size:1.2rem;opacity:.85}
+.closebtn{margin-left:auto;display:flex;align-items:center;gap:6px;border:2px solid currentColor;background:transparent;color:inherit;border-radius:999px;padding:5px 12px 5px 8px;cursor:pointer;font:inherit;font-weight:600;font-size:.88rem}
+.closebtn svg{width:20px;height:20px}
+.play .pbody{position:relative;max-width:720px;width:100%;margin:0 auto;padding:12px 16px 20px}
+.play.goldplay{border-color:#b8860b}
+.goldplay .phead{background:linear-gradient(120deg,#e8b923,#b8860b);color:#3a2a00}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+#q{position:relative}
+
+/* Omslaget */
+.play.cover{border-width:6px}
+.play.cover #q{background:transparent;border:0;padding:6px 4px 4px}
+.eyebrow{font-family:var(--display);font-weight:700;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cover .kb{max-width:460px;margin:8px auto 0}
+.cname{font-family:var(--display);font-weight:700;font-size:clamp(2rem,10cqi,3.6rem);line-height:.95;margin:8px 0 6px;display:flex;align-items:center;gap:12px;min-width:0;overflow-wrap:anywhere}
+.cname .ticon{width:52px;height:52px;border-radius:13px}.cname .ticon svg{width:36px;height:36px}
+.cline{margin:0;color:var(--muted);font-size:1.05rem;max-width:52ch}
+.unlock{margin-top:auto;padding-top:18px}
+.unlock .rule{height:0;border-top:2px dashed var(--c);margin-bottom:14px}
+.ulab{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase}
+.ulab svg{width:20px;height:20px;color:var(--c)}
+.kickq{font-weight:700;font-size:1.15rem;margin:6px 0 10px}
+.kickopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kopt{min-width:0;overflow-wrap:anywhere;font:inherit;font-size:1rem;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:12px 10px;min-height:60px;cursor:pointer;text-align:center}
+.kopt:hover{border-color:var(--c)}
+.kopt.bad{border-color:var(--bad);background:var(--bad-bg);cursor:default;opacity:.75}
+.kopt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.xbtn{position:absolute;top:4px;right:4px;z-index:2;width:40px;height:40px;border-radius:50%;border:2px solid var(--c);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.xbtn svg{width:20px;height:20px}
+@media (prefers-reduced-motion:no-preference){.kickopts.shake{animation:shake .45s ease-in-out}}
+
+/* Nyckeln på spelkortet */
+.keywin{margin:auto;text-align:center;display:grid;justify-items:center;gap:6px}
+.keywin svg{width:180px;height:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3))}
+@media (prefers-reduced-motion:no-preference){.keywin svg{animation:keyin .8s cubic-bezier(.3,1.6,.5,1) both}@keyframes keyin{from{transform:scale(.2) rotate(-90deg);opacity:0}}}
+.keywin h3{font-family:var(--display);font-size:2rem;line-height:1.05;margin:8px 0 0;text-wrap:balance}
+.keywin p{margin:0;color:var(--muted)}
+
+/* Frågan */
+.kindtag{display:inline-block;margin:0 0 8px;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--bg);color:var(--muted)}
+.kind-keys .kindtag{background:var(--chord);color:var(--keyname)}
+.qtop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.prompt{font-size:1.1rem;margin:0;padding-top:6px;font-weight:500}
+.replay{flex:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px 6px 9px;font:inherit;font-size:.88rem;font-weight:600;cursor:pointer}
+.replay svg{width:16px;height:16px}
+.replay:hover{border-color:var(--accent)}
+.big{font-family:var(--display);font-weight:600;font-size:clamp(2.2rem,9vw,3.2rem);line-height:1.05;margin:0 0 6px}
+.opts{display:grid;gap:10px;margin-top:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.opt{position:relative;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 8px;cursor:pointer;min-height:56px;min-width:0;overflow-wrap:anywhere;
+  font-family:var(--display);font-size:1.45rem;line-height:1.15}
+.opt.txt{font-family:var(--text);font-size:1rem}
+.opt:hover:not(:disabled):not([aria-disabled]){border-color:var(--accent)}
+.opt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.opt.bad{border-color:var(--bad);background:var(--bad-bg)}
+.opt.chosen{box-shadow:inset 0 0 0 3px var(--accent)}
+.opt:disabled,.opt[aria-disabled]{cursor:default}
+.primary{margin-top:14px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;padding:12px 22px;cursor:pointer}
+.primary:disabled{opacity:.45;cursor:default}
+.submitrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.submitrow .count{color:var(--muted);font-size:.95rem;margin-top:14px}
+.lesson{margin:14px 0 0;border-radius:10px;padding:10px 14px;line-height:1.45;background:var(--bad-bg)}
+.cheat{position:relative;box-shadow:inset 0 0 0 3px var(--ok)}
+.cheat::after{content:'➜';position:absolute;left:6px;top:3px;color:var(--ok);font:700 1rem/1 system-ui,sans-serif}
+.cheatline{color:var(--ok);font-weight:700;font-size:.95rem;margin:10px 0 0}
+
+/* Klaviaturen */
+.kb{margin:6px 0 0}
+.kb svg{display:block;width:100%;height:auto;max-width:600px;margin:0 auto;overflow:visible;touch-action:manipulation}
+.k .kr{stroke:var(--ivory-line);stroke-width:1}
+.k.w .kr{fill:var(--ivory)}
+.k.b .kr{fill:var(--ebony);stroke:var(--ebony)}
+.k[data-key]{cursor:pointer}
+.k[data-key]:focus{outline:none}
+.k[data-key]:focus-visible .kr{stroke:var(--accent);stroke-width:3}
+.k.w[data-key]:hover .kr{fill:color-mix(in srgb,var(--accent) 12%,var(--ivory))}
+.k.b[data-key]:hover .kr{fill:color-mix(in srgb,var(--accent) 35%,var(--ebony))}
+.k.sel .kr{fill:var(--accent)!important;stroke:var(--accent)}
+.lit{pointer-events:none}
+.lit.acc{fill:var(--chord)}
+.lit.step{fill:var(--chord-soft)}
+.lit.ok{fill:var(--ok)}
+.lit.bad{fill:var(--bad)}
+.lit.ghost{fill:var(--chord);opacity:.35}
+.kn{font:700 13px var(--text);pointer-events:none}
+.kn.onw{fill:var(--keyname)}
+.kn.onb{fill:#fff;font-size:10.5px}
+.k.sel~.kn{fill:#fff}
+.arc path{stroke-width:2.5;stroke-linecap:round}
+.arc text{font:700 13px var(--text);text-anchor:middle}
+.arc.acc path{stroke:var(--accent)}.arc.acc circle,.arc.acc text{fill:var(--accent)}
+.arc.ok path{stroke:var(--ok)}.arc.ok circle,.arc.ok text{fill:var(--ok)}
+.arc.bad path{stroke:var(--bad)}.arc.bad circle,.arc.bad text{fill:var(--bad)}
+.under{font:600 12px var(--text);fill:var(--muted);text-anchor:middle}
+.under.ok{fill:var(--ok)}.under.bad{fill:var(--bad)}
+.cheatmark{fill:var(--ok)}
+.animnote{margin:12px 0 0;padding:10px 14px;border-radius:10px;background:var(--bg);line-height:1.45}
+.animnote b{font-family:var(--display);font-size:1.25rem}
+.letters{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+.letters span{display:inline-grid;place-items:center;min-width:34px;height:34px;padding:0 6px;border-radius:8px;border:1.5px solid var(--line);font-family:var(--display);font-weight:700;font-size:1.2rem;color:var(--muted)}
+.letters span.on{border-color:var(--ok);background:var(--ok-bg);color:var(--ink)}
+.qtab{border-collapse:collapse;margin:6px 0 0;font-variant-numeric:tabular-nums}
+.qtab td{padding:3px 12px 3px 0}
+.qtab tr.hit td{font-weight:700;color:var(--ok)}
+.qtab tr.hit{background:var(--ok-bg)}
+@media (prefers-reduced-motion:no-preference){
+  .mk{animation:ain .3s ease-out both}
+  @keyframes ain{from{opacity:0}}
+  .lesson{animation:pop .18s ease-out}
+  @keyframes pop{from{transform:translateY(4px);opacity:0}}
+}
+
+/* Svarsanimeringen och stapeln (samma som Färgkoden) */
+.fx{position:absolute;width:0;height:0;pointer-events:none;z-index:4}
+.fx i{position:absolute;left:-11px;top:-11px;width:22px;height:22px;border-radius:50%}
+.fx.spark i{background:radial-gradient(circle,#fff 0 25%,#ffd84a 45%,rgba(255,170,0,0) 72%);box-shadow:0 0 12px 4px rgba(255,200,40,.7)}
+.fx.won i{background:radial-gradient(circle,#eaffef 0 25%,#3ad66a 55%,rgba(58,214,106,0) 75%);box-shadow:0 0 18px 8px rgba(58,214,106,.55)}
+.fx.lost i{background:radial-gradient(circle,#ffd0c8 0 20%,#d9381e 55%,rgba(217,56,30,0) 75%)}
+.fx b{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:#ffd84a}
+.fx.party b:nth-child(3n){background:var(--accent)}.fx.party b:nth-child(3n+1){background:#3ad66a}
+.fx s{position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;background:rgba(120,120,120,.55);text-decoration:none}
+@media (prefers-reduced-motion:no-preference){
+  .fx.spark i{animation:sparkgo .9s cubic-bezier(.4,0,.6,1) forwards}
+  @keyframes sparkgo{0%{transform:translateX(0) scale(.6)}88%{transform:translateX(var(--dx)) scale(1.1)}100%{transform:translateX(var(--dx)) scale(1.5);opacity:.9}}
+  .fx.won i{animation:ledon 1s ease-out forwards}
+  @keyframes ledon{0%{transform:scale(.4)}35%{transform:scale(1.6)}100%{transform:scale(1);opacity:0}}
+  .fx.won b{animation:burst .75s ease-out forwards}
+  @keyframes burst{0%{transform:rotate(var(--a)) translateX(0);opacity:1}100%{transform:rotate(var(--a)) translateX(46px);opacity:0}}
+  .fx.party b{animation:burstbig 1.2s ease-out forwards}
+  @keyframes burstbig{0%{transform:rotate(var(--a)) translateX(0);opacity:1}100%{transform:rotate(var(--a)) translateX(110px) translateY(30px);opacity:0}}
+  .fx.lost i{animation:fizz .6s steps(6) forwards}
+  @keyframes fizz{0%,100%{opacity:0}20%,60%{opacity:1}40%,80%{opacity:.2}}
+  .fx.lost s{animation:smoke 1.4s ease-out forwards;opacity:0}
+  .fx.lost s:nth-of-type(2){animation-delay:.15s;left:-2px}.fx.lost s:nth-of-type(3){animation-delay:.3s;left:-14px}
+  @keyframes smoke{0%{transform:translateY(0) scale(.4);opacity:.8}100%{transform:translateY(-46px) scale(2.2);opacity:0}}
+  .pending{animation:pend .45s ease-in-out infinite alternate}
+  @keyframes pend{to{box-shadow:inset 0 0 0 3px var(--accent)}}
+  .opt.bad.chosen{animation:shake .5s ease-in-out}
+  @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+  .tapcue svg{animation:press 1.1s ease-in-out calc(var(--wait,0s) + .3s) infinite}
+  @keyframes press{0%,60%,100%{transform:translate(0,0) scale(1)}30%{transform:translate(-3px,-4px) scale(.88)}}
+}
+.tapcue{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;width:60px;height:60px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;animation:cuein .3s ease-out var(--wait,0s) forwards}
+.tapcue svg{width:34px;height:34px}
+@keyframes cuein{to{opacity:1;pointer-events:auto}}
+.gbar{position:relative;max-width:720px;width:100%;margin:0 auto;padding:12px 16px 4px;pointer-events:none}
+.gname{display:none}
+.segs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.gseg span{display:block;text-align:center;font-size:.68rem;color:var(--muted);margin-top:3px;white-space:nowrap}
+.gseg.cur span{color:var(--ink);font-weight:700}
+.gseg.cur .cells{outline:2px solid var(--ink);outline-offset:2px;border-radius:5px}
+.cells{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;height:16px}
+.cells i{display:block;border-radius:3px;border:1.5px solid var(--line);background:var(--bg);transition:background .45s,border-color .45s}
+.cells i.on{background:var(--fresh);border-color:#6cc43c}
+.cells i.full,.cells i.ripe{background:var(--ripe);border-color:var(--ripe)}
+.cells i.was{background:var(--fresh);border-color:var(--fresh);opacity:.4}
+.cells i.bad{background:var(--bad);border-color:var(--bad)}
+.gbar.float{position:fixed;top:0;left:0;right:0;z-index:30;background:var(--surface);border-radius:0 0 14px 14px;padding-bottom:8px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.dust{position:fixed;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;z-index:31;pointer-events:none}
+.dust.in{background:#a6f06e;box-shadow:0 0 6px #8fe25f}
+.dust.out{background:#9b8f7e}
+.dust.out.bad{background:var(--bad)}
+.dust.gold{background:#f6c945;box-shadow:0 0 8px #ffd95a}
+.gbar.gilded .cells i{background:#e8b923;border-color:#b8860b;transition:background .4s calc(var(--k) * 60ms),border-color .4s calc(var(--k) * 60ms);opacity:1}
+.gbar.gilded{box-shadow:0 0 0 2px #e8b923,0 8px 30px rgba(232,185,35,.55)}
+.goldbar{box-shadow:0 0 0 2px #e8b923,0 8px 24px rgba(0,0,0,.25)}
+.mixrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.mixrow .streak{font-family:var(--display);font-size:1.2rem}
+.mixrow .streak b{display:inline-block;font-size:1.8rem;color:#b8860b}
+.mixrow .rec{font-size:.85rem;color:var(--muted)}
+.mixrow .rec.new{color:#b8860b;font-weight:700}
+@media (prefers-reduced-motion:no-preference){
+  .gbar.float{animation:floatin .25s ease-out}
+  .gbar.float.leave{animation:floatout .25s ease-in forwards}
+  @keyframes floatin{from{transform:translateY(-100%)}}
+  @keyframes floatout{to{transform:translateY(-100%)}}
+  .cells i.pop,.mixrow b.pop{animation:cellpop .45s ease-out}
+  @keyframes cellpop{40%{transform:scaleY(1.6);box-shadow:0 0 14px var(--fresh)}}
+  .gbar.shake{animation:bshake .45s ease-in-out}
+  @keyframes bshake{20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+  .gbar.quake{animation:bquake .5s linear}
+  @keyframes bquake{0%,100%{transform:none}10%{transform:translate(-10px,3px) rotate(-2deg)}20%{transform:translate(9px,-3px) rotate(2deg)}30%{transform:translate(-8px,2px) rotate(-1.5deg)}40%{transform:translate(7px,-2px) rotate(1.5deg)}50%{transform:translate(-6px,2px) rotate(-1deg)}60%{transform:translate(5px,-1px)}70%{transform:translate(-4px,1px)}80%{transform:translate(3px,0)}90%{transform:translate(-2px,0)}}
+  .gbar.newgrade .gseg.cur span{animation:gpop .45s ease-out}
+  @keyframes gpop{50%{transform:scale(1.35)}}
+  .cells i.bad{animation:rattle .25s linear infinite}
+  @keyframes rattle{25%{transform:translate(-1px,1px) rotate(-3deg)}75%{transform:translate(1px,-1px) rotate(3deg)}}
+  .cells i.newbad{animation:badin .35s ease-out,rattle .25s linear .35s infinite}
+  @keyframes badin{40%{transform:scale(1.5);box-shadow:0 0 10px var(--bad)}}
+  .cells i.heal{animation:heal .6s ease-out}
+  @keyframes heal{0%{background:var(--bad);border-color:var(--bad)}50%{transform:scale(1.3);box-shadow:0 0 12px var(--fresh)}}
+}
+.gbar.pick{pointer-events:auto}
+.gbar.pick .gseg[data-gpick]{cursor:pointer}
+.gbar.pick .gseg[data-gpick]:hover .cells,.gbar.pick .gseg[data-gpick]:focus-visible .cells{outline:2px dashed var(--accent);outline-offset:2px;border-radius:5px}
+.gbar.pick .gseg:focus{outline:none}
+.gask{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin-top:10px;font-weight:600;font-size:.95rem}
+.gask button{font:inherit;font-size:.9rem;border:1.5px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:4px 14px;cursor:pointer}
+.gask button[data-gyes]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.testbar{margin-top:24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
+.testbar[hidden]{display:none}
+.testbar button{font:inherit;font-size:.85rem;padding:6px 10px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}.tile:hover{transform:none}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <a class="home" href="index.html">← Alla spel</a>
+    <div class="toprow">
+      <h1 class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="3" width="30" height="26" rx="4" fill="var(--ebony)"/><g fill="var(--ivory)"><rect x="3" y="5" width="6" height="22" rx="1"/><rect x="10" y="5" width="6" height="22" rx="1"/><rect x="17" y="5" width="6" height="22" rx="1"/><rect x="24" y="5" width="5" height="22" rx="1"/></g><rect x="3" y="5" width="6" height="22" rx="1" fill="var(--chord)"/><rect x="17" y="5" width="6" height="22" rx="1" fill="var(--chord)"/><g fill="var(--ebony)"><rect x="7.5" y="5" width="4" height="13"/><rect x="14.5" y="5" width="4" height="13"/><rect x="27.5" y="5" width="3" height="13"/></g></svg>Ackordkartan</h1>
+      <button class="soundbtn" id="soundBtn" aria-pressed="true" aria-label="Ljud på"></button>
+    </div>
+  </header>
+  <p class="lead" id="lead">Lär dig vad du spelar, och vart du kan gå härnäst.</p>
+  <div class="grid" id="grid"></div>
+  <section class="play" id="spel" hidden>
+    <span class="tpat" aria-hidden="true"></span>
+    <div class="phead" id="phead"></div>
+    <div class="gbar" id="gbar" aria-hidden="true"></div>
+    <div class="pbody">
+      <section class="card" id="q" aria-live="polite"></section>
+    </div>
+  </section>
+  <div class="testbar" hidden>
+    <span>Test</span>
+    <button id="tGive">Lås upp nästa ämne</button>
+    <button id="tReset">Börja om</button>
+    <button id="tCheat">Dölj rätt svar</button>
+  </div>
+</main>
+<script>
+// ===================== Musikteori =====================
+// En ton är en bokstav (0–6, C–B) och ett förtecken (−1 ♭, 0, +1 ♯). B är tonen under C (på svenska ofta H).
+const LETTERS = ['C','D','E','F','G','A','B'], NAT = [0, 2, 4, 5, 7, 9, 11];
+const ACC = {'-2':'𝄫', '-1':'♭', '0':'', '1':'♯', '2':'𝄪'};
+const N = s => ({l: LETTERS.indexOf(s[0]), a: s.length > 1 ? (s[1] === '♯' ? 1 : -1) : 0});
+const pcOf = n => ((NAT[n.l] + n.a) % 12 + 12) % 12;
+const nName = n => LETTERS[n.l] + ACC[n.a];
+// Tonen semis halvtoner och steps bokstäver upp från n, stavad efter bokstaven
+function upN(n, semis, steps){
+  const l = (n.l + steps) % 7, t = (pcOf(n) + semis) % 12;
+  let a = ((t - NAT[l]) % 12 + 12) % 12;
+  if (a > 6) a -= 12;
+  return {l, a};
+}
+// Treklangernas sorter: halvtoner och bokstavssteg från grundtonen, och vad tonerna kallas
+const QUAL = {
+  maj: {n:'dur', suf:'', iv:[[0,0],[4,2],[7,4]], roles:['grundton','ters','kvint']},
+  min: {n:'moll', suf:'m', iv:[[0,0],[3,2],[7,4]], roles:['grundton','ters','kvint']},
+  dim: {n:'förminskat', suf:'dim', iv:[[0,0],[3,2],[6,4]], roles:['grundton','ters','kvint']},
+  aug: {n:'överstigande', suf:'aug', iv:[[0,0],[4,2],[8,4]], roles:['grundton','ters','kvint']},
+  sus2: {n:'sus2', suf:'sus2', iv:[[0,0],[2,1],[7,4]], roles:['grundton','sekund','kvint']},
+  sus4: {n:'sus4', suf:'sus4', iv:[[0,0],[5,3],[7,4]], roles:['grundton','kvart','kvint']}
+};
+const QORDER = ['maj','min','dim','aug','sus2','sus4'];
+const spell = (root, q) => QUAL[q].iv.map(([s, st]) => upN(root, s, st));
+const chordName = (root, q) => nName(root) + QUAL[q].suf;
+const spellTxt = (root, q) => spell(root, q).map(nName).join(' ');
+// Stavningen, eller null om den skulle kräva dubbelkors eller dubbelbe
+const spellOk = (root, q) => noDouble(root, q) ? spellTxt(root, q) : null;
+const ROOT_NAMES = ['C','C♯','D♭','D','D♯','E♭','E','F','F♯','G♭','G','G♯','A♭','A','A♯','B♭','B'];
+// Grundtonerna som brukar användas: D♭-dur men C♯-moll, och så vidare
+const COMMON = {maj:['C','D♭','D','E♭','E','F','F♯','G','A♭','A','B♭','B'], min:['C','C♯','D','E♭','E','F','F♯','G','G♯','A','B♭','B']};
+const noDouble = (root, q) => spell(root, q).every(n => Math.abs(n.a) < 2);
+const rootsFor = q => (COMMON[q] || ROOT_NAMES).filter(r => noDouble(N(r), q));
+const WHITE_ROOTS = ['C','D','E','F','G','A','B'];
+// Klaviaturen: två oktaver, C4 (60) till B5 (83)
+const LO = 60, HI = 83;
+const KEYS = Array.from({length: HI - LO + 1}, (_, i) => LO + i);
+const isBlack = m => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12);
+const WHITES = KEYS.filter(m => !isBlack(m)), BLACKS = KEYS.filter(isBlack);
+const rootMidi = n => LO + pcOf(n);
+const voicing = (root, q) => QUAL[q].iv.map(([s]) => rootMidi(root) + s);
+const pcSet = ms => [...new Set(ms.map(m => ((m % 12) + 12) % 12))].sort((a, b) => a - b);
+const samePcs = (a, b) => pcSet(a).join() === pcSet(b).join();
+const SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'], FLAT = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const pcName = m => { const p = ((m % 12) + 12) % 12; return SHARP[p] === FLAT[p] ? SHARP[p] : `${SHARP[p]}/${FLAT[p]}`; };
+const pairName = m => { const p = ((m % 12) + 12) % 12; return `${SHARP[p]} / ${FLAT[p]}`; };
+const keyLabel = m => `${pcName(m).replace('/', ' eller ')}, oktav ${Math.floor(m / 12) - 1}`;
+
+// ===================== Allmänt =====================
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+function shuffle(a){ for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+// Rätt svar och tre andra, utan dubbletter
+function four(right, others){
+  const out = [right];
+  for (const x of others) { if (out.length === 4) break; if (x && !out.includes(x)) out.push(x); }
+  return shuffle(out);
+}
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ===================== Klaviaturen =====================
+// En SVG-sträng. lit: {midi: 'acc'|'ok'|'bad'|'step'|{cls, at}}, names: {midi: text|{text, at}},
+// arcs: [{a, b, text, at, cls}], under: [{m, text, at, cls}], tap: tangenterna är knappar, sel: valda tangenter.
+const KW = 30, KH = 120, BW = 18, BH = 76;
+function keyX(m){
+  const o = Math.floor((m - LO) / 12), p = ((m % 12) + 12) % 12;
+  return isBlack(m) ? o * 7 * KW + (NAT.indexOf(p - 1) + 1) * KW : o * 7 * KW + NAT.indexOf(p) * KW + KW / 2;
+}
+const dl = at => at != null ? ` style="animation-delay:${at.toFixed(2)}s"` : '';
+const mkc = at => at != null ? ' mk' : '';
+function kbd(o = {}){
+  const lit = o.lit || {}, names = o.names || {}, sel = o.sel || [], cheat = o.cheat || [];
+  const key = m => {
+    const b = isBlack(m), x = keyX(m) - (b ? BW / 2 : KW / 2), w = b ? BW : KW - 1, h = b ? BH : KH;
+    const L = lit[m], cls = !L ? '' : typeof L === 'string' ? L : L.cls, at = L && typeof L === 'object' ? L.at : null;
+    const tap = o.tap ? ` role="button" tabindex="0" data-key="${m}" aria-pressed="${sel.includes(m)}" aria-label="${keyLabel(m)}"` : '';
+    const inset = b ? 2 : 2.5;
+    return `<g class="k ${b ? 'b' : 'w'}${sel.includes(m) ? ' sel' : ''}"${tap}><rect class="kr" x="${x}" y="0" width="${w}" height="${h}" rx="${b ? 2 : 3}"/>` +
+      (cls ? `<rect class="lit ${cls}${mkc(at)}"${dl(at)} x="${x + inset}" y="${inset}" width="${w - 2 * inset}" height="${h - 2 * inset}" rx="2"/>` : '') + '</g>';
+  };
+  const nameEls = Object.entries(names).map(([k, v]) => {
+    const m = +k, t = typeof v === 'string' ? {text: v} : v, b = isBlack(m), parts = String(t.text).split('/');
+    const y0 = b ? BH - 10 - (parts.length - 1) * 12 : KH - 12;
+    return `<text class="kn ${b ? 'onb' : 'onw'}${mkc(t.at)}"${dl(t.at)} text-anchor="middle">${parts.map((p, i) => `<tspan x="${keyX(m)}" y="${y0 + i * 12}">${p}</tspan>`).join('')}</text>`;
+  }).join('');
+  const arcs = (o.arcs || []).map(({a, b, text, at, cls = 'acc'}) => {
+    const xa = keyX(a), xb = keyX(b), h = Math.min(28, 10 + Math.abs(xb - xa) / 4), mx = (xa + xb) / 2;
+    return `<g class="arc ${cls}${mkc(at)}"${dl(at)}><path d="M${xa} -3 Q${mx} ${-3 - 2 * h} ${xb} -3" fill="none"/><circle cx="${xb}" cy="-3" r="3.2"/>` +
+      (text ? `<text x="${mx}" y="${-8 - h}">${text}</text>` : '') + '</g>';
+  }).join('');
+  const under = (o.under || []).map(({m, text, at, cls = '', row = 0}) =>
+    `<text class="under ${cls}${mkc(at)}"${dl(at)} x="${keyX(m)}" y="${KH + 17 + row * 15}">${text}</text>`).join('');
+  const marks = cheat.map(m => `<path class="cheatmark" d="M${keyX(m) - 6} -14 L${keyX(m) + 6} -14 L${keyX(m)} -5 Z"/>`).join('');
+  const label = o.label || 'Klaviatur';
+  return `<svg viewBox="0 -48 ${WHITES.length * KW} ${KH + 40 + 48}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}">` +
+    WHITES.map(key).join('') + BLACKS.map(key).join('') + nameEls + arcs + under + marks + '</svg>';
+}
+
+// ===================== Ljud =====================
+let audioCtx = null;
+function audio(){
+  if (!S.sound) return null;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  try { audioCtx = audioCtx || new AC(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch(e) { return null; }
+  return audioCtx;
+}
+// Ett syntetiskt pianoanslag: grundton och två övertoner genom ett filter som stängs, och en avklingning
+function pianoNote(a, m, t0){
+  const f = 440 * 2 ** ((m - 69) / 12), t = a.currentTime + t0;
+  const lp = a.createBiquadFilter(), g = a.createGain();
+  lp.type = 'lowpass'; lp.frequency.setValueAtTime(Math.min(6000, f * 9), t); lp.frequency.exponentialRampToValueAtTime(Math.max(500, f * 2.5), t + 1.4);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.13, t + .006); g.gain.exponentialRampToValueAtTime(.045, t + .4); g.gain.exponentialRampToValueAtTime(.0001, t + 2.4);
+  [[1, 'triangle', 1], [2, 'sine', .3], [3, 'sine', .1]].forEach(([k, type, v]) => {
+    const o = a.createOscillator(), og = a.createGain();
+    o.type = type; o.frequency.value = f * k; o.detune.value = (Math.random() - .5) * 5; og.gain.value = v;
+    o.connect(og).connect(lp); o.start(t); o.stop(t + 2.5);
+  });
+  lp.connect(g).connect(a.destination);
+}
+const piano = {
+  // Ett ackord: tonerna nästan samtidigt, som ett anslag
+  chord(ms, t0 = 0){ const a = audio(); if (!a) return; ms.forEach((m, i) => pianoNote(a, m, t0 + i * .012)); },
+  // Tonerna en i taget
+  seq(ms, step = .4, t0 = 0){ const a = audio(); if (!a) return; ms.forEach((m, i) => pianoNote(a, m, t0 + i * step)); },
+  // Ett schema: [{at, chord}|{at, notes, step}]
+  plan(list){ (list || []).forEach(x => x.chord ? this.chord(x.chord, x.at || 0) : this.seq(x.notes, x.step ?? .4, x.at || 0)); }
+};
+// Spelljuden, som i Färgkoden
+const sfx = (() => {
+  const tone = (a, f, {f2, t0 = 0, d = .3, type = 'sine', v = .2, at = .02} = {}) => {
+    const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + t0;
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + at); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t + d + .05);
+  };
+  const noise = (a, d, {hp = 1000, v = .3, t0 = 0} = {}) => {
+    const n = a.createBufferSource(), buf = a.createBuffer(1, Math.ceil(a.sampleRate * d), a.sampleRate), ch = buf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / ch.length, 3);
+    n.buffer = buf;
+    const f = a.createBiquadFilter(), g = a.createGain(), t = a.currentTime + t0;
+    f.type = 'highpass'; f.frequency.value = hp; g.gain.value = v;
+    n.connect(f).connect(g).connect(a.destination); n.start(t);
+  };
+  return {
+    spark(){ const a = audio(); if (!a) return; noise(a, .8, {hp: 1800, v: .06}); tone(a, 220, {f2: 660, d: .85, type: 'sawtooth', v: .03, at: .6}); },
+    right(step = 0){ const a = audio(); if (!a) return; const k = 2 ** (step * 4 / 12); tone(a, 1318 * k, {d: .9, v: .2, at: .005}); tone(a, 1976 * k, {t0: .07, d: 1.1, v: .12, at: .005}); },
+    // Kort och dovt, så att förklaringens toner hörs efteråt
+    wrong(){ const a = audio(); if (!a) return; tone(a, 196, {d: .22, type: 'triangle', v: .18, at: .01}); tone(a, 147, {t0: .2, d: .4, type: 'triangle', v: .18, at: .01}); },
+    fanfare(){ const a = audio(); if (!a) return; [523, 659, 784].forEach((f, i) => tone(a, f, {t0: i * .11, d: .16, type: 'square', v: .07, at: .01})); [1047, 784, 659].forEach(f => tone(a, f, {t0: .36, d: .9, type: 'triangle', v: .12, at: .01})); },
+    gold(){ const a = audio(); if (!a) return; [523, 659, 784, 1047, 1319].forEach((f, i) => tone(a, f, {t0: i * .1, d: .18, type: 'square', v: .06, at: .01})); [1047, 1319, 1568, 2093].forEach(f => tone(a, f, {t0: .55, d: 1.6, type: 'triangle', v: .09, at: .02})); },
+    whoosh(){ const a = audio(); if (!a) return; noise(a, .35, {hp: 900, v: .12}); },
+    clink(){ const a = audio(); if (!a) return; tone(a, 2200, {d: .25, v: .08, at: .003}); tone(a, 3300, {t0: .03, d: .2, v: .05, at: .003}); },
+    insert(){ const a = audio(); if (!a) return; noise(a, .22, {hp: 3500, v: .1}); },
+    turn(){ const a = audio(); if (!a) return; tone(a, 900, {f2: 500, d: .06, type: 'square', v: .08, at: .002}); noise(a, .05, {hp: 2500, v: .25, t0: .05}); },
+    chains(){ const a = audio(); if (!a) return; for (let i = 0; i < 7; i++) noise(a, .08, {hp: 3000, v: .12, t0: i * .07}); }
+  };
+})();
+
+// ===================== Ämnen och läge =====================
+const TOPICS = ['tangent','treklang','tonart','steg','fyrklang','vag','lan'];
+const BUILT = ['tangent','treklang'];
+const ORDER = [...TOPICS, 'ultra'];
+const TOPIC_NAME = {tangent:'Klaviaturen', treklang:'Treklangerna', tonart:'Tonarterna', steg:'Stegen', fyrklang:'Fyrklangerna', vag:'Vägarna', lan:'Lånade ackord', ultra:'Eldprovet'};
+const topicName = t => TOPIC_NAME[t];
+const TOPIC_LINE = {
+  tangent:'Tonnamnen, ♯ och ♭, halvtonssteg och heltonssteg. B är tonen under C (på svenska ofta H).',
+  treklang:'Dur, moll, förminskat, överstigande och sus: tre toner staplade i terser.',
+  tonart:'Durskalan, förtecknen, kvintcirkeln och parallell moll.',
+  steg:'I ii iii IV V vi vii°: vilket ackord är vilket steg, och vad det gör.',
+  fyrklang:'maj7, 7, m7 och m7♭5, omvändningar och närmaste greppet.',
+  vag:'Vart kan du gå härifrån? Kvintfall, ii–V–I och sekundärdominanter.',
+  lan:'Ackorden du lånar från moll: iv, ♭VI, ♭VII och ♭III.',
+  ultra:'Allt blandat, i svåraste varianten.'
+};
+const TOPIC_LOOK = {
+  tangent:{c:'#2b2733', ci:'#f7f2e6'}, treklang:{c:'#b8572a', ci:'#fff'}, tonart:{c:'#2f6f9f', ci:'#fff'}, steg:{c:'#2d7a4f', ci:'#fff'},
+  fyrklang:{c:'#7a3fa0', ci:'#fff'}, vag:{c:'#b0892a', ci:'#2a1d00'}, lan:{c:'#a83a56', ci:'#fff'}, ultra:{c:'#d9381e', ci:'#fff'}
+};
+const txtIcon = (s, size = 17) => `<text x="16" y="${16 + size * .36}" text-anchor="middle" font-size="${size}" font-weight="700" font-family="Georgia,serif" fill="currentColor">${s}</text>`;
+const TOPIC_ICON = {
+  tangent:'<g fill="currentColor"><rect x="3" y="6" width="6" height="20" rx="1" opacity=".45"/><rect x="10" y="6" width="6" height="20" rx="1" opacity=".45"/><rect x="17" y="6" width="6" height="20" rx="1" opacity=".45"/><rect x="24" y="6" width="5" height="20" rx="1" opacity=".45"/><rect x="7.5" y="6" width="4" height="12"/><rect x="14.5" y="6" width="4" height="12"/><rect x="27" y="6" width="3" height="12"/></g>',
+  treklang:'<g fill="currentColor"><ellipse cx="16" cy="25" rx="5.5" ry="4" transform="rotate(-20 16 25)"/><ellipse cx="16" cy="16" rx="5.5" ry="4" transform="rotate(-20 16 16)"/><ellipse cx="16" cy="7" rx="5.5" ry="4" transform="rotate(-20 16 7)"/></g>',
+  tonart: txtIcon('♯', 24), steg: txtIcon('IV', 15), fyrklang: txtIcon('7', 22),
+  vag:'<path d="M5 24c4-12 10-14 16-10" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M19 9l7 4-7 4z" fill="currentColor"/><circle cx="6" cy="24" r="3" fill="currentColor"/>',
+  lan: txtIcon('♭VI', 12),
+  ultra:'<path fill="currentColor" d="M16 3c1.3 4.6 6 7.3 6 13.3a6 6 0 0 1-12 0c0-2.5 1-4.3 2.4-5.6.3 2.1 1.3 3.5 2.9 4 0-4.8-2.1-7.6.7-11.7z"/>'
+};
+const topicIcon = k => `<svg viewBox="0 0 32 32" aria-hidden="true">${TOPIC_ICON[k]}</svg>`;
+const topicPattern = k => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72'><g color='${TOPIC_LOOK[k].c}' opacity='.12' transform='rotate(-14 36 36) translate(20 20)'>${TOPIC_ICON[k]}</g></svg>`)}")`;
+const lookVars = t => `--c:${TOPIC_LOOK[t].c};--ci:${TOPIC_LOOK[t].ci}` + (t === 'ultra' ? '' : `;--pat:${topicPattern(t)}`);
+const GRADE_NAME = ['Nykomling','Lärling','Gesäll','Mästare','Stormästare'];
+const UP_AT = 3, DOWN_AT = 3, UNLOCK_AT = 3, MAX = 4;
+const PFX = 'ackord1-';
+const S = {topic:'tangent', grade:{}, done:{}, up:0, down:0, streaks:{}, Q:null, sel:[], pick:null, answered:false};
+TOPICS.forEach(t => { S.grade[t] = 0; S.done[t] = 0; });
+const save = (k, v) => { if (S.pin && k !== 'sound' && k !== 'cheat') return; try { localStorage.setItem(PFX + k, v); } catch(e) {} };
+const load = k => { try { return localStorage.getItem(PFX + k); } catch(e) { return null; } };
+// Testläge: ?test=true i adressen, eller data-test="true" på html-elementet (så publiceras artifacten)
+const TEST_MODE = new URLSearchParams(location.search).get('test') === 'true' || document.documentElement.dataset.test === 'true';
+S.cheatOn = load('cheat') !== 'off';
+const showCheat = () => TEST_MODE && S.cheatOn;
+const cheat = right => showCheat() && !S.answered && right ? ' cheat' : '';
+try {
+  const tp = load('topic');
+  S.firstVisit = !tp;
+  if (tp && BUILT.includes(tp)) S.topic = tp;
+  const clamp = (x, hi) => Math.max(0, Math.min(hi, Math.floor(+x || 0)));
+  const dn = JSON.parse(load('done') || '{}') || {}, gr = JSON.parse(load('grade') || '{}') || {};
+  TOPICS.forEach(t => { S.done[t] = clamp(dn[t], 5); S.grade[t] = Math.min(clamp(gr[t], MAX), S.done[t]); });
+} catch(e) { S.firstVisit = true; TOPICS.forEach(t => { S.done[t] = 0; S.grade[t] = 0; }); }
+// Förhandsvisning från dev.html: ?test=true&topic=treklang&grade=2 (och &q=frågetyp) öppnar en grad och stannar där.
+// Allt är öppet, inget sparas och trappan står still.
+{
+  const u = new URLSearchParams(location.search), t = u.get('topic'), g = +u.get('grade');
+  if (TEST_MODE && BUILT.includes(t)) {
+    S.pin = {topic: t, grade: g >= 0 && g <= MAX ? Math.floor(g) : 0, q: u.get('q')};
+    S.topic = t; S.firstVisit = false;
+    TOPICS.forEach(x => { S.done[x] = MAX; });
+    S.grade[t] = S.pin.grade;
+  }
+}
+S.mix = {streak: 0, best: {}};
+try { Object.assign(S.mix.best, JSON.parse(load('best') || '{}')); } catch(e) {}
+S.sound = load('sound') !== 'off';
+const saveProgress = () => { save('done', JSON.stringify(S.done)); save('grade', JSON.stringify(S.grade)); };
+const unlocked = t => { const i = TOPICS.indexOf(t); return i <= 0 || S.done[TOPICS[i - 1]] >= UNLOCK_AT; };
+const cleared = t => TOPICS.includes(t) && S.done[t] >= 5;
+const isMix = t => cleared(t);
+S.keys = []; S.seen = []; S.flying = []; S.arriving = [];
+S.screen = 'grid'; S.open = null; S.cover = null; S.fresh = null; S.keyWin = null;
+(() => {
+  if (S.pin) { S.seen = TOPICS.slice(); return; }
+  try { const k = load('keys'); S.keys = k != null ? JSON.parse(k).filter(t => TOPICS.includes(t) && unlocked(t)) : S.firstVisit ? ['tangent'] : []; } catch(e) { S.keys = []; }
+  try { const s = load('seen'); S.seen = s != null ? JSON.parse(s).filter(t => TOPICS.includes(t)) : TOPICS.filter(t => S.done[t] > 0 || S.grade[t] > 0); } catch(e) { S.seen = []; }
+})();
+const saveKeys = () => { save('keys', JSON.stringify(S.keys)); save('seen', JSON.stringify(S.seen)); };
+function grantKey(t){
+  if (!TOPICS.includes(t) || S.pin || S.keys.includes(t)) return;
+  S.keys.push(t); S.flying.push(t); saveKeys();
+}
+// Ett ämne som inte är byggt visas som Kommer snart och går inte att öppna, men en förtjänad nyckel sitter i låset
+const tileState = t => t === 'ultra' || !BUILT.includes(t) ? 'soon' : !unlocked(t) ? 'locked' : S.keys.includes(t) ? 'key' : cleared(t) ? 'done' : 'open';
+function ladder(s, ok){
+  let {g, up, down, done} = s, moved = null;
+  if (ok) {
+    up++; down = 0;
+    if (up >= UP_AT) { done = Math.max(done, g + 1); up = 0; if (g < MAX) { g++; moved = 'up'; } }
+  } else {
+    down++; up = 0;
+    if (down >= DOWN_AT) { down = 0; if (g > 0) { g--; moved = 'down'; } }
+  }
+  return {g, up, down, done, moved};
+}
+
+// ===================== Felanimeringarnas byggstenar =====================
+// Tiderna i sekunder. Förklaringen börjar efter det korta fel-ljudet.
+const T0 = .55, STEP = .42;
+// Räkna de vita tangenterna från C upp till m: de tänds en i taget med namn, och tonerna spelas
+function countWhites(m, t = T0){
+  const c = m - (((m % 12) + 12) % 12), ws = WHITES.filter(k => k >= c && k <= m);
+  const lit = {}, names = {};
+  ws.forEach((k, i) => { const at = t + i * STEP; lit[k] = {cls: k === m ? 'ok' : 'step', at}; names[k] = {text: LETTERS[NAT.indexOf(k % 12)], at}; });
+  return {lit, names, sound: [{notes: ws, step: STEP, at: t}], total: t + ws.length * STEP + .4};
+}
+// Grannarna till en svart tangent: vit till vänster + ♯, vit till höger + ♭
+function neighbours(m, t = T0){
+  const lft = m - 1, rgt = m + 1, p = m % 12;
+  return {
+    lit: {[lft]: {cls: 'step', at: t}, [rgt]: {cls: 'step', at: t + 1.1}, [m]: {cls: 'ok', at: t + 2.1}},
+    names: {[lft]: {text: SHARP[lft % 12], at: t}, [rgt]: {text: FLAT[rgt % 12], at: t + 1.1}, [m]: {text: `${SHARP[p]}/${FLAT[p]}`, at: t + 2.1}},
+    arcs: [{a: lft, b: m, text: '♯ +1', at: t + .4}, {a: rgt, b: m, text: '♭ −1', at: t + 1.5}],
+    under: [{m: lft, text: `${SHARP[lft % 12]} + ♯`, at: t + .4}, {m: rgt, text: `${FLAT[rgt % 12]} + ♭`, at: t + 1.5}],
+    sound: [{notes: [lft, m], step: .35, at: t + .2}, {notes: [rgt, m], step: .35, at: t + 1.3}],
+    total: t + 2.7
+  };
+}
+// Halvtonssteg från a, n steg åt dir: en båge per steg med siffran
+function hops(a, n, dir = 1, t = T0){
+  const arcs = [], lit = {[a]: {cls: 'acc', at: t - .2}}, ms = [a];
+  for (let i = 1; i <= n; i++) {
+    const k = a + dir * i, at = t + (i - 1) * STEP;
+    arcs.push({a: k - dir, b: k, text: String(i), at});
+    lit[k] = {cls: i === n ? 'ok' : 'step', at: at + .15};
+    ms.push(k);
+  }
+  return {arcs, lit, sound: [{notes: ms, step: STEP, at: t - .2}], end: t + n * STEP};
+}
+// Tersstaplingen: grundtonen, upp till tersen, upp till kvinten, och sedan klingar ackordet
+function stack(root, q, t = T0){
+  const vs = voicing(root, q), sp = spell(root, q), roles = QUAL[q].roles;
+  const lit = {}, names = {}, arcs = [], under = [];
+  vs.forEach((m, i) => {
+    const at = t + i * 1.0;
+    lit[m] = {cls: 'ok', at}; names[m] = {text: nName(sp[i]), at};
+    under.push({m, text: roles[i], at, cls: 'ok', row: i % 2});
+    if (i) arcs.push({a: vs[i - 1], b: m, text: '+' + (m - vs[i - 1]), at: at - .45});
+  });
+  const end = t + 2 * 1.0 + .5;
+  return {lit, names, arcs, under, vs, end,
+    sound: [{notes: [vs[0]], at: t}, {notes: [vs[1]], at: t + 1}, {notes: [vs[2]], at: t + 2}, {chord: vs, at: end}], total: end + .8};
+}
+// Ett ackord med namn på tangenterna (rätt stavat)
+function chordLit(root, q, cls = 'acc'){
+  const vs = voicing(root, q), sp = spell(root, q), lit = {}, names = {};
+  vs.forEach((m, i) => { lit[m] = cls; names[m] = nName(sp[i]); });
+  return {lit, names, vs};
+}
+const merge = (...xs) => xs.reduce((a, x) => ({...a, ...x}), {});
+// Tabellen över sorterna: avstånden ters och kvint, och namnet
+const qTable = (q, at) => `<table class="qtab">${QORDER.map(k => { const iv = QUAL[k].iv, hit = k === q;
+  return `<tr class="${hit ? 'hit' + mkc(at) : ''}"${hit ? dl(at) : ''}><td>${iv[1][0]} + ${iv[2][0] - iv[1][0]}</td><td>${QUAL[k].n}</td><td>X${QUAL[k].suf}</td></tr>`; }).join('')}</table>`;
+
+// ===================== Frågorna =====================
+// Varje fråga: {id, kind: 'mc'|'keys', prompt, show (klaviaturen i frågan), sound, opts/right (mc), need/check/answer (keys),
+// wrong (raden för skärmläsare), anim(pick) → {kb, note, sound, total}}
+const near = m => KEYS.filter(k => Math.abs(k - m) <= 4);
+const cNames = {60: 'C', 72: 'C'};
+const Q_TANGENT = [
+  // Nykomling
+  [{id:'tangent-namn', make(){
+    const m = rnd(WHITES), right = LETTERS[NAT.indexOf(m % 12)];
+    const opts = four(right, shuffle(LETTERS.filter(x => x !== right)));
+    return {kind:'mc', prompt:'Vad heter den markerade tangenten?', show:{lit:{[m]:'acc'}, names:cNames}, opts, right: opts.indexOf(right),
+      wrong:`Räkna från C: C D E F G A B. Tangenten heter ${right}.`,
+      anim(){ const A = countWhites(m); return {kb:{lit:A.lit, names:merge(cNames, A.names)}, sound:A.sound, total:A.total}; }};
+  }}],
+  // Lärling
+  [{id:'tangent-peka-vit', make(){
+    const L = rnd(LETTERS.slice(1)), p = NAT[LETTERS.indexOf(L)];
+    return {kind:'keys', need:1, prompt:`Peka på ${L}.`, show:{names:cNames}, check: sel => sel[0] % 12 === p, answer:[LO + p, LO + 12 + p],
+      wrong:`Räkna från C: C D E F G A B. ${L} är ${LETTERS.indexOf(L) + 1}:a vita tangenten.`,
+      anim(pick){ const m = pick[0] - (pick[0] % 12) + p, A = countWhites(m);
+        return {kb:{lit:merge(pick[0] !== m ? {[pick[0]]:'bad'} : {}, A.lit), names:merge(cNames, A.names)}, sound:A.sound, total:A.total}; }};
+  }}],
+  // Gesäll
+  [{id:'tangent-svart', make(){
+    const m = rnd(BLACKS), right = pairName(m);
+    const opts = four(right, shuffle(BLACKS.filter(k => k % 12 !== m % 12).map(pairName)));
+    return {kind:'mc', prompt:'Vad heter den markerade svarta tangenten?', show:{lit:{[m]:'acc'}}, opts, right: opts.indexOf(right), txt:true,
+      wrong:`Den svarta tangenten har två namn: ${SHARP[m % 12]} (${SHARP[(m - 1) % 12]} upp ett halvtonssteg) och ${FLAT[m % 12]} (${FLAT[(m + 1) % 12]} ner ett halvtonssteg).`,
+      anim(){ const A = neighbours(m); return {kb:A, sound:A.sound, total:A.total}; }};
+  }},
+  {id:'tangent-steg', make(){
+    // Hälften av gångerna E–F eller B–C, där två vita tangenter ligger ett halvtonssteg isär
+    const tricky = Math.random() < .5;
+    const a = tricky ? rnd([64, 71, 76]) : rnd(KEYS.filter(k => k <= HI - 2)), d = tricky ? 1 : rnd([1, 2]), b = a + d;
+    const right = d === 1 ? 'Halvtonssteg' : 'Heltonssteg', opts = ['Halvtonssteg','Heltonssteg'];
+    return {kind:'mc', prompt:'Hur långt är det mellan de markerade tangenterna?', show:{lit:{[a]:'acc', [b]:'acc'}}, sound:[{notes:[a, b], step:.45}],
+      opts, right: opts.indexOf(right), txt:true,
+      wrong:`${d === 1 ? 'Tangenterna ligger bredvid varandra: ett halvtonssteg.' : 'Det ligger en tangent emellan: två halvtonssteg, alltså ett heltonssteg.'}`,
+      anim(){ const H = hops(a, d);
+        return {kb:{lit:merge(H.lit, {[a]:'acc'}), arcs:H.arcs, under:[{m:b, text: d === 1 ? '1 = halvton' : '2 = helton', at:H.end, cls:'ok'}]},
+          note: d === 1 && !isBlack(a) && !isBlack(b) ? `<span class="mk"${dl(H.end)}>Mellan E och F, och mellan B och C, finns ingen svart tangent. Där är två vita tangenter bara ett halvtonssteg isär.</span>` : '',
+          sound:H.sound, total:H.end + .8}; }};
+  }}],
+  // Mästare
+  [{id:'tangent-peka-alla', make(){
+    const name = rnd(ROOT_NAMES), n = N(name), p = pcOf(n);
+    return {kind:'keys', need:1, prompt:`Peka på ${name}.`, show:{}, check: sel => sel[0] % 12 === p, answer:[LO + p, LO + 12 + p],
+      wrong: n.a ? `${name} är ${LETTERS[n.l]} ${n.a > 0 ? 'upp' : 'ner'} ett halvtonssteg.` : `Räkna från C: C D E F G A B.`,
+      anim(pick){ const m = pick[0] - (pick[0] % 12) + p, bad = pick[0] !== m ? {[pick[0]]:'bad'} : {};
+        if (!n.a) { const A = countWhites(m); return {kb:{lit:merge(bad, A.lit), names:A.names}, sound:A.sound, total:A.total}; }
+        const base = m - n.a, A = {lit:{[base]:{cls:'step', at:T0}, [m]:{cls:'ok', at:T0 + .8}}, names:{[base]:{text:LETTERS[n.l], at:T0}, [m]:{text:name, at:T0 + .8}},
+          arcs:[{a:base, b:m, text:`${n.a > 0 ? '♯ +1' : '♭ −1'}`, at:T0 + .4}]};
+        return {kb:{lit:merge(bad, A.lit), names:A.names, arcs:A.arcs}, sound:[{notes:[base, m], step:.8, at:T0}], total:T0 + 1.6}; }};
+  }},
+  {id:'tangent-halvton-upp', make(){
+    const m = Math.random() < .5 ? rnd([64, 71, 76]) : rnd(WHITES.filter(k => k < HI)), to = m + 1, from = LETTERS[NAT.indexOf(m % 12)];
+    const right = SHARP[to % 12], nextWhite = LETTERS[(NAT.indexOf(m % 12) + 1) % 7];
+    const opts = four(right, shuffle([nextWhite, SHARP[(to + 1) % 12], FLAT[(m + 11) % 12], SHARP[(m + 3) % 12]]));
+    return {kind:'mc', prompt:`Ett halvtonssteg upp från ${from}. Vad kommer du till?`, show:{lit:{[m]:'acc'}, names:{[m]:from}}, opts, right: opts.indexOf(right),
+      wrong: isBlack(to) ? `Den närmaste tangenten till höger om ${from} är den svarta, ${SHARP[to % 12]}.` : `Mellan ${from} och ${right} finns ingen svart tangent, så nästa tangent är ${right}.`,
+      anim(){ const H = hops(m, 1);
+        return {kb:{lit:H.lit, names:{[m]:from, [to]:{text:pcName(to), at:H.end}}, arcs:H.arcs},
+          note: isBlack(to) ? '' : `<span class="mk"${dl(H.end)}>Mellan E och F, och mellan B och C, finns ingen svart tangent.</span>`, sound:H.sound, total:H.end + .8}; }};
+  }}],
+  // Stormästare
+  [{id:'tangent-hoppa', make(){
+    const n = rnd([2, 3, 4, 5]), dir = rnd([1, -1]), m = rnd(KEYS.filter(k => k + dir * n >= LO && k + dir * n <= HI)), target = m + dir * n;
+    const word = ['', 'ett', 'två', 'tre', 'fyra', 'fem'][n];
+    return {kind:'keys', need:1, prompt:`Gå ${word} halvtonssteg ${dir > 0 ? 'upp' : 'ner'} från ${pcName(m)}. Peka.`, show:{lit:{[m]:'acc'}, names:{[m]:pcName(m)}},
+      check: sel => sel[0] % 12 === target % 12, answer:[target],
+      wrong:`Räkna varje tangent, vit som svart: ${n} steg ${dir > 0 ? 'upp' : 'ner'} från ${pcName(m)} är ${pcName(target)}.`,
+      anim(pick){ const H = hops(m, n, dir);
+        return {kb:{lit:merge(pick[0] !== target ? {[pick[0]]:'bad'} : {}, H.lit), names:{[m]:pcName(m), [target]:{text:pcName(target), at:H.end - .2}}, arcs:H.arcs}, sound:H.sound, total:H.end + .6}; }};
+  }},
+  {id:'tangent-enharm', make(){
+    const [name, base, d] = rnd([['E♯', 64, 1], ['B♯', 71, 1], ['F♭', 65, -1], ['C♭', 72, -1]]), target = base + d;
+    return {kind:'keys', need:1, prompt:`Peka på tangenten som också heter ${name}.`, show:{}, check: sel => sel[0] % 12 === ((target % 12) + 12) % 12, answer:[target],
+      wrong:`${name} är ${name[0]} ${d > 0 ? 'upp' : 'ner'} ett halvtonssteg. Där finns ingen svart tangent, så det blir ${pcName(target)}.`,
+      anim(pick){ const t = pick[0] % 12 === target % 12 ? {} : {[pick[0]]:'bad'};
+        return {kb:{lit:merge(t, {[base]:{cls:'step', at:T0}, [target]:{cls:'ok', at:T0 + .8}}), names:{[base]:{text:name[0], at:T0}, [target]:{text:`${pcName(target)}/${name}`, at:T0 + .8}},
+          arcs:[{a:base, b:target, text: d > 0 ? '♯ +1' : '♭ −1', at:T0 + .4}]}, sound:[{notes:[base, target], step:.8, at:T0}], total:T0 + 1.6}; }};
+  }}]
+];
+
+// Namn på ackord med samma grundton i andra sorter, för flervalen
+const sameRoot = (root, qs) => qs.map(q => chordName(root, q));
+const okName = s => ROOT_NAMES.includes(s.replace(/(m|dim|aug|sus2|sus4)$/, ''));
+// Ackord som delar toner med (root, q): på tersen och kvinten, och parallellen
+function neighbourChords(root, q){
+  const sp = spell(root, q), out = [];
+  [sp[1], sp[2]].forEach(n => ['maj','min'].forEach(x => out.push(chordName(n, x))));
+  out.push(q === 'maj' ? chordName(upN(root, 9, 5), 'min') : chordName(upN(root, 3, 2), 'maj'));
+  return out.filter(okName);
+}
+// Samma tonklass, stavad med grannbokstaven (A♯ → B♭), om det går utan dubbeltecken
+function respell(n){
+  for (const dir of [1, -1]) { const l = (n.l + dir + 7) % 7, p = pcOf(n); let a = ((p - NAT[l]) % 12 + 12) % 12; if (a > 6) a -= 12; if (Math.abs(a) <= 1) return {l, a}; }
+  return null;
+}
+// Durr eller moll med en vit grundton (Nykomling och Lärling)
+const easyChord = () => { const q = rnd(['maj','min']); return {root: N(rnd(WHITE_ROOTS)), q}; };
+function thirdAnim(root, q){
+  // Bågar halvton för halvton från grundtonen till tersen, sedan ackordet
+  const C = chordLit(root, q, 'step'), [r, x] = C.vs, d = x - r, H = hops(r, d), end = H.end;
+  return {kb:{lit:merge(C.lit, H.lit, {[x]:{cls:'ok', at:end - .3}}), names:C.names, arcs:H.arcs,
+      under:[{m:r, text:'grundton', at:T0 - .2}, {m:x, text: d === 4 ? '4 = stor ters' : '3 = liten ters', at:end - .3, cls:'ok', row:1}]},
+    note:`<span class="mk"${dl(end)}>Stor ters (4 halvtoner) ger <b>dur</b>. Liten ters (3 halvtoner) ger <b>moll</b>. ${chordName(root, q)} är ${QUAL[q].n}.</span>`,
+    sound:[...H.sound, {chord:C.vs, at:end + .2}], total:end + 1};
+}
+const Q_TREKLANG = [
+  // Nykomling
+  [{id:'treklang-durmoll', make(){
+    const {root, q} = easyChord(), C = chordLit(root, q), opts = ['Dur','Moll'];
+    return {kind:'mc', prompt:'Dur eller moll?', show:{lit:C.lit, names:C.names}, sound:[{chord:C.vs}], opts, right: q === 'maj' ? 0 : 1, txt:true,
+      wrong:`Från ${nName(root)} till tersen är det ${q === 'maj' ? 'fyra halvtoner: stor ters, dur' : 'tre halvtoner: liten ters, moll'}.`,
+      anim(){ return thirdAnim(root, q); }};
+  }}],
+  // Lärling
+  [{id:'treklang-namn', make(){
+    const {root, q} = easyChord(), C = chordLit(root, q), right = chordName(root, q);
+    const opts = four(right, shuffle([chordName(root, q === 'maj' ? 'min' : 'maj'), ...neighbourChords(root, q)]));
+    return {kind:'mc', prompt:'Vilket ackord är det här?', show:{lit:C.lit, names:C.names}, sound:[{chord:C.vs}], opts, right: opts.indexOf(right),
+      wrong:`Grundtonen är ${nName(root)}, och tersen ligger ${q === 'maj' ? 'fyra' : 'tre'} halvtoner upp: ${right}.`,
+      anim(){ return thirdAnim(root, q); }};
+  }}],
+  // Gesäll
+  [{id:'treklang-bygg', make(){
+    const q = rnd(['maj','min']), root = N(rnd(rootsFor(q))), name = chordName(root, q), vs = voicing(root, q);
+    return {kind:'keys', need:3, prompt:`Ta ackordet ${name}.`, show:{}, check: sel => samePcs(sel, vs), answer: vs,
+      wrong:`${name}: ${spellTxt(root, q)}. Grundton, ${q === 'maj' ? 'plus 4 till tersen och 3 till kvinten' : 'plus 3 till tersen och 4 till kvinten'}.`,
+      anim(pick){ const A = stack(root, q), bad = {}; pick.forEach(m => { if (!pcSet(vs).includes(m % 12)) bad[m] = 'bad'; });
+        return {kb:{lit:merge(bad, A.lit), names:A.names, arcs:A.arcs, under:A.under}, sound:A.sound, total:A.total}; }};
+  }}],
+  // Mästare
+  [{id:'treklang-sort', make(){
+    const q = rnd(QORDER), root = N(rnd(rootsFor(q))), C = chordLit(root, q), right = chordName(root, q);
+    const opts = four(right, shuffle(sameRoot(root, QORDER.filter(x => x !== q))));
+    return {kind:'mc', prompt:'Vilket ackord är det här?', show:{lit:C.lit}, sound:[{chord:C.vs}], opts, right: opts.indexOf(right),
+      wrong:`${right}: avstånden är ${C.vs[1] - C.vs[0]} och ${C.vs[2] - C.vs[1]} halvtoner, och det ger ${QUAL[q].n}.`,
+      anim(){ const A = stack(root, q); return {kb:{lit:A.lit, names:A.names, arcs:A.arcs, under:A.under}, note:qTable(q, A.end), sound:A.sound, total:A.total}; }};
+  }},
+  {id:'treklang-stava', make(){
+    const q = rnd(['maj','min']), root = N(rnd(rootsFor(q).filter(r => r.length > 1 || Math.random() < .3))), sp = spell(root, q), right = spellTxt(root, q);
+    // En felstavning: samma tangenter men fel bokstav på tersen eller kvinten
+    const i = rnd([1, 2]), alt = respell(sp[i]) || respell(sp[3 - i]), j = respell(sp[i]) ? i : 3 - i;
+    const mis = alt ? sp.map((n, k) => k === j ? alt : n).map(nName).join(' ') : null;
+    const opts = four(right, [mis, spellOk(root, q === 'maj' ? 'min' : 'maj'), spellOk(root, q === 'maj' ? 'aug' : 'dim'), spellOk(root, 'sus4'), spellOk(root, 'sus2')].filter(Boolean));
+    const name = chordName(root, q), L0 = root.l;
+    return {kind:'mc', prompt:`Vilka toner ingår i ${name}?`, show:null, opts, right: opts.indexOf(right), txt:true,
+      wrong:`Tersen och kvinten ligger två och fyra bokstäver upp från ${nName(root)}: ${right}.`,
+      anim(){ const A = stack(root, q);
+        const letters = [0, 1, 2, 3, 4].map(k => { const on = k % 2 === 0; return `<span class="${on ? 'on mk' : ''}"${on ? dl(T0 + k * .5) : ''}>${on ? nName(sp[k / 2]) : LETTERS[(L0 + k) % 7]}</span>`; }).join('');
+        return {kb:{lit:A.lit, names:A.names, arcs:A.arcs, under:A.under},
+          note:`<div class="letters">${letters}</div><span class="mk"${dl(A.end)}>Varannan bokstav: ${LETTERS[L0]}, ${LETTERS[(L0 + 2) % 7]}, ${LETTERS[(L0 + 4) % 7]}. Halvtonerna bestämmer sedan ♯ eller ♭.</span>`,
+          sound:A.sound, total:A.total}; }};
+  }}],
+  // Stormästare
+  [{id:'treklang-flytta', make(){
+    const MOVES = {
+      maj: [{op:'Sänk tersen ett halvtonssteg', i:1, d:-1, to:'min'}, {op:'Höj tersen ett halvtonssteg', i:1, d:1, to:'sus4'}, {op:'Höj kvinten ett halvtonssteg', i:2, d:1, to:'aug'}, {op:'Sänk tersen två halvtonssteg', i:1, d:-2, to:'sus2'}],
+      min: [{op:'Höj tersen ett halvtonssteg', i:1, d:1, to:'maj'}, {op:'Sänk kvinten ett halvtonssteg', i:2, d:-1, to:'dim'}, {op:'Sänk tersen ett halvtonssteg', i:1, d:-1, to:'sus2'}]
+    };
+    const q = rnd(['maj','min']), mv = rnd(MOVES[q]), root = N(rnd(rootsFor(q).filter(r => noDouble(N(r), mv.to))));
+    const from = chordName(root, q), right = chordName(root, mv.to), C = chordLit(root, q);
+    const opts = four(right, shuffle(sameRoot(root, QORDER.filter(x => x !== mv.to && x !== q))));
+    return {kind:'mc', prompt:`Du spelar ${from}. ${mv.op}. Vilket ackord spelar du nu?`, show:{lit:C.lit, names:C.names}, sound:[{chord:C.vs}], opts, right: opts.indexOf(right),
+      wrong:`${from} är ${spellTxt(root, q)}. ${mv.op} och du får ${spellTxt(root, mv.to)}: ${right}.`,
+      anim(){ const old = C.vs[mv.i], nw = old + mv.d, D = chordLit(root, mv.to, 'ok'), t = T0;
+        return {kb:{lit:merge(C.lit, {[old]:{cls:'bad', at:t}}, Object.fromEntries(D.vs.map(m => [m, {cls:'ok', at:t + 1.1}]))),
+            names:merge({[old]:C.names[old]}, Object.fromEntries(D.vs.map(m => [m, {text:D.names[m], at:t + 1.1}]))),
+            arcs:[{a:old, b:nw, text:(mv.d > 0 ? '+' : '−') + Math.abs(mv.d), at:t + .5, cls:'ok'}]},
+          note:`<span class="mk"${dl(t + 1.4)}><b>${from}</b> → <b>${right}</b> (${QUAL[mv.to].n})</span>`,
+          sound:[{chord:C.vs, at:t}, {chord:D.vs, at:t + 1.4}], total:t + 2.4}; }};
+  }},
+  {id:'treklang-bygg-alla', make(){
+    const q = rnd(QORDER), root = N(rnd(rootsFor(q))), name = chordName(root, q), vs = voicing(root, q), iv = QUAL[q].iv;
+    return {kind:'keys', need:3, prompt:`Ta ackordet ${name}.`, show:{}, check: sel => samePcs(sel, vs), answer: vs,
+      wrong:`${name}: ${spellTxt(root, q)}. ${QUAL[q].n}: plus ${iv[1][0]} och sedan plus ${iv[2][0] - iv[1][0]}.`,
+      anim(pick){ const A = stack(root, q), bad = {}; pick.forEach(m => { if (!pcSet(vs).includes(m % 12)) bad[m] = 'bad'; });
+        return {kb:{lit:merge(bad, A.lit), names:A.names, arcs:A.arcs, under:A.under}, note:qTable(q, A.end), sound:A.sound, total:A.total}; }};
+  }}]
+];
+const GRADES = {tangent: Q_TANGENT, treklang: Q_TREKLANG};
+const allTypes = t => GRADES[t].flatMap((list, g) => list.map(x => ({...x, g})));
+
+// Snabbkollen på omslaget. Första valet är det rätta.
+const KICK = {
+  tangent:{q:'Hur sitter de svarta tangenterna?', opts:['I grupper om två och tre','En mellan varje vit','I grupper om fyra','Helt slumpat']},
+  treklang:{q:'Hur många toner har en treklang?', opts:['3','2','4','7']}
+};
+// Omslagets bild: en klaviatur som visar ämnet
+function coverKb(t){
+  if (t === 'tangent') { const A = countWhites(67, .2); return kbd({lit:A.lit, names:A.names, label:'C D E F G räknas upp'}); }
+  const A = stack(N('C'), 'maj', .2); return kbd({lit:A.lit, names:A.names, arcs:A.arcs, under:A.under, label:'C-dur byggs: C, E, G'});
+}
+
+// ===================== Startsidan =====================
+const CLOSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><rect x="3" y="4" width="5" height="7" rx="1.2"/><rect x="9.5" y="4" width="5" height="7" rx="1.2"/><rect x="16" y="4" width="5" height="7" rx="1.2"/><rect x="3" y="13" width="5" height="7" rx="1.2"/><rect x="9.5" y="13" width="5" height="7" rx="1.2"/><rect x="16" y="13" width="5" height="7" rx="1.2"/></g></svg>';
+const PADLOCK_SVG = `<svg class="padlock" viewBox="0 0 60 72" aria-hidden="true"><defs><linearGradient id="lk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9c1c8"/><stop offset=".5" stop-color="#7d8791"/><stop offset="1" stop-color="#4f5860"/></linearGradient></defs>
+  <path class="shackle" d="M16 34V21a14 14 0 0 1 28 0v13" fill="none" stroke="#5f6870" stroke-width="7" stroke-linecap="round"/>
+  <rect x="5" y="31" width="50" height="39" rx="9" fill="url(#lk)" stroke="#3d454c" stroke-width="1.5"/>
+  <g class="kh" fill="#1d2730"><circle cx="30" cy="47" r="6"/><path d="M26.5 49h7l1.8 12h-10.6z"/></g></svg>`;
+function chainsSVG(){
+  const link = (x, y, a, i) => i % 2
+    ? `<rect x="${x - 10}" y="${y - 2.5}" width="20" height="5" rx="2.5" transform="rotate(${a} ${x} ${y})" fill="#5f6870"/>`
+    : `<ellipse cx="${x}" cy="${y}" rx="12" ry="6.5" transform="rotate(${a} ${x} ${y})" fill="none" stroke="#7d8791" stroke-width="3.6"/>`;
+  const line = (x0, y0, x1, y1) => { let s = ''; const n = 22, a = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI; for (let i = 0; i <= n; i++) s += link(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n, a, i); return s; };
+  return `<svg class="chains" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${line(-20, 10, 320, 190)}${line(-20, 190, 320, 10)}</svg>`;
+}
+const keySVG = c => `<svg viewBox="0 0 96 40" aria-hidden="true"><path fill-rule="evenodd" fill="${c}" stroke="#2a1d10" stroke-width="2" d="M18 4a16 16 0 1 1 0 32a16 16 0 0 1 0-32zm0 9a7 7 0 1 0 0 14a7 7 0 0 0 0-14zM33 16h58v8h-6v9h-7v-9h-6v6h-7v-6H33z"/><circle cx="12" cy="12" r="3" fill="#fff" opacity=".55"/></svg>`;
+const tileUp = t => t === S.topic ? S.up : (S.streaks[t] || {up: 0}).up;
+function miniBar(t){
+  const g = S.grade[t], up = tileUp(t);
+  return `<span class="gb" aria-hidden="true">${GRADE_NAME.map((_, i) => `<span class="gs${i === g ? ' cur' : ''}"><span class="cells">${[0, 1, 2].map(j =>
+    `<i class="${i < g ? 'full' : i === g && j < up ? 'on' : ''}"></i>`).join('')}</span></span>`).join('')}</span>`;
+}
+function tileHTML(t){
+  const state = tileState(t), fresh = S.fresh === t ? ' fresh' : '';
+  const head = `<span class="tpat"></span><span class="thead"><span class="ticon">${topicIcon(t)}</span><span class="tname">${topicName(t)}</span></span><span class="tline">${TOPIC_LINE[t]}</span>`;
+  if (t === 'ultra') return `<button class="tile exam soon" data-id="ultra" style="${lookVars(t)}" aria-label="Eldprovet: kommer snart">${head}<span class="soonchip">Kommer snart</span></button>`;
+  if (state === 'done') return `<button class="tile done${fresh}" data-id="${t}" style="${lookVars(t)}">${head}
+    <span class="tfoot"><span class="tstate">Klart ✓ · rekord ${S.mix.best[t] || 0} i rad</span><span class="tchip">Spela blandat</span></span></button>`;
+  if (state === 'open') return `<button class="tile open${fresh}" data-id="${t}" style="${lookVars(t)}">${head}
+    <span class="tfoot">${miniBar(t)}<span class="tstate">${S.seen.includes(t) ? `${GRADE_NAME[S.grade[t]]} · ${tileUp(t)} av 3 rätt i rad · fortsätt` : 'Nytt · börja med en snabbkoll'}</span></span>
+    ${fresh ? '<span class="newflag">Nytt!</span>' : ''}</button>`;
+  const key = state === 'key' || (state === 'soon' && S.keys.includes(t)), flying = S.flying.includes(t) || S.arriving.includes(t);
+  return `<button class="tile locked${key ? ' haskey' : ''}" data-id="${t}" style="${lookVars(t)}" aria-label="${topicName(t)}: ${state === 'soon' ? 'kommer snart' : key ? 'tryck för att vrida om nyckeln' : 'låst'}">${head}
+    <span class="fog"></span>${chainsSVG()}${PADLOCK_SVG}${key ? `<span class="inkey${flying ? ' arriving' : ''}">${keySVG(TOPIC_LOOK[t].c)}</span>` : ''}${state === 'soon' ? '<span class="soonchip">Kommer snart</span>' : ''}</button>`;
+}
+function renderGrid(){ document.getElementById('grid').innerHTML = ORDER.map(tileHTML).join(''); }
+function nope(t){
+  const tile = document.querySelector(`#grid [data-id="${t}"]`);
+  tile.classList.remove('nope'); void tile.offsetWidth; tile.classList.add('nope');
+}
+document.getElementById('grid').addEventListener('click', e => {
+  const tile = e.target.closest('.tile');
+  if (!tile || S.screen !== 'grid') return;
+  const t = tile.dataset.id, state = tileState(t);
+  if (state === 'locked' || state === 'soon') { nope(t); return; }
+  if (state === 'key') { unlockTile(tile); return; }
+  openTopic(t);
+});
+// Nycklarna flyger från kortet man lämnade till sina lås
+function flyKeys(fromId){
+  const list = S.flying.splice(0);
+  if (!list.length) return;
+  const fromEl = fromId && document.querySelector(`#grid [data-id="${fromId}"]`);
+  if (S.instant || reduceMotion() || !fromEl || !fromEl.animate) { renderGrid(); return; }
+  S.arriving.push(...list);
+  renderGrid();
+  const from = fromEl.getBoundingClientRect();
+  list.forEach((t, i) => setTimeout(() => flyOne(t, from), 250 + i * 1300));
+}
+function flyOne(t, from){
+  const target = document.querySelector(`#grid [data-id="${t}"]`), slot = target && target.querySelector('.inkey');
+  const land = () => { S.arriving = S.arriving.filter(x => x !== t); document.querySelector(`#grid [data-id="${t}"] .inkey`)?.classList.remove('arriving'); sfx.clink(); };
+  if (!slot || S.screen !== 'grid') { land(); return; }
+  target.scrollIntoView?.({block: 'nearest', behavior: 'smooth'});
+  const to = slot.getBoundingClientRect(), g = document.createElement('div');
+  g.className = 'keyghost'; g.innerHTML = keySVG(TOPIC_LOOK[t].c); g.style.width = to.width + 'px';
+  document.body.appendChild(g);
+  g.animate([
+    {left: from.left + from.width / 2 - to.width / 2 + 'px', top: from.top + from.height / 2 + 'px', transform: 'scale(2.2) rotate(-30deg)'},
+    {left: (from.left + to.left) / 2 + 'px', top: Math.min(from.top, to.top) - 60 + 'px', transform: 'scale(1.6) rotate(200deg)', offset: .55},
+    {left: to.left + 'px', top: to.top + 'px', transform: 'scale(1) rotate(360deg)'}
+  ], {duration: 1100, easing: 'cubic-bezier(.45,.05,.3,1)', fill: 'forwards'}).onfinish = () => { g.remove(); land(); };
+}
+function unlockTile(tile){
+  const t = tile.dataset.id;
+  if (tile.classList.contains('turning') || !S.keys.includes(t)) return;
+  tile.classList.add('turning');
+  sfx.insert();
+  const open = () => { S.keys = S.keys.filter(x => x !== t); saveKeys(); S.fresh = t; renderGrid(); };
+  if (S.instant || reduceMotion()) { sfx.turn(); sfx.chains(); open(); return; }
+  setTimeout(() => sfx.turn(), 410);
+  setTimeout(() => { tile.classList.add('opening'); sfx.chains(); }, 760);
+  setTimeout(open, 1850);
+}
+
+// ===================== Spelkortet =====================
+function showScreen(){
+  const play = S.screen === 'play', lv = S.open, el = document.getElementById('spel');
+  document.getElementById('grid').hidden = play;
+  document.getElementById('lead').hidden = play;
+  el.hidden = !play;
+  if (!play) return;
+  el.className = 'play' + (cleared(lv) ? ' goldplay' : '') + (S.cover ? ' cover' : '');
+  el.setAttribute('style', lookVars(lv));
+  el.setAttribute('aria-label', topicName(lv));
+  document.getElementById('phead').hidden = !!S.cover;
+  document.getElementById('gbar').hidden = !!S.cover;
+}
+function updateHead(){
+  const lv = S.open;
+  if (!lv) return;
+  const mode = isMix(lv) ? '<span class="pmode">· Blandat</span>' : '';
+  document.getElementById('phead').innerHTML = `<span class="ticon">${topicIcon(lv)}</span><span class="pname">${topicName(lv)}</span>${mode}
+    <button class="closebtn" id="closeBtn" aria-label="Byt ämne">${CLOSE_ICON}<span>Byt ämne</span></button>`;
+}
+document.getElementById('phead').addEventListener('click', e => { if (e.target.closest('#closeBtn')) closePlay(); });
+function zoomIn(from){
+  const el = document.getElementById('spel'), to = el.getBoundingClientRect();
+  if (S.instant || reduceMotion() || !el.animate || !to.width) return;
+  sfx.whoosh();
+  const turn = S.cover ? ' perspective(1400px) rotateY(-90deg)' : '';
+  el.animate([{transformOrigin: '0 0', transform: `translate(${from.left - to.left}px,${from.top - to.top}px) scale(${from.width / to.width},${from.height / to.height})${turn}`},
+    {transformOrigin: '0 0', transform: 'none'}], {duration: S.cover ? 700 : 450, easing: 'cubic-bezier(.2,.8,.2,1)'});
+}
+function openTopic(lv){
+  if (S.screen === 'play' && S.open === lv) return;
+  const tile = S.screen === 'grid' && document.querySelector(`#grid [data-id="${lv}"]`), from = tile ? tile.getBoundingClientRect() : null;
+  if (S.fresh === lv) S.fresh = null;
+  S.screen = 'play'; S.open = lv; S.keyWin = null;
+  S.cover = !cleared(lv) && !S.seen.includes(lv) ? lv : null;
+  showScreen(); updateHead();
+  if (S.cover) drawCover(lv); else goTopic(lv);
+  if (from) zoomIn(from);
+  document.getElementById('closeBtn')?.focus({preventScroll: true});
+}
+const SPARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4z" fill="currentColor"/></svg>';
+function drawCover(lv){
+  if (!S.kick || S.kick.lv !== lv) { const order = shuffle([0, 1, 2, 3]); S.kick = {lv, right: order.indexOf(0), bad: [], opts: order.map(i => KICK[lv].opts[i])}; }
+  const k = S.kick, q = document.getElementById('q');
+  q.className = 'card';
+  q.innerHTML = `<button class="xbtn" id="coverClose" aria-label="Byt ämne">${CLOSE_ICON}</button>
+    <span class="eyebrow">Ämne ${TOPICS.indexOf(lv) + 1} av ${TOPICS.length}</span><div class="kb">${coverKb(lv)}</div>
+    <h2 class="cname"><span class="ticon">${topicIcon(lv)}</span>${topicName(lv)}</h2>
+    <p class="cline">${TOPIC_LINE[lv]}</p>
+    <div class="unlock"><div class="rule"></div><span class="ulab">${SPARK_ICON}Snabbkoll</span>
+      <p class="kickq">${KICK[lv].q}</p>
+      <div class="kickopts">${k.opts.map((o, i) => `<button class="kopt${k.bad.includes(i) ? ' bad' : ''}${showCheat() && i === k.right ? ' cheat' : ''}" data-kick="${i}"${k.bad.includes(i) ? ' aria-disabled="true"' : ''}>${o}</button>`).join('')}</div></div>`;
+}
+function kickPick(btn){
+  const k = S.kick, i = +btn.dataset.kick, lv = S.cover;
+  if (!k || !lv || k.busy || k.bad.includes(i)) return;
+  if (i !== k.right) {
+    k.bad.push(i); drawCover(lv);
+    const box = document.querySelector('#q .kickopts');
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    sfx.wrong(); return;
+  }
+  k.busy = true; btn.classList.add('ok'); sfx.right();
+  const go = () => {
+    if (S.cover !== lv || S.kick !== k) return;
+    S.seen.push(lv); saveKeys();
+    S.kick = null; S.cover = null;
+    showScreen(); updateHead(); goTopic(lv);
+  };
+  if (S.instant || reduceMotion()) { go(); return; }
+  setTimeout(() => flipCard(go), 550);
+}
+function flipCard(fn){
+  const el = document.getElementById('spel');
+  if (S.instant || reduceMotion() || !el.animate) { fn(); return; }
+  el.animate([{transform: 'perspective(1400px) rotateY(0)'}, {transform: 'perspective(1400px) rotateY(90deg)'}], {duration: 230, easing: 'ease-in'}).onfinish = () => {
+    if (fn() === false) return;
+    el.animate([{transform: 'perspective(1400px) rotateY(-90deg)'}, {transform: 'perspective(1400px) rotateY(0)'}], {duration: 260, easing: 'ease-out'});
+  };
+}
+function slideCard(dir, fn){
+  const el = document.getElementById('spel');
+  if (S.instant || reduceMotion() || !el.animate) { fn(); return; }
+  el.animate([{transform: 'translateX(0)', opacity: 1}, {transform: `translateX(${dir * 110}%)`, opacity: 0}], {duration: 280, easing: 'ease-in'}).onfinish = () => {
+    if (fn() === false) return;
+    el.animate([{transform: `translateX(${-dir * 110}%)`, opacity: 0}, {transform: 'translateX(0)', opacity: 1}], {duration: 320, easing: 'ease-out'});
+  };
+}
+function closePlay(){
+  if (S.screen !== 'play') return;
+  const lv = S.open, el = document.getElementById('spel'), from = el.getBoundingClientRect();
+  stopTimer(); clearBar();
+  if (S.answered) S.Q = null;
+  S.keyWin = null; S.cover = null; S.kick = null; S.busy = false; S.unlockedNow = null; S.goldNow = null;
+  S.screen = 'grid'; S.open = null;
+  renderGrid();
+  const tile = document.querySelector(`#grid [data-id="${lv}"]`);
+  const done = () => { el.removeAttribute('style'); showScreen(); tile?.focus({preventScroll: true}); flyKeys(lv); };
+  if (S.instant || reduceMotion() || !el.animate || !from.width || !tile) { done(); return; }
+  document.getElementById('grid').hidden = false; document.getElementById('lead').hidden = false;
+  Object.assign(el.style, {position: 'fixed', left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px', zIndex: 40, margin: 0});
+  const to = tile.getBoundingClientRect();
+  sfx.whoosh();
+  el.animate([{transformOrigin: '0 0', transform: 'none'},
+    {transformOrigin: '0 0', transform: `translate(${to.left - from.left}px,${to.top - from.top}px) scale(${to.width / from.width},${to.height / from.height})`}],
+    {duration: 420, easing: 'cubic-bezier(.5,0,.2,1)'}).onfinish = () => { el.getAnimations({subtree: true}).forEach(a => a.cancel()); done(); };
+}
+function goTopic(lv){
+  S.kick = null; clearBar();
+  if (lv === S.topic && S.Q && !S.answered) { render(); return; }
+  if (lv !== S.topic) {
+    S.streaks[S.topic] = {up: S.up, down: S.down};
+    const s = S.streaks[lv] || {up: 0, down: 0};
+    S.up = s.up; S.down = s.down; S.mix.streak = 0; S.topic = lv; save('topic', lv);
+  }
+  S.moved = null;
+  next();
+}
+function advance(){
+  stopTimer();
+  if (S.keyWin) { closePlay(); return; }
+  if (S.goldNow) { const lv = S.goldNow; S.goldNow = null; S.fresh = lv; closePlay(); }
+  else if (S.unlockedNow) { const lv = S.unlockedNow; S.unlockedNow = null; showKeyWin(lv); }
+  else nextFlip();
+}
+function nextFlip(){
+  if (S.flipping) return;
+  const lv = S.open;
+  S.flipping = true;
+  const dir = S.moved === 'up' ? -1 : S.moved === 'down' ? 1 : 0;
+  (dir ? fn => slideCard(dir, fn) : flipCard)(() => {
+    S.flipping = false;
+    if (S.screen !== 'play' || S.open !== lv) return false;
+    next();
+  });
+}
+function showKeyWin(lv){
+  S.keyWin = lv;
+  const q = document.getElementById('q');
+  q.className = 'card';
+  q.innerHTML = `<div class="keywin">${keySVG(TOPIC_LOOK[lv].c)}<h3>Mästare! Du fick nyckeln till ${topicName(lv)}.</h3><p>${BUILT.includes(lv) ? 'Den flyger till låset.' : 'Ämnet kommer snart. Nyckeln väntar i låset.'}</p></div>`;
+  if (S.instant) { closePlay(); return; }
+  S.timer = setTimeout(closePlay, 2200);
+}
+
+// ===================== Frågan =====================
+function next(){
+  stopTimer(); clearBar();
+  const topic = S.topic;
+  // Blandat: en slumpad grad, oftare de svåra
+  const g = isMix(topic) ? rnd([0, 1, 2, 3, 3, 4, 4]) : S.grade[topic];
+  const list = GRADES[topic][g], pinned = S.pin && S.pin.q && allTypes(topic).find(x => x.id === S.pin.q);
+  const type = pinned || rnd(list);
+  S.Q = {...type.make(), id: type.id};
+  S.sel = []; S.pick = null; S.answered = false; S.ok = null; S.pickC = null;
+  render();
+  playShown();
+  const card = document.getElementById('q');
+  if (card.getBoundingClientRect().top < 0 && card.scrollIntoView) card.scrollIntoView({block: 'start', behavior: reduceMotion() ? 'auto' : 'smooth'});
+}
+// Greppet i frågan spelas en gång. Efter ett fel svar spelar Spela igen det rätta svaret.
+function playShown(){
+  const Q = S.Q;
+  if (!Q) return;
+  if (S.answered && !S.ok && S.anim) piano.plan(S.anim.sound);
+  else if (Q.sound) piano.plan(Q.sound);
+}
+const PLAY_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg>';
+const HAND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V4.5a1.5 1.5 0 0 1 3 0V10l.4-.1a1.5 1.5 0 0 1 2.1 1.1l.1-.1a1.5 1.5 0 0 1 2.3 1.2l.1-.1a1.5 1.5 0 0 1 2.4 1.2V17a5 5 0 0 1-5 5h-1.6a5 5 0 0 1-3.9-1.9l-3-3.8a1.6 1.6 0 0 1 2.4-2.1L9 15z" fill="#fff" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+function render(){
+  const Q = S.Q, q = document.getElementById('q'), done = S.answered, why = done && !S.ok;
+  const A = why ? S.anim : null;
+  const canReplay = Q.sound || A;
+  let h = `<p class="kindtag">${Q.kind === 'keys' ? (Q.need > 1 ? 'Ta ackordet' : 'Peka på tangenten') : 'Välj rätt svar'}</p>
+    <div class="qtop"><p class="prompt">${Q.prompt}</p>${canReplay ? `<button class="replay" id="replay" type="button">${PLAY_ICON}Spela igen</button>` : ''}</div>`;
+  let kb;
+  if (A) kb = A.kb;
+  else if (Q.kind === 'keys') kb = done ? {...Q.show, lit: merge(Q.show.lit || {}, Object.fromEntries(S.sel.map(m => [m, 'ok'])))}
+    : {...Q.show, tap: true, sel: S.sel, cheat: showCheat() ? Q.answer : []};
+  else kb = Q.show;
+  if (kb) h += `<div class="kb">${kbd(kb)}</div>`;
+  if (A && A.note) h += `<div class="animnote">${A.note}</div>`;
+  if (Q.kind === 'mc') {
+    const mk = i => !done ? '' : (i === Q.right ? ' ok' : S.pickC === i ? ' bad' : '') + (S.pickC === i ? ' chosen' : '');
+    h += `<div class="opts">${Q.opts.map((o, i) => `<button class="opt${Q.txt ? ' txt' : ''}${mk(i)}${cheat(i === Q.right)}" data-c="${i}"${done ? ' aria-disabled="true"' : ''}>${o}</button>`).join('')}</div>`;
+  }
+  if (Q.kind === 'keys' && Q.need > 1 && !done)
+    h += `<div class="submitrow"><button class="primary" id="submit"${S.sel.length === Q.need ? '' : ' disabled'}>Svara</button><span class="count">${S.sel.length} av ${Q.need} tangenter</span></div>`;
+  if (Q.kind === 'keys' && showCheat() && !done) h += `<p class="cheatline">Svar: ${pcSet(Q.answer).map(p => pcName(p)).join(', ')}</p>`;
+  if (why) {
+    const wait = Math.max(0, ((S.lockUntil || 0) - (S.revealAt || 0)) / 1000);
+    h += `<p class="${A ? 'sr' : 'lesson'}" role="status">${Q.wrong}</p><button type="button" class="tapcue" id="cont" aria-label="Fortsätt" style="--wait:${wait.toFixed(2)}s">${HAND}</button>`;
+  }
+  q.className = 'card kind-' + Q.kind;
+  q.innerHTML = h;
+  if (!done) barIdle(); else noPick(document.getElementById('gbar'));
+}
+// Ett tryck på en tangent: den klingar. Med en tangent att välja är det svaret, annars växlar den mellan vald och inte vald.
+function tapKey(m){
+  const Q = S.Q;
+  if (!Q || S.answered || Q.kind !== 'keys' || S.busy) return;
+  piano.chord([m]);
+  if (Q.need === 1) { S.sel = [m]; S.pick = [m]; finish(Q.check([m])); return; }
+  if (S.sel.includes(m)) S.sel = S.sel.filter(x => x !== m);
+  else if (S.sel.length < Q.need) S.sel = [...S.sel, m];
+  render();
+  document.querySelector(`#q [data-key="${m}"]`)?.focus({preventScroll: true});
+}
+function submitKeys(){
+  const Q = S.Q;
+  if (!Q || S.answered || S.sel.length !== Q.need) return;
+  S.pick = S.sel.slice();
+  finish(Q.check(S.pick));
+}
+function answerMC(i){
+  if (S.answered || S.busy) return;
+  S.pickC = i; S.pick = i;
+  finish(i === S.Q.right);
+}
+
+// Svaret: en gnista, sedan utfallet. Rätt går vidare av sig själv. Fel visar förklaringen tills man trycker.
+const SPARK_MS = 900, NEXT_MS = 1700, PARTY_MS = 2600, GOLD_MS = 4200;
+const stopTimer = () => { clearTimeout(S.timer); S.timer = null; S.autoNext = false; };
+function finish(ok){
+  S.answered = true; S.ok = ok;
+  S.unlockedNow = null; S.goldNow = null; S.moved = null; S.barPlan = null;
+  S.anim = !ok && S.Q.anim ? S.Q.anim(Array.isArray(S.pick) ? S.pick : [S.pick]) : null;
+  if (isMix(S.topic)) {
+    const t = S.topic, from = S.mix.streak;
+    S.mix.streak = ok ? from + 1 : 0;
+    const record = S.mix.streak > (S.mix.best[t] || 0);
+    if (record) { S.mix.best[t] = S.mix.streak; save('best', JSON.stringify(S.mix.best)); }
+    S.barPlan = {mix: true, ok, topic: t, from: {streak: from}, to: {streak: S.mix.streak, best: S.mix.best[t] || 0}, record};
+  } else {
+    const t = S.topic, before = S.done[t], from = {g: S.grade[t], up: S.up, down: S.down, done: before};
+    const r = ladder(from, ok);
+    if (S.pin && S.pin.topic === t) { r.g = S.pin.grade; r.done = before; r.moved = null; }
+    S.grade[t] = r.g; S.up = r.up; S.down = r.down; S.done[t] = r.done;
+    S.moved = r.moved || (r.done === 5 && before < 5 ? 'top' : null);
+    S.barPlan = {ok, topic: t, from, to: {g: r.g, up: r.up, down: r.down, done: r.done}, moved: S.moved};
+    saveProgress();
+    const nx = TOPICS[TOPICS.indexOf(t) + 1];
+    if (nx && before < UNLOCK_AT && r.done >= UNLOCK_AT) { S.unlockedNow = nx; grantKey(nx); }
+    if (S.moved === 'top') { S.goldNow = t; S.mix.streak = 0; }
+  }
+  if (S.instant || reduceMotion()) { reveal(); return; }
+  S.busy = true;
+  sfx.spark(); sparkFX();
+  S.timer = setTimeout(reveal, SPARK_MS);
+}
+function reveal(){
+  stopTimer();
+  S.busy = false; S.revealAt = Date.now();
+  const A = S.anim;
+  // Vid fel måste man se hela förklaringen och stapeln innan man kan gå vidare
+  const barStart = S.ok ? .1 : A && !reduceMotion() ? A.total : .3;
+  const barDur = !S.barPlan || S.ok ? 0 : S.barPlan.moved === 'down' ? BAR_DOWN : BAR_WRONG;
+  S.lockUntil = S.revealAt + (S.instant ? 0 : S.ok ? 600 : (barStart + barDur) * 1000);
+  render();
+  const party = S.moved === 'up' || S.moved === 'top';
+  if (!S.ok) { sfx.wrong(); if (A) piano.plan(A.sound); }
+  else if (party) { sfx.right(2); const fan = S.moved === 'top' ? sfx.gold : sfx.fanfare; if (S.instant) fan(); else setTimeout(fan, 450); }
+  else sfx.right(S.barPlan && !S.barPlan.mix ? S.barPlan.from.up : 0);
+  if (!S.instant) outcomeFX(S.ok ? 'won' : 'lost', party);
+  if (!S.instant) barFX(S.barPlan, barStart);
+  if (!S.instant && S.ok) { S.autoNext = true; S.timer = setTimeout(advance, S.moved === 'top' ? GOLD_MS : party ? PARTY_MS : NEXT_MS); }
+  document.getElementById('cont')?.focus({preventScroll: true});
+}
+// Gnistan löper längs klaviaturen, eller längs knappen man tryckte på
+function fxTarget(){
+  const q = document.getElementById('q'), qr = q.getBoundingClientRect();
+  const el = q.querySelector('.kb svg') || (S.lastTap && q.contains(S.lastTap) ? S.lastTap : null);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return {q, x0: r.left - qr.left + 8, x1: r.right - qr.left - 8, y: r.top - qr.top + 8};
+}
+function fxLayer(t, cls){
+  const d = document.createElement('div');
+  d.className = 'fx ' + cls;
+  d.style.cssText = `left:${t.x0}px;top:${t.y}px;--dx:${t.x1 - t.x0}px`;
+  d.setAttribute('aria-hidden', 'true');
+  t.q.appendChild(d);
+  return d;
+}
+function sparkFX(){ S.lastTap?.classList?.add('pending'); const t = fxTarget(); if (t) fxLayer(t, 'spark').innerHTML = '<i></i>'; }
+function outcomeFX(kind, party){
+  const t = fxTarget();
+  if (!t) return;
+  const at = {...t, x0: t.x1}, d = fxLayer(at, 'out ' + kind + (party ? ' party' : ''));
+  const qr = t.q.getBoundingClientRect();
+  S.ledAt = {x: qr.left + at.x0, y: qr.top + at.y};
+  const n = party ? 14 : 8;
+  d.innerHTML = `<i></i>${kind === 'won' ? Array.from({length: n}, (_, i) => `<b style="--a:${i * (360 / n)}deg"></b>`).join('') : '<s></s><s></s><s></s>'}`;
+}
+
+// ===================== Stapeln (som Färgkoden) =====================
+const BAR_WRONG = 1.1, BAR_DOWN = 1.9;
+const barT = [];
+const later = (sec, fn) => barT.push(setTimeout(fn, sec * 1000));
+const gbarEl = document.getElementById('gbar');
+const noPick = b => {
+  b.classList.remove('pick'); b.querySelector('.gask')?.remove();
+  b.querySelectorAll('[data-gpick]').forEach(x => { x.removeAttribute('data-gpick'); x.removeAttribute('role'); x.removeAttribute('tabindex'); x.removeAttribute('aria-label'); });
+};
+function clearBar(){
+  barT.forEach(clearTimeout); barT.length = 0;
+  gbarEl.className = 'gbar';
+  document.getElementById('gbargap')?.remove();
+  noPick(gbarEl);
+  document.querySelectorAll('.dust').forEach(d => d.remove());
+}
+function floatBar(b){
+  if (b.getBoundingClientRect().top >= 0 || document.getElementById('gbargap')) return;
+  const gap = document.createElement('div');
+  gap.id = 'gbargap'; gap.style.height = b.offsetHeight + 'px';
+  b.before(gap); b.classList.add('float');
+}
+function sinkBar(b){
+  if (!b.classList.contains('float')) return;
+  const done = () => { b.classList.remove('float', 'leave'); document.getElementById('gbargap')?.remove(); };
+  if (reduceMotion()) { done(); return; }
+  b.classList.add('leave'); later(.25, done);
+}
+function barDraw(st, topic, label){
+  const red = (g, i) => g === st.g - 1 && i >= 3 - (st.down || 0);
+  const segs = GRADE_NAME.map((n, g) => {
+    const cur = g === st.g, fill = i => g < st.g ? (red(g, i) ? 'full bad' : 'full') : cur ? (i < st.up ? 'on' : '') : g < (st.done || 0) ? 'was' : '';
+    return `<div class="gseg${cur ? ' cur' : ''}"><div class="cells">${[0, 1, 2].map(i => `<i class="${fill(i)}" style="--k:${g * 3 + i}"></i>`).join('')}</div><span>${cur && label ? label : n}</span></div>`;
+  }).join('');
+  gbarEl.innerHTML = `<div class="gname">${topicName(topic)}</div><div class="segs">${segs}</div>`;
+}
+function dust(from, to, n, cls){
+  if (!from) return;
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('i');
+    d.className = 'dust ' + cls; d.style.left = from.x + 'px'; d.style.top = from.y + 'px';
+    document.body.appendChild(d);
+    const jx = Math.random() * 30 - 15, jy = -6 - Math.random() * 14;
+    const dx = to ? to.x - from.x : jx * 1.5, dy = to ? to.y - from.y : 45 + Math.random() * 35, ms = to ? 520 : 750;
+    if (d.animate) d.animate([{transform: `translate(${jx}px,${jy}px)`, opacity: 1}, {transform: `translate(${dx}px,${dy}px) scale(${to ? .4 : .7})`, opacity: to ? 1 : 0}],
+      {duration: ms, delay: i * 35, easing: to ? 'cubic-bezier(.5,0,.9,.6)' : 'ease-in', fill: 'forwards'});
+    later((ms + i * 35) / 1000 + .05, () => d.remove());
+  }
+}
+function barDrawMix(topic, n, best, rec){
+  gbarEl.innerHTML = `<div class="gname">${topicName(topic)} · Blandat</div><div class="mixrow"><span class="streak"><b>${n}</b> i rad</span><span class="rec${rec ? ' new' : ''}">${rec ? 'Nytt rekord!' : `Rekord ${best}`}</span></div>`;
+}
+function barIdle(){
+  const lv = S.open;
+  clearBar();
+  if (!lv) return;
+  if (isMix(lv)) { barDrawMix(lv, S.mix.streak, S.mix.best[lv] || 0, false); gbarEl.className = 'gbar goldbar'; return; }
+  barDraw({g: S.grade[lv], up: S.up, down: S.down, done: S.done[lv]}, lv);
+  if (S.answered || S.pin || lv !== S.topic) return;
+  gbarEl.classList.add('pick');
+  const top = Math.min(S.done[lv], MAX);
+  gbarEl.querySelectorAll('.gseg').forEach((el, g) => {
+    if (g > top || g === S.grade[lv]) return;
+    el.dataset.gpick = g; el.setAttribute('role', 'button'); el.tabIndex = 0;
+    el.setAttribute('aria-label', `${g < S.grade[lv] ? 'Gå ner' : 'Gå upp'} till ${GRADE_NAME[g]}`);
+  });
+}
+function mixFX(P, startAt){
+  const b = gbarEl, calm = reduceMotion();
+  const num = () => { const e = b.querySelector('.streak b'); if (!e) return null; const r = e.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+  later(startAt, () => { barDrawMix(P.topic, P.from.streak, P.to.best - (P.record ? 1 : 0), false); b.className = 'gbar show goldbar'; floatBar(b); });
+  if (P.ok) {
+    later(startAt + .35, () => { if (!calm) dust(S.ledAt, num(), 10, 'in gold'); });
+    later(startAt + .85, () => { barDrawMix(P.topic, P.to.streak, P.to.best, P.record); b.querySelector('.streak b').classList.add('pop'); if (P.record) b.classList.add('quake'); });
+    later(startAt + 1.55, () => { b.classList.remove('show'); sinkBar(b); });
+  } else {
+    later(startAt + .25, () => { if (!calm && P.from.streak) dust(num(), null, 10, 'out gold'); barDrawMix(P.topic, 0, P.to.best, false); b.classList.add('shake'); });
+    later(startAt + 1.2, () => sinkBar(b));
+  }
+}
+function goldFX(b, at){
+  later(at, () => {
+    b.classList.remove('quake'); b.classList.add('gilded');
+    if (reduceMotion()) return;
+    const r = b.getBoundingClientRect(), cy = r.top + r.height / 2;
+    for (let i = 0; i < 3; i++) later(.15 + i * .35, () => {
+      const p = {x: r.left + r.width * (.2 + .3 * i), y: cy};
+      for (let j = 0; j < 12; j++) { const a = j / 12 * Math.PI * 2, d = 60 + Math.random() * 50; dust(p, {x: p.x + Math.cos(a) * d, y: p.y + Math.sin(a) * d + 30}, 1, 'in gold'); }
+    });
+  });
+}
+function barFX(P, startAt){
+  clearBar();
+  if (!P) return;
+  if (P.mix) { mixFX(P, startAt); return; }
+  const b = gbarEl, calm = reduceMotion(), party = P.moved === 'up' || P.moved === 'top';
+  const cellEl = (g, i) => b.querySelectorAll('.gseg')[g]?.querySelectorAll('.cells i')[i];
+  const cell = (g, i) => { const c = cellEl(g, i); if (!c) return null; const r = c.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; };
+  later(startAt, () => { barDraw(P.from, P.topic); b.className = 'gbar show'; floatBar(b); });
+  if (P.ok) {
+    const slot = Math.min(P.from.up, 2), g = P.from.g;
+    later(startAt + .35, () => { if (!calm) dust(S.ledAt, cell(g, slot), 10, 'in'); });
+    later(startAt + .85, () => {
+      barDraw({...P.from, up: P.from.up + 1, down: 0}, P.topic); cellEl(g, slot)?.classList.add('pop');
+      for (let i = 3 - P.from.down; i < 3 && g > 0; i++) cellEl(g - 1, i)?.classList.add('heal');
+    });
+    if (party) {
+      later(startAt + 1.05, () => { b.classList.add('quake'); b.querySelectorAll('.gseg.cur .cells i').forEach(c => c.classList.add('ripe')); });
+      later(startAt + 1.55, () => { b.classList.remove('quake'); barDraw(P.to, P.topic, P.moved === 'top' ? 'klart ✓' : null); b.classList.add('newgrade'); });
+      if (P.moved === 'top') { goldFX(b, startAt + 1.7); later(startAt + 3.9, () => { b.classList.remove('show'); sinkBar(b); }); }
+      else later(startAt + 2.3, () => { b.classList.remove('show'); sinkBar(b); });
+    } else later(startAt + 1.5, () => { b.classList.remove('show'); sinkBar(b); });
+  } else {
+    const down = P.moved === 'down';
+    later(startAt + .25, () => {
+      if (!calm) [0, 1, 2].filter(i => i < P.from.up).forEach(i => dust(cell(P.from.g, i), null, down ? 8 : 5, 'out'));
+      const nd = Math.min(P.from.down + 1, 3);
+      barDraw({...P.from, up: 0, down: P.from.g > 0 ? nd : 0}, P.topic);
+      if (P.from.g > 0) cellEl(P.from.g - 1, 3 - nd)?.classList.add('newbad');
+      b.classList.add(down ? 'quake' : 'shake');
+    });
+    if (down) later(startAt + .95, () => {
+      b.classList.remove('quake');
+      if (!calm) [0, 1, 2].forEach(i => dust(cell(P.to.g, i), null, 7, 'out bad'));
+      barDraw(P.to, P.topic); b.classList.add('newgrade', 'fell');
+    });
+    later(startAt + (down ? 1.9 : 1.3), () => sinkBar(b));
+  }
+}
+// Byte av grad i stapeln: först en fråga, sedan som om man fått många rätt eller fel i rad
+function gradeAsk(g){
+  const cur = S.grade[S.open];
+  gbarEl.querySelector('.gask')?.remove();
+  gbarEl.insertAdjacentHTML('beforeend', `<div class="gask" role="group"><span>${g < cur ? `Gå ner till ${GRADE_NAME[g]}?` : `Gå upp till ${GRADE_NAME[g]} igen?`}</span>
+    <button data-gyes="${g}">Ja</button><button data-gno>Nej</button></div>`);
+  gbarEl.querySelector('[data-gyes]').focus({preventScroll: true});
+}
+function gradeJump(lv, to){
+  const from = S.grade[lv], done = S.done[lv], down = to < from;
+  S.grade[lv] = to; S.up = 0; S.down = 0;
+  saveProgress();
+  down ? sfx.wrong() : sfx.fanfare();
+  clearBar();
+  if (S.instant || reduceMotion()) { next(); return; }
+  const steps = Math.abs(to - from);
+  barDraw({g: from, up: 0, down: 0, done}, lv);
+  later(.3, () => { barDraw({g: to, up: 0, down: 0, done}, lv); gbarEl.classList.add('newgrade', down ? 'shake' : 'quake'); });
+  later(.3 + Math.min(steps, 2) * .5 + .4, () => { if (S.open === lv) next(); });
+}
+gbarEl.addEventListener('click', e => {
+  if (S.screen !== 'play' || S.answered || S.busy) return;
+  const yes = e.target.closest('[data-gyes]');
+  if (yes) { gradeJump(S.open, +yes.dataset.gyes); return; }
+  if (e.target.closest('[data-gno]')) { gbarEl.querySelector('.gask')?.remove(); return; }
+  const seg = e.target.closest('[data-gpick]');
+  if (seg) gradeAsk(+seg.dataset.gpick);
+});
+gbarEl.addEventListener('keydown', e => {
+  const seg = e.target.closest('[data-gpick]');
+  if (seg && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); gradeAsk(+seg.dataset.gpick); }
+});
+document.addEventListener('click', e => { if (!gbarEl.contains(e.target)) gbarEl.querySelector('.gask')?.remove(); });
+
+// ===================== Tryck och tangenter =====================
+document.getElementById('q').addEventListener('click', e => {
+  if (S.keyWin) { closePlay(); return; }
+  if (e.target.closest('#replay')) { playShown(); return; }
+  if (S.busy) { reveal(); return; }
+  if (S.autoNext) { advance(); return; }
+  if (S.answered && !S.cover) { if (Date.now() < (S.lockUntil || 0)) return; advance(); return; }
+  const key = e.target.closest('[data-key]');
+  if (key) { S.lastTap = key; tapKey(+key.dataset.key); return; }
+  const btn = e.target.closest('button');
+  if (!btn || btn.disabled) return;
+  S.lastTap = btn;
+  if (btn.id === 'coverClose') closePlay();
+  else if (btn.dataset.kick != null) kickPick(btn);
+  else if (btn.dataset.c != null) answerMC(+btn.dataset.c);
+  else if (btn.id === 'submit') submitKeys();
+});
+document.getElementById('q').addEventListener('keydown', e => {
+  const key = e.target.closest('[data-key]');
+  if (key && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); S.lastTap = key; tapKey(+key.dataset.key); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && S.screen === 'play') { closePlay(); return; }
+  if (S.busy && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); reveal(); return; }
+  if (S.autoNext && e.key === 'Enter') { e.preventDefault(); advance(); return; }
+  if (e.key !== 'Enter' || e.target.tagName === 'BUTTON' || e.target.closest?.('[data-key]')) return;
+  if (S.screen !== 'play' || S.cover) return;
+  if (S.answered) { if (Date.now() >= (S.lockUntil || 0)) advance(); return; }
+  submitKeys();
+});
+function syncSound(){
+  const b = document.getElementById('soundBtn');
+  b.setAttribute('aria-pressed', S.sound);
+  b.setAttribute('aria-label', S.sound ? 'Ljud på' : 'Ljud av');
+  b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/>${S.sound
+    ? '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+    : '<path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'}</svg>`;
+}
+document.getElementById('soundBtn').addEventListener('click', () => { S.sound = !S.sound; save('sound', S.sound ? 'on' : 'off'); syncSound(); });
+syncSound();
+// Testraden
+if (TEST_MODE) document.querySelector('.testbar').hidden = false;
+const cheatBtn = document.getElementById('tCheat');
+const syncCheatBtn = () => { cheatBtn.textContent = S.cheatOn ? 'Dölj rätt svar' : 'Visa rätt svar'; cheatBtn.setAttribute('aria-pressed', !S.cheatOn); };
+syncCheatBtn();
+cheatBtn.addEventListener('click', () => {
+  S.cheatOn = !S.cheatOn; save('cheat', S.cheatOn ? 'on' : 'off'); syncCheatBtn();
+  if (S.cover) drawCover(S.cover); else if (S.screen === 'play' && S.Q && !S.keyWin) render();
+});
+document.getElementById('tGive').addEventListener('click', () => {
+  const lv = TOPICS.find(l => !unlocked(l));
+  if (lv) { const p = TOPICS[TOPICS.indexOf(lv) - 1]; S.done[p] = Math.max(S.done[p], UNLOCK_AT); S.grade[p] = Math.max(S.grade[p], UNLOCK_AT); saveProgress(); grantKey(lv); }
+  if (S.screen === 'grid') flyKeys(null);
+});
+document.getElementById('tReset').addEventListener('click', () => {
+  if (S.screen === 'play') closePlay();
+  TOPICS.forEach(t => { S.done[t] = 0; S.grade[t] = 0; });
+  saveProgress();
+  S.up = 0; S.down = 0; S.streaks = {}; S.Q = null; S.topic = 'tangent'; save('topic', 'tangent');
+  S.keys = ['tangent']; S.seen = []; S.flying = []; S.arriving = []; saveKeys();
+  renderGrid();
+});
+// Sidan öppnar på startsidan. Förhandsvisningen från dev.html går direkt till spelkortet.
+renderGrid();
+if (S.pin) openTopic(S.pin.topic);
+</script>
+</body>
+</html>
