@@ -1,6 +1,6 @@
 # Ackordkartan: ett spel om ackord, steg och lånade ackord
 
-Datum: 2026-10-09. Status: godkänd i chatten, omgång 1 byggs först.
+Datum: 2026-10-09. Status: godkänd i chatten. Omgång 1 är byggd, omgång 2 byggs.
 
 ## Syfte
 
@@ -96,6 +96,41 @@ Snabbkoll: "Hur sitter de svarta tangenterna?" Rätt svar: "I grupper om två oc
 | Stormästare | Peka (flera tangenter) | Ta ackordet B♭dim (alla kvaliteter, inga namn). | Tersstaplingen som på Gesäll, med kvalitetens avstånd. |
 
 Snabbkoll: "Hur många toner har en treklang?" Svaren är 3 (rätt), 2, 4 och 7.
+
+## Omgång 2: frågekatalog
+
+Skalor tas på klaviaturen med sju tangenter och Svara, på samma sätt som ackord. Därför behövs ingen Ordna-frågetyp: tonhöjden ger ordningen. Kvintcirkeln ritas som en egen liten bild i förklaringsrutan. Durtonarterna går upp till fem förtecken (F♯ och G♭ bara i kvintcirkeln), och molltonarterna är naturlig moll.
+
+### Tonarterna (`tonart`)
+
+| Grad | Frågetyp | Fråga | Felanimering |
+|---|---|---|---|
+| Nykomling | Flerval | G-dur: G A B C D ? F♯. Vilken ton fattas? Skalan visas med namn (C, G, F, D, B♭). | Skalan går upp ton för ton med bågar märkta *hel* och *halv*, mönstret hel-hel-halv-hel-hel-hel-halv. Den saknade tonen blir grön. |
+| Lärling | Peka (sju tangenter) | Ta G-durskalan (upp till fyra förtecken). | Samma skalvandring från grundtonen, och tonerna spelas en i taget. |
+| Gesäll | Flerval | Hur många förtecken har D-dur? (2 ♯, 3 ♯, 1 ♯, 2 ♭) | Skalvandringen. Tangenterna som behöver ♯ eller ♭ blir gröna och listas: "D-dur har F♯ och C♯". |
+| Mästare | Flerval | Vilken durtonart har tre ♭? | Kvintcirkeln: från C ett steg i taget medsols (♯) eller motsols (♭), med räkningen 1, 2, 3 tills rätt tonart lyser. |
+| Mästare | Flerval | Vilken är parallell moll till F-dur? | Tre halvtonssteg ner från grundtonen (bågar 1, 2, 3), och mollackordet klingar. Raden: samma toner, samma förtecken. |
+| Stormästare | Flerval | Hur många förtecken har F♯m? | Tre halvtonssteg upp till parallell dur, och sedan kvintcirkeln fram till den. |
+| Stormästare | Peka (sju tangenter) | Ta skalan E-moll (naturlig moll). | Skalvandring med mollens mönster hel-halv-hel-hel-halv-hel-hel. |
+
+Snabbkoll: "Hur många olika toner har en durskala?" Svaren är 7 (rätt), 8, 5 och 12.
+
+### Stegen (`steg`)
+
+Stegen i dur är I ii iii IV V vi vii°: dur, moll, moll, dur, dur, moll, förminskat. Funktionerna är tonika (I, iii, vi), subdominant (ii, IV) och dominant (V, vii°).
+
+| Grad | Frågetyp | Fråga | Felanimering |
+|---|---|---|---|
+| Nykomling | Flerval | I C-dur: vilket steg är det här ackordet? Ackordet visas med namn och spelas. | Skalan tänds ton för ton med stegsiffror under, fram till ackordets grundton. Sedan staplas ackordet med skalans toner, varannan ton. |
+| Lärling | Flerval | I G-dur: vilket ackord är vi? (C, G, F) | Stegräkningen, sedan staplingen med bågar: +3 och +4 ger moll. |
+| Gesäll | Flerval | I D-dur: vilket ackord är V? Alla durtonarter. | Samma som Lärling. |
+| Gesäll | Peka (flera tangenter) | I F-dur: ta IV. | Samma, och ackordet klingar. |
+| Mästare | Flerval | Am i C-dur: vilket steg? Alla durtonarter. | Stegräkningen fram till ackordets grundton. |
+| Mästare | Flerval | I C-dur: vilken funktion har Am? (Tonika, Subdominant, Dominant) | Huvudackordet för funktionen (C) tänds, och sedan Am. De gemensamma tonerna märks. En tabell visar grupperna, med rätt rad markerad. |
+| Stormästare | Flerval | I–V–vi–IV i C-dur är C G Am F. Vad blir det i D-dur? | En tabell: stegen överst, C-dur under och sedan den nya tonarten, ackord för ackord. Följden spelas i den nya tonarten. |
+| Stormästare | Flerval | Dm, G och C: vilken durtonart hör de hemma i? | Rätt tonart visas med steg under tangenterna, och varje ackord får sitt steg: Dm = ii, G = V, C = I. |
+
+Snabbkoll: "Vilket steg är hemma, där en låt brukar sluta?" Svaren är I (rätt), V, IV och vi.
 
 ## Testning
 

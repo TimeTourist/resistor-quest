@@ -237,6 +237,14 @@ main{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
 .qtab td{padding:3px 12px 3px 0}
 .qtab tr.hit td{font-weight:700;color:var(--ok)}
 .qtab tr.hit{background:var(--ok-bg)}
+.circ{display:block;width:100%;max-width:260px;height:auto;margin:0 auto 6px}
+.circ .ring{fill:none;stroke:var(--line);stroke-width:1.5}
+.circ .maj{font:700 14px var(--text);fill:var(--ink);text-anchor:middle}
+.circ .min{font:500 10.5px var(--text);fill:var(--muted);text-anchor:middle}
+.circ .hl{fill:var(--chord-soft)}
+.circ .hl.ok{fill:var(--ok-bg);stroke:var(--ok);stroke-width:2.5}
+.circ .cnt{font:700 12px var(--text);fill:var(--accent);text-anchor:middle}
+.letters.steps span{min-width:0;height:28px;font-size:1rem}
 @media (prefers-reduced-motion:no-preference){
   .mk{animation:ain .3s ease-out both}
   @keyframes ain{from{opacity:0}}
@@ -411,6 +419,33 @@ const SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'], 
 const pcName = m => { const p = ((m % 12) + 12) % 12; return SHARP[p] === FLAT[p] ? SHARP[p] : `${SHARP[p]}/${FLAT[p]}`; };
 const pairName = m => { const p = ((m % 12) + 12) % 12; return `${SHARP[p]} / ${FLAT[p]}`; };
 const keyLabel = m => `${pcName(m).replace('/', ' eller ')}, oktav ${Math.floor(m / 12) - 1}`;
+// Skalorna: halvtoner från grundtonen per skalsteg. Skalsteg k är bokstaven k steg upp.
+const MODE = {maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10]};
+const scale = (tonic, mode = 'maj') => MODE[mode].map((s, k) => upN(tonic, s, k));
+const scaleMidi = (tonic, mode = 'maj') => MODE[mode].map(s => rootMidi(tonic) + s);
+// Förtecknen: antal ♯ (positivt) eller ♭ (negativt)
+const accCount = (tonic, mode = 'maj') => scale(tonic, mode).reduce((s, n) => s + n.a, 0);
+const accTxt = n => n === 0 ? 'Inga' : n > 0 ? `${n} ♯` : `${-n} ♭`;
+const MAJ_KEYS = ['C','G','D','A','E','B','F','B♭','E♭','A♭','D♭'];
+const MIN_KEYS = ['A','E','B','F♯','C♯','G♯','D','G','C','F','B♭'];
+// Kvintcirkeln medsols från C. Plats 6 är F♯ eller G♭.
+const CIRCLE = ['C','G','D','A','E','B','F♯','D♭','A♭','E♭','B♭','F'];
+const CIRCLE_MIN = ['Am','Em','Bm','F♯m','C♯m','G♯m','E♭m','B♭m','Fm','Cm','Gm','Dm'];
+const circleIdx = name => CIRCLE.indexOf(name);
+const circleAcc = i => i <= 6 ? i : i - 12;
+// Stegen i dur: sort och funktion (tonika, subdominant, dominant)
+const ROMAN = ['I','ii','iii','IV','V','vi','vii°'], DQ = ['maj','min','min','maj','maj','min','dim'];
+const FUNC = ['T','S','T','S','D','T','D'], FUNC_NAME = {T:'Tonika', S:'Subdominant', D:'Dominant'}, FUNC_MAIN = {T:0, S:3, D:4};
+// Ackordet på steg d: skalans toner d, d+2 och d+4. Det läggs en oktav ner om det inte ryms.
+function diat(tonic, d){
+  const base = scaleMidi(tonic), root = scale(tonic)[d], q = DQ[d];
+  let ms = [d, d + 2, d + 4].map(k => base[k % 7] + 12 * Math.floor(k / 7));
+  if (ms[2] > HI) ms = ms.map(m => m - 12);
+  return {root, q, roman: ROMAN[d], name: chordName(root, q), ms, names: spell(root, q).map(nName)};
+}
+// Ackorden i en durtonart som tonklass och sort, för att se vilka tonarter som rymmer en följd
+const diatSet = pc => DQ.map((q, d) => `${(pc + MODE.maj[d]) % 12}${q}`);
+const ord = n => n + (n <= 2 ? ':a' : ':e');
 
 // ===================== Allmänt =====================
 const rnd = a => a[Math.floor(Math.random() * a.length)];
@@ -439,11 +474,13 @@ function kbd(o = {}){
   const lit = o.lit || {}, names = o.names || {}, sel = o.sel || [], cheat = o.cheat || [];
   const key = m => {
     const b = isBlack(m), x = keyX(m) - (b ? BW / 2 : KW / 2), w = b ? BW : KW - 1, h = b ? BH : KH;
-    const L = lit[m], cls = !L ? '' : typeof L === 'string' ? L : L.cls, at = L && typeof L === 'object' ? L.at : null;
+    // En tangent kan tändas flera gånger i en animering: lit[m] får vara en lista, och den senare ritas över
+    const Ls = lit[m] == null ? [] : Array.isArray(lit[m]) ? lit[m] : [lit[m]];
     const tap = o.tap ? ` role="button" tabindex="0" data-key="${m}" aria-pressed="${sel.includes(m)}" aria-label="${keyLabel(m)}"` : '';
     const inset = b ? 2 : 2.5;
     return `<g class="k ${b ? 'b' : 'w'}${sel.includes(m) ? ' sel' : ''}"${tap}><rect class="kr" x="${x}" y="0" width="${w}" height="${h}" rx="${b ? 2 : 3}"/>` +
-      (cls ? `<rect class="lit ${cls}${mkc(at)}"${dl(at)} x="${x + inset}" y="${inset}" width="${w - 2 * inset}" height="${h - 2 * inset}" rx="2"/>` : '') + '</g>';
+      Ls.map(L => { const cls = typeof L === 'string' ? L : L.cls, at = typeof L === 'object' ? L.at : null;
+        return `<rect class="lit ${cls}${mkc(at)}"${dl(at)} x="${x + inset}" y="${inset}" width="${w - 2 * inset}" height="${h - 2 * inset}" rx="2"/>`; }).join('') + '</g>';
   };
   const nameEls = Object.entries(names).map(([k, v]) => {
     const m = +k, t = typeof v === 'string' ? {text: v} : v, b = isBlack(m), parts = String(t.text).split('/');
@@ -530,7 +567,7 @@ const sfx = (() => {
 
 // ===================== Ämnen och läge =====================
 const TOPICS = ['tangent','treklang','tonart','steg','fyrklang','vag','lan'];
-const BUILT = ['tangent','treklang'];
+const BUILT = ['tangent','treklang','tonart','steg'];
 const ORDER = [...TOPICS, 'ultra'];
 const TOPIC_NAME = {tangent:'Klaviaturen', treklang:'Treklangerna', tonart:'Tonarterna', steg:'Stegen', fyrklang:'Fyrklangerna', vag:'Vägarna', lan:'Lånade ackord', ultra:'Eldprovet'};
 const topicName = t => TOPIC_NAME[t];
@@ -681,6 +718,60 @@ const merge = (...xs) => xs.reduce((a, x) => ({...a, ...x}), {});
 // Tabellen över sorterna: avstånden ters och kvint, och namnet
 const qTable = (q, at) => `<table class="qtab">${QORDER.map(k => { const iv = QUAL[k].iv, hit = k === q;
   return `<tr class="${hit ? 'hit' + mkc(at) : ''}"${hit ? dl(at) : ''}><td>${iv[1][0]} + ${iv[2][0] - iv[1][0]}</td><td>${QUAL[k].n}</td><td>X${QUAL[k].suf}</td></tr>`; }).join('')}</table>`;
+// Som merge, men en tangent som tänds flera gånger behåller alla lagren
+const layer = (...xs) => xs.reduce((a, x) => { for (const [k, v] of Object.entries(x || {})) a[k] = [...(a[k] == null ? [] : [].concat(a[k])), ...[].concat(v)]; return a; }, {});
+// Etiketter under tangenter som ligger tätt hamnar på varannan rad
+function unders(ms, texts, ats, cls = ''){
+  let prev = null, row = 0;
+  return ms.map((m, i) => { row = prev != null && Math.abs(keyX(m) - keyX(prev)) < 28 ? 1 - row : 0; prev = m; return {m, text: texts[i], at: ats[i], cls, row}; });
+}
+// Skalan går upp ton för ton, till oktaven, med bågar som räknar halvtonerna (2 = hel, 1 = halv)
+const SSTEP = .32;
+function scaleWalk(tonic, mode = 'maj', t = T0, hot = []){
+  const ms = [...scaleMidi(tonic, mode), rootMidi(tonic) + 12], sc = scale(tonic, mode), lit = {}, names = {}, arcs = [];
+  ms.forEach((m, i) => {
+    const at = t + i * SSTEP, n = sc[i % 7];
+    lit[m] = {cls: hot.includes(i % 7) ? 'ok' : 'step', at}; names[m] = {text: nName(n), at};
+    if (i) arcs.push({a: ms[i - 1], b: m, text: String(m - ms[i - 1]), at: at - .15});
+  });
+  const end = t + ms.length * SSTEP;
+  const chips = ms.slice(1).map((m, i) => `<span class="on mk"${dl(t + (i + 1) * SSTEP - .15)}>${m - ms[i] === 2 ? 'hel' : 'halv'}</span>`).join('');
+  return {lit, names, arcs, ms, end, chips: `<div class="letters steps">${chips}</div>`, sound: [{notes: ms, step: SSTEP, at: t}]};
+}
+// Kvintcirkeln som bild. path: platserna som tänds i tur och ordning, den sista grön.
+function circleSvg(path = [], t = T0, step = STEP){
+  const pos = (i, r) => { const a = (i * 30 - 90) * Math.PI / 180; return [Math.cos(a) * r, Math.sin(a) * r]; };
+  const hl = path.map((i, k) => { const [x, y] = pos(i, 84), at = t + k * step, last = k === path.length - 1, [cx, cy] = pos(i, 112);
+    return `<circle class="hl${last ? ' ok' : ''} mk"${dl(at)} cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="17"/>` +
+      (i ? `<text class="cnt mk"${dl(at)} x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}">${accTxt(circleAcc(i)).replace(' ', '')}</text>` : ''); }).join('');
+  const txt = CIRCLE.map((n, i) => { const [x, y] = pos(i, 84), [mx, my] = pos(i, 54);
+    return `<text class="maj" x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}">${i === 6 ? 'F♯/G♭' : n}</text><text class="min" x="${mx.toFixed(1)}" y="${(my + 4).toFixed(1)}">${CIRCLE_MIN[i]}</text>`; }).join('');
+  return `<svg class="circ" viewBox="-130 -130 260 260" role="img" aria-label="Kvintcirkeln"><circle class="ring" r="84"/><circle class="ring" r="54"/>${hl}${txt}</svg>`;
+}
+// Vägen runt cirkeln från C till plats i: medsols för ♯, motsols för ♭
+const circlePath = i => { const n = circleAcc(i); return Array.from({length: Math.abs(n) + 1}, (_, k) => ((n > 0 ? k : -k) + 12) % 12); };
+// Stegräkningen: skalan tänds fram till steg d med stegsiffror under, och sedan staplas ackordet av skalans toner
+function stepWalk(tonic, d, t = T0){
+  const base = scaleMidi(tonic), sc = scale(tonic), upto = base.slice(0, d + 1), lit = {}, names = {};
+  upto.forEach((m, i) => { const at = t + i * SSTEP; lit[m] = {cls: i === d ? 'acc' : 'step', at}; names[m] = {text: nName(sc[i]), at}; });
+  const under = unders(upto, ROMAN.slice(0, d + 1), upto.map((_, i) => t + i * SSTEP), '');
+  under[d].cls = 'ok';
+  const D = diat(tonic, d), t2 = t + (d + 1) * SSTEP + .3;
+  const clit = {}, cnames = {}, arcs = [];
+  D.ms.forEach((m, i) => { const at = t2 + i * .5; clit[m] = {cls: 'ok', at}; cnames[m] = {text: D.names[i], at}; if (i) arcs.push({a: D.ms[i - 1], b: m, text: '+' + (m - D.ms[i - 1]), at: at - .25}); });
+  const end = t2 + 1.2;
+  return {kb: {lit: layer(lit, clit), names: merge(names, cnames), arcs, under}, D, end,
+    sound: [{notes: upto, step: SSTEP, at: t}, {chord: D.ms, at: end}], total: end + .8};
+}
+// Hela skalan med stegen under, utan animering
+function stepScale(tonic, cls = 'step'){
+  const base = scaleMidi(tonic), sc = scale(tonic), lit = {}, names = {};
+  base.forEach((m, i) => { lit[m] = cls; names[m] = nName(sc[i]); });
+  return {lit, names, under: unders(base, ROMAN, base.map(() => null))};
+}
+const majName = n => `${nName(n)}-dur`;
+// Fyra förtecken-alternativ runt det rätta
+const accOpts = n => four(accTxt(n), [n + 1, n - 1, -n, n + 2, n - 2].filter(k => k !== n && Math.abs(k) <= 7).map(accTxt));
 
 // ===================== Frågorna =====================
 // Varje fråga: {id, kind: 'mc'|'keys', prompt, show (klaviaturen i frågan), sound, opts/right (mc), need/check/answer (keys),
@@ -864,17 +955,194 @@ const Q_TREKLANG = [
         return {kb:{lit:merge(bad, A.lit), names:A.names, arcs:A.arcs, under:A.under}, note:qTable(q, A.end), sound:A.sound, total:A.total}; }};
   }}]
 ];
-const GRADES = {tangent: Q_TANGENT, treklang: Q_TREKLANG};
+
+// Ett tryck på fel tangenter i en skala eller ett ackord: de blir röda
+const badKeys = (pick, right) => Object.fromEntries((pick || []).filter(m => !pcSet(right).includes(((m % 12) + 12) % 12)).map(m => [m, 'bad']));
+const scaleKeys = n => MAJ_KEYS.filter(k => Math.abs(accCount(N(k))) <= n);
+const PATTERN = {maj: 'hel-hel-halv-hel-hel-hel-halv', min: 'hel-halv-hel-hel-halv-hel-hel'};
+const Q_TONART = [
+  // Nykomling
+  [{id:'tonart-fattas', make(){
+    const tonic = N(rnd(['C','G','F','D','B♭'])), sc = scale(tonic), ms = scaleMidi(tonic), i = 1 + Math.floor(Math.random() * 6), miss = sc[i], right = nName(miss);
+    const L = LETTERS[miss.l], next = LETTERS[(miss.l + 1) % 7], prev = LETTERS[(miss.l + 6) % 7];
+    const opts = four(right, shuffle([L, L + '♯', L + '♭', next, next + '♭', prev, prev + '♯']).filter(x => ROOT_NAMES.includes(x)));
+    const lit = {}, names = {};
+    ms.forEach((m, k) => { lit[m] = k === i ? 'step' : 'acc'; names[m] = k === i ? '?' : nName(sc[k]); });
+    return {kind:'mc', prompt:`${majName(tonic)}: ${sc.map((n, k) => k === i ? '?' : nName(n)).join(' ')}. Vilken ton fattas?`, show:{lit, names},
+      sound:[{notes:ms, step:SSTEP}], opts, right: opts.indexOf(right),
+      wrong:`Durskalan går ${PATTERN.maj}. I ${majName(tonic)} är den ${ord(i + 1)} tonen ${right}.`,
+      anim(){ const W = scaleWalk(tonic, 'maj', T0, [i]);
+        return {kb:{lit:W.lit, names:W.names, arcs:W.arcs}, note:`${W.chips}<span class="mk"${dl(W.end)}>Durskalan: ${PATTERN.maj}. Tonen som fattas är <b>${right}</b>.</span>`, sound:W.sound, total:W.end + .6}; }};
+  }}],
+  // Lärling
+  [{id:'tonart-ta-skala', make(){
+    const tonic = N(rnd(scaleKeys(4))), ms = scaleMidi(tonic), name = majName(tonic);
+    return {kind:'keys', need:7, tag:'Ta skalan', prompt:`Ta ${name}skalan.`, show:{}, check: sel => samePcs(sel, ms), answer: ms,
+      wrong:`${name}: ${scale(tonic).map(nName).join(' ')}. Mönstret är ${PATTERN.maj}.`,
+      anim(pick){ const W = scaleWalk(tonic);
+        return {kb:{lit:layer(badKeys(pick, ms), W.lit), names:W.names, arcs:W.arcs}, note:`${W.chips}<span class="mk"${dl(W.end)}>Från ${nName(tonic)}: ${PATTERN.maj}.</span>`, sound:W.sound, total:W.end + .6}; }};
+  }}],
+  // Gesäll
+  [{id:'tonart-fortecken', make(){
+    const tonic = N(rnd(MAJ_KEYS)), n = accCount(tonic), right = accTxt(n), opts = accOpts(n), sc = scale(tonic);
+    const accs = sc.filter(x => x.a).map(nName), hot = sc.map((x, k) => x.a ? k : -1).filter(k => k >= 0);
+    return {kind:'mc', prompt:`Hur många förtecken har ${majName(tonic)}?`, show:{lit:{[rootMidi(tonic)]:'acc'}, names:{[rootMidi(tonic)]:nName(tonic)}},
+      opts, right: opts.indexOf(right), txt:true,
+      wrong: accs.length ? `${majName(tonic)} har ${accs.join(', ')}: ${right}.` : `C-dur har bara vita tangenter: inga förtecken.`,
+      anim(){ const W = scaleWalk(tonic, 'maj', T0, hot);
+        return {kb:{lit:W.lit, names:W.names, arcs:W.arcs},
+          note:`<span class="mk"${dl(W.end)}>${accs.length ? `${majName(tonic)} har <b>${accs.join(' ')}</b>: ${right.replace('♯', 'kors').replace('♭', 'b')}.` : 'C-dur har inga förtecken.'}</span>`, sound:W.sound, total:W.end + .6}; }};
+  }}],
+  // Mästare
+  [{id:'tonart-cirkel', make(){
+    const i = rnd([1, 2, 3, 4, 5, 7, 8, 9, 10, 11]), n = circleAcc(i), tonic = N(CIRCLE[i]), right = majName(tonic);
+    const opts = four(right, shuffle([(i + 1) % 12, (i + 11) % 12, (12 - i) % 12, (i + 2) % 12, (i + 10) % 12].filter(k => k !== 6 && k !== i).map(k => majName(N(CIRCLE[k])))));
+    return {kind:'mc', prompt:`Vilken durtonart har ${['', 'ett', 'två', 'tre', 'fyra', 'fem'][Math.abs(n)]} ${n > 0 ? '♯' : '♭'}?`, show:null, opts, right: opts.indexOf(right),
+      wrong:`Gå runt kvintcirkeln från C: ${n > 0 ? 'medsols ger ett ♯ till' : 'motsols ger ett ♭ till'} för varje steg. ${Math.abs(n)} steg ger ${right}.`,
+      anim(){ const path = circlePath(i), tEnd = T0 + (path.length - 1) * STEP, sc = scale(tonic), base = scaleMidi(tonic), lit = {}, names = {};
+        base.forEach((m, k) => { if (sc[k].a) { lit[m] = {cls:'ok', at:tEnd}; names[m] = {text:nName(sc[k]), at:tEnd}; } });
+        lit[base[0]] = {cls:'acc', at:tEnd}; names[base[0]] = {text:nName(tonic), at:tEnd};
+        return {kb:{lit, names}, note:`${circleSvg(path)}<span class="mk"${dl(tEnd)}>Varje steg medsols ger ett ♯ till, varje steg motsols ett ♭ till. <b>${right}</b> har ${accTxt(n)}.</span>`,
+          sound:[{notes:path.map(k => rootMidi(N(CIRCLE[k]))), step:STEP, at:T0}], total:tEnd + 1}; }};
+  }},
+  {id:'tonart-parallell', make(){
+    const tonic = N(rnd(MAJ_KEYS)), rel = upN(tonic, 9, 5), right = chordName(rel, 'min'), C = chordLit(tonic, 'maj');
+    const opts = four(right, shuffle([chordName(rel, 'maj'), chordName(tonic, 'min'), chordName(upN(tonic, 4, 2), 'min'), chordName(upN(tonic, 2, 1), 'min')].filter(okName)));
+    return {kind:'mc', prompt:`Vilken är parallell moll till ${majName(tonic)}?`, show:{lit:C.lit, names:C.names}, sound:[{chord:C.vs}], opts, right: opts.indexOf(right),
+      wrong:`Parallell moll börjar tre halvtonssteg under durens grundton: ${nName(tonic)} ner tre halvtoner är ${nName(rel)}. ${right}.`,
+      anim(){ const p = pcOf(tonic), m = p <= 7 ? LO + 12 + p : LO + p, H = hops(m, 3, -1), sp = spell(rel, 'min'), vs = [m - 3, m, m + 4], t2 = H.end + .2;
+        const lit = layer(H.lit, Object.fromEntries(vs.map(k => [k, {cls:'ok', at:t2}])));
+        const names = merge({[m]:nName(tonic)}, Object.fromEntries(vs.map((k, j) => [k, {text:nName(sp[j]), at:t2}])));
+        return {kb:{lit, names, arcs:H.arcs, under:[{m:m - 3, text:right, at:t2, cls:'ok'}]},
+          note:`<span class="mk"${dl(t2)}>${majName(tonic)} och <b>${right}</b> har samma toner och samma förtecken. Mollen börjar på durskalans sjätte ton.</span>`,
+          sound:[...H.sound, {chord:vs, at:t2 + .1}], total:t2 + 1.2}; }};
+  }}],
+  // Stormästare
+  [{id:'tonart-moll-fortecken', make(){
+    const tonic = N(rnd(MIN_KEYS)), rel = upN(tonic, 3, 2), n = accCount(tonic, 'min'), right = accTxt(n), opts = accOpts(n), name = chordName(tonic, 'min');
+    return {kind:'mc', prompt:`Hur många förtecken har ${name}?`, show:null, opts, right: opts.indexOf(right), txt:true,
+      wrong:`${name} har samma förtecken som sin parallella dur, ${majName(rel)}, tre halvtonssteg upp: ${right}.`,
+      anim(){ const m = rootMidi(tonic), H = hops(m, 3), i = circleIdx(nName(rel)), path = circlePath(i), t2 = H.end + .3;
+        return {kb:{lit:H.lit, names:{[m]:nName(tonic), [m + 3]:{text:nName(rel), at:H.end}}, arcs:H.arcs, under:[{m:m + 3, text:majName(rel), at:H.end, cls:'ok'}]},
+          note:`${circleSvg(path, t2)}<span class="mk"${dl(t2 + path.length * STEP)}>${name} → ${majName(rel)} → <b>${right}</b>.</span>`,
+          sound:H.sound, total:t2 + path.length * STEP + .6}; }};
+  }},
+  {id:'tonart-ta-moll', make(){
+    const tonic = N(rnd(MIN_KEYS.filter(k => Math.abs(accCount(N(k), 'min')) <= 4))), ms = scaleMidi(tonic, 'min'), name = chordName(tonic, 'min').replace(/m$/, '-moll');
+    return {kind:'keys', need:7, tag:'Ta skalan', prompt:`Ta skalan ${name} (naturlig moll).`, show:{}, check: sel => samePcs(sel, ms), answer: ms,
+      wrong:`${name}: ${scale(tonic, 'min').map(nName).join(' ')}. Mönstret är ${PATTERN.min}.`,
+      anim(pick){ const W = scaleWalk(tonic, 'min');
+        return {kb:{lit:layer(badKeys(pick, ms), W.lit), names:W.names, arcs:W.arcs}, note:`${W.chips}<span class="mk"${dl(W.end)}>Moll från ${nName(tonic)}: ${PATTERN.min}.</span>`, sound:W.sound, total:W.end + .6}; }};
+  }}]
+];
+
+// Fel alternativ för ett steg: samma grundton i en annan sort, och grannstegens ackord
+const stepOpts = (tonic, d) => { const D = diat(tonic, d);
+  return four(D.name, shuffle([...sameRoot(D.root, ['maj','min','dim'].filter(q => q !== D.q)), diat(tonic, (d + 1) % 7).name, diat(tonic, (d + 6) % 7).name]).filter(okName)); };
+const romanOpts = d => four(ROMAN[d], shuffle(ROMAN.filter((_, k) => k !== d)));
+function stepChordQ(keys){
+  const tonic = N(rnd(keys)), d = Math.floor(Math.random() * 7), D = diat(tonic, d), opts = stepOpts(tonic, d), K = majName(tonic);
+  return {kind:'mc', prompt:`I ${K}: vilket ackord är ${D.roman}?`, show:{lit:{[rootMidi(tonic)]:'acc'}, names:{[rootMidi(tonic)]:nName(tonic)}}, opts, right: opts.indexOf(D.name),
+    wrong:`Räkna skalan från ${nName(tonic)}: ${D.roman} är ${nName(D.root)}, och tonerna ${D.names.join(' ')} ur skalan ger ${D.name}.`,
+    anim(){ const A = stepWalk(tonic, d); return {...A, note:`<span class="mk"${dl(A.end)}>${D.roman} i ${K} = <b>${D.name}</b> (${QUAL[D.q].n}).</span>`}; }};
+}
+const PROGS = [[0, 4, 5, 3], [0, 3, 4, 0], [1, 4, 0], [5, 3, 0, 4], [0, 5, 3, 4], [0, 5, 1, 4]];
+const progTxt = (tonic, p) => p.map(d => diat(tonic, d).name).join(' ');
+const Q_STEG = [
+  // Nykomling
+  [{id:'steg-c-dur', make(){
+    const tonic = N('C'), d = Math.floor(Math.random() * 7), D = diat(tonic, d), opts = romanOpts(d);
+    const lit = {}, names = {}; D.ms.forEach((m, i) => { lit[m] = 'acc'; names[m] = D.names[i]; });
+    return {kind:'mc', prompt:'I C-dur: vilket steg är det här ackordet?', show:{lit, names}, sound:[{chord:D.ms}], opts, right: opts.indexOf(D.roman),
+      wrong:`${D.name} har grundtonen ${nName(D.root)}, den ${ord(d + 1)} tonen i C-dur: steg ${D.roman}.`,
+      anim(){ const A = stepWalk(tonic, d); return {...A, note:`<span class="mk"${dl(A.end)}>C D E F G A B: ${nName(D.root)} är ${ord(d + 1)} tonen, och ${D.name} är <b>${D.roman}</b>. Stora siffror är dur, små är moll, ° är förminskat.</span>`}; }};
+  }}],
+  // Lärling
+  [{id:'steg-ackord-latt', make(){ return stepChordQ(['C','G','F']); }}],
+  // Gesäll
+  [{id:'steg-ackord', make(){ return stepChordQ(MAJ_KEYS); }},
+  {id:'steg-ta', make(){
+    const tonic = N(rnd(MAJ_KEYS)), d = Math.floor(Math.random() * 7), D = diat(tonic, d), K = majName(tonic);
+    return {kind:'keys', need:3, prompt:`I ${K}: ta ${D.roman}.`, show:{}, check: sel => samePcs(sel, D.ms), answer: D.ms,
+      wrong:`${D.roman} i ${K} är ${D.name}: ${D.names.join(' ')}.`,
+      anim(pick){ const A = stepWalk(tonic, d); return {...A, kb:{...A.kb, lit:layer(badKeys(pick, D.ms), A.kb.lit)}, note:`<span class="mk"${dl(A.end)}>${D.roman} i ${K} = <b>${D.name}</b>.</span>`}; }};
+  }}],
+  // Mästare
+  [{id:'steg-vilket', make(){
+    const tonic = N(rnd(MAJ_KEYS)), d = Math.floor(Math.random() * 7), D = diat(tonic, d), opts = romanOpts(d), K = majName(tonic);
+    return {kind:'mc', prompt:`${D.name} i ${K}: vilket steg?`, show:null, opts, right: opts.indexOf(D.roman),
+      wrong:`Räkna från ${nName(tonic)}: ${nName(D.root)} är ${ord(d + 1)} tonen i ${K}, så ${D.name} är ${D.roman}.`,
+      anim(){ const A = stepWalk(tonic, d); return {...A, note:`<span class="mk"${dl(A.end)}>${D.name} = <b>${D.roman}</b> i ${K}.</span>`}; }};
+  }},
+  {id:'steg-funktion', make(){
+    const tonic = N(rnd(MAJ_KEYS)), d = Math.floor(Math.random() * 7), D = diat(tonic, d), f = FUNC[d], K = majName(tonic);
+    const opts = ['Tonika','Subdominant','Dominant'], lit = {}, names = {};
+    D.ms.forEach((m, i) => { lit[m] = 'acc'; names[m] = D.names[i]; });
+    return {kind:'mc', prompt:`I ${K}: vilken funktion har ${D.name} (${D.roman})?`, show:{lit, names}, sound:[{chord:D.ms}], opts, right: opts.indexOf(FUNC_NAME[f]), txt:true,
+      wrong:`${D.roman} hör till ${FUNC_NAME[f].toLowerCase()}gruppen. Den delar toner med ${diat(tonic, FUNC_MAIN[f]).name}.`,
+      anim(){ const M = diat(tonic, FUNC_MAIN[f]), same = M.name === D.name, t2 = T0 + 1.2, mlit = {}, clit = {}, nm = {};
+        M.ms.forEach((m, i) => { mlit[m] = {cls:'step', at:T0}; nm[m] = {text:M.names[i], at:T0}; });
+        D.ms.forEach((m, i) => { clit[m] = {cls:'ok', at:same ? T0 : t2}; nm[m] = {text:D.names[i], at:same ? T0 : t2}; });
+        const shared = same ? [] : D.ms.filter(m => pcSet(M.ms).includes(m % 12)).map(m => D.names[D.ms.indexOf(m)]);
+        const under = same ? [] : [{m:M.ms[0], text:M.roman, at:T0}, {m:D.ms[0], text:D.roman, at:t2, cls:'ok', row:1}];
+        const rows = [['T', 'I iii vi', 'hemma, vila'], ['S', 'ii IV', 'på väg bort'], ['D', 'V vii°', 'vill hem till I']];
+        const tab = `<table class="qtab">${rows.map(([k, s, w]) => `<tr class="${k === f ? 'hit mk' : ''}"${k === f ? dl(t2 + .4) : ''}><td>${FUNC_NAME[k]}</td><td>${s}</td><td>${w}</td></tr>`).join('')}</table>`;
+        const share = shared.length ? `<span class="mk"${dl(t2 + .4)}>${D.name} och ${M.name} delar ${shared.join(' och ')}.</span>` : '';
+        return {kb:{lit:layer(same ? {} : mlit, clit), names:nm, under}, note:share + tab,
+          sound: same ? [{chord:D.ms, at:T0}] : [{chord:M.ms, at:T0}, {chord:D.ms, at:t2}], total:t2 + 1.4}; }};
+  }}],
+  // Stormästare
+  [{id:'steg-transponera', make(){
+    const p = rnd(PROGS), tonic = N(rnd(MAJ_KEYS.filter(k => k !== 'C'))), right = progTxt(tonic, p), C = N('C');
+    const wrongQ = p.map(d => { const D = diat(tonic, d); return chordName(D.root, D.q === 'maj' ? 'min' : 'maj'); }).join(' ');
+    const opts = four(right, shuffle([progTxt(upN(tonic, 7, 4), p), progTxt(upN(tonic, 5, 3), p), wrongQ, progTxt(upN(tonic, 2, 1), p)].filter(s => !/𝄪|𝄫|E♯|B♯|C♭|F♭/.test(s))));
+    const K = majName(tonic), romans = p.map(d => ROMAN[d]).join('–');
+    return {kind:'mc', prompt:`${romans} i C-dur är ${progTxt(C, p)}. Vad blir det i ${K}?`, show:null,
+      sound:p.map((d, i) => ({chord:diat(C, d).ms, at:i * .8})), opts, right: opts.indexOf(right), txt:true,
+      wrong:`Samma steg i ${K}: ${p.map(d => `${ROMAN[d]} = ${diat(tonic, d).name}`).join(', ')}.`,
+      anim(){ const S0 = stepScale(tonic), t2 = T0 + .4;
+        const cell = (s, i, at) => `<td class="mk"${dl(at)}>${s}</td>`;
+        const tab = `<table class="qtab"><tr><td></td>${p.map(d => `<td><b>${ROMAN[d]}</b></td>`).join('')}</tr>
+          <tr><td>C-dur</td>${p.map(d => `<td>${diat(C, d).name}</td>`).join('')}</tr>
+          <tr class="hit"><td>${K}</td>${p.map((d, i) => cell(diat(tonic, d).name, i, t2 + i * .8)).join('')}</tr></table>`;
+        return {kb:{lit:S0.lit, names:S0.names, under:S0.under}, note:tab,
+          sound:p.map((d, i) => ({chord:diat(tonic, d).ms, at:t2 + i * .8})), total:t2 + p.length * .8 + .6}; }};
+  }},
+  {id:'steg-tonart', make(){
+    // Tre ackord som bara ryms i en enda durtonart
+    let tonic, ds;
+    for (let tries = 0; tries < 50; tries++) {
+      tonic = N(rnd(MAJ_KEYS)); ds = shuffle([0, 1, 2, 3, 4, 5]).slice(0, 3);
+      const want = ds.map(d => diatSet(pcOf(tonic))[d]);
+      if (Array.from({length: 12}, (_, pc) => pc).filter(pc => want.every(x => diatSet(pc).includes(x))).length === 1) break;
+    }
+    const names = ds.map(d => diat(tonic, d).name), right = majName(tonic), i = circleIdx(nName(tonic));
+    const opts = four(right, shuffle([(i + 1) % 12, (i + 11) % 12, (i + 2) % 12, (i + 10) % 12, (i + 3) % 12].filter(k => k !== 6).map(k => majName(N(CIRCLE[k])))));
+    return {kind:'mc', prompt:`${names.slice(0, 2).join(', ')} och ${names[2]}: vilken durtonart hör de hemma i?`, show:null,
+      sound:ds.map((d, k) => ({chord:diat(tonic, d).ms, at:k * .8})), opts, right: opts.indexOf(right),
+      wrong:`Alla tre finns bland stegen i ${right}: ${ds.map(d => `${diat(tonic, d).name} = ${ROMAN[d]}`).join(', ')}.`,
+      anim(){ const S0 = stepScale(tonic), lit = {}, nm = {};
+        ds.forEach((d, k) => diat(tonic, d).ms.forEach(m => { lit[m] = [].concat(lit[m] || [], {cls:'ok', at:T0 + k * .9}); }));
+        const note = ds.map((d, k) => `<span class="mk"${dl(T0 + k * .9)}>${diat(tonic, d).name} = <b>${ROMAN[d]}</b></span>`).join(' · ');
+        return {kb:{lit:layer(S0.lit, lit), names:S0.names, under:S0.under}, note:`${note}<br><span class="mk"${dl(T0 + 2.7)}>Alla tre hör hemma i <b>${right}</b>.</span>`,
+          sound:ds.map((d, k) => ({chord:diat(tonic, d).ms, at:T0 + k * .9})), total:T0 + 3.4}; }};
+  }}]
+];
+const GRADES = {tangent: Q_TANGENT, treklang: Q_TREKLANG, tonart: Q_TONART, steg: Q_STEG};
 const allTypes = t => GRADES[t].flatMap((list, g) => list.map(x => ({...x, g})));
 
 // Snabbkollen på omslaget. Första valet är det rätta.
 const KICK = {
   tangent:{q:'Hur sitter de svarta tangenterna?', opts:['I grupper om två och tre','En mellan varje vit','I grupper om fyra','Helt slumpat']},
-  treklang:{q:'Hur många toner har en treklang?', opts:['3','2','4','7']}
+  treklang:{q:'Hur många toner har en treklang?', opts:['3','2','4','7']},
+  tonart:{q:'Hur många olika toner har en durskala?', opts:['7','8','5','12']},
+  steg:{q:'Vilket steg är hemma, där en låt brukar sluta?', opts:['I','V','IV','vi']}
 };
 // Omslagets bild: en klaviatur som visar ämnet
 function coverKb(t){
   if (t === 'tangent') { const A = countWhites(67, .2); return kbd({lit:A.lit, names:A.names, label:'C D E F G räknas upp'}); }
+  if (t === 'tonart') { const W = scaleWalk(N('C'), 'maj', .2); return kbd({lit:W.lit, names:W.names, arcs:W.arcs, label:'C-durskalan: hel, hel, halv, hel, hel, hel, halv'}); }
+  if (t === 'steg') { const S0 = stepScale(N('C')), D = diat(N('C'), 4); return kbd({lit:layer(S0.lit, Object.fromEntries(D.ms.map(m => [m, 'acc']))), names:S0.names, under:S0.under, label:'Stegen i C-dur, med G-dur (V) tänt'}); }
   const A = stack(N('C'), 'maj', .2); return kbd({lit:A.lit, names:A.names, arcs:A.arcs, under:A.under, label:'C-dur byggs: C, E, G'});
 }
 
@@ -1134,7 +1402,7 @@ function render(){
   const Q = S.Q, q = document.getElementById('q'), done = S.answered, why = done && !S.ok;
   const A = why ? S.anim : null;
   const canReplay = Q.sound || A;
-  let h = `<p class="kindtag">${Q.kind === 'keys' ? (Q.need > 1 ? 'Ta ackordet' : 'Peka på tangenten') : 'Välj rätt svar'}</p>
+  let h = `<p class="kindtag">${Q.tag || (Q.kind === 'keys' ? (Q.need > 1 ? 'Ta ackordet' : 'Peka på tangenten') : 'Välj rätt svar')}</p>
     <div class="qtop"><p class="prompt">${Q.prompt}</p>${canReplay ? `<button class="replay" id="replay" type="button">${PLAY_ICON}Spela igen</button>` : ''}</div>`;
   let kb;
   if (A) kb = A.kb;

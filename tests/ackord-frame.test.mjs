@@ -6,7 +6,7 @@ test('Ny spelare: åtta kort, nyckeln i Klaviaturens lås, och ämnen som inte �
   const t = load({ start: true });
   assert.equal(t.$$('#grid .tile').length, 8);
   assert.ok(t.$('#grid [data-id="tangent"] .inkey'), 'nyckeln sitter i låset');
-  for (const id of ['tonart', 'steg', 'fyrklang', 'vag', 'lan', 'ultra']) {
+  for (const id of ['fyrklang', 'vag', 'lan', 'ultra']) {
     assert.match(t.$(`#grid [data-id="${id}"]`).textContent, /Kommer snart/);
     t.$(`#grid [data-id="${id}"]`).click();
     assert.equal(t.g('S.screen'), 'grid', id);
@@ -31,17 +31,31 @@ test('Trappan: tre rätt upp en grad, tre fel ner igen', () => {
   assert.equal(t.g("JSON.parse(localStorage.getItem('ackord1-grade')).tangent"), 0);
 });
 
-test('Mästare i Treklangerna ger nyckeln till Tonarterna, som kommer snart', () => {
-  const t = load({ storage: { 'ackord1-topic': 'treklang', 'ackord1-done': JSON.stringify({ tangent: 5, treklang: 2 }), 'ackord1-grade': JSON.stringify({ treklang: 2 }) } });
+test('Mästare i Stegen ger nyckeln till Fyrklangerna, som kommer snart', () => {
+  const t = load({ storage: { 'ackord1-topic': 'steg', 'ackord1-done': JSON.stringify({ tangent: 5, treklang: 5, tonart: 5, steg: 2 }), 'ackord1-grade': JSON.stringify({ steg: 2 }) } });
   for (let i = 0; i < 3; i++) { answer(t, true); if (i < 2) cont(t); }
-  assert.equal(t.g('S.done.treklang'), 3);
-  assert.ok(t.g("S.keys.includes('tonart')"));
+  assert.equal(t.g('S.done.steg'), 3);
+  assert.ok(t.g("S.keys.includes('fyrklang')"));
   cont(t);
   assert.equal(t.g('S.screen'), 'grid', 'nyckeln visas och kortet stängs');
-  const tile = t.$('#grid [data-id="tonart"]');
+  const tile = t.$('#grid [data-id="fyrklang"]');
   assert.ok(tile.querySelector('.inkey'), 'nyckeln sitter i låset');
   tile.click();
   assert.equal(t.g('S.screen'), 'grid', 'men ämnet går inte att öppna än');
+});
+
+test('En nyckel till Tonarterna som förtjänades medan ämnet kom snart vrids om och öppnar ämnet', () => {
+  const t = load({ start: true, storage: { 'ackord1-topic': 'treklang', 'ackord1-done': JSON.stringify({ tangent: 5, treklang: 3 }), 'ackord1-keys': JSON.stringify(['tonart']), 'ackord1-seen': JSON.stringify(['tangent', 'treklang']) } });
+  const tile = () => t.$('#grid [data-id="tonart"]');
+  assert.ok(tile().querySelector('.inkey'));
+  assert.doesNotMatch(tile().textContent, /Kommer snart/);
+  tile().click();
+  tile().click();
+  assert.equal(t.g('S.screen'), 'play');
+  assert.ok(t.$('#q [data-kick]'), 'omslaget med snabbkoll');
+  t.$(`#q [data-kick="${t.g('S.kick.right')}"]`).click();
+  assert.equal(t.g('S.Q.id'), 'tonart-fattas');
+  assert.deepEqual(t.errors, []);
 });
 
 test('Förhandsvisningen öppnar exakt frågetypen, stannar på graden och sparar inget', () => {

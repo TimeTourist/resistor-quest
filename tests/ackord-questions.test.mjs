@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { load, pinned, answer, cont, tap } from './ackord-harness.mjs';
 
-const types = (() => { const t = load({ start: true }); return JSON.parse(t.g("JSON.stringify(['tangent', 'treklang'].flatMap(x => allTypes(x).map(y => ({id: y.id, g: y.g, topic: x}))))")); })();
+const types = (() => { const t = load({ start: true }); return JSON.parse(t.g("JSON.stringify(BUILT.flatMap(x => allTypes(x).map(y => ({id: y.id, g: y.g, topic: x}))))")); })();
 
 for (const { id, g, topic } of types) {
   test(`${id}: rätt och fel svar, och felanimeringen låser tills den är klar`, () => {

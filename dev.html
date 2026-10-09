@@ -234,7 +234,7 @@ const FARG_CATALOG = {
 
 // Ackordkartan (ackord.html). Raderna har samma id som frågetyperna i spelet, så Visa öppnar exakt den frågan.
 const ACK = 'Gnista längs klaviaturen, grön lampa och priing, nästa fråga själv';
-const ACKORD_TABS = [{id:'tangent', name:'Klaviaturen'}, {id:'treklang', name:'Treklangerna'}];
+const ACKORD_TABS = [{id:'tangent', name:'Klaviaturen'}, {id:'treklang', name:'Treklangerna'}, {id:'tonart', name:'Tonarterna'}, {id:'steg', name:'Stegen'}];
 const ACKORD_CATALOG = {
   tangent: [
     r('tangent-namn', 0, 'Vit tangent', 'En vit tangent är markerad. Vad heter den? C-tangenterna har sina namn som stöd.', 'Flerval', ACK,
@@ -269,6 +269,40 @@ const ACKORD_CATALOG = {
       'Tonen som flyttas blir röd, en båge till den nya platsen, och det nya ackordet blir grönt. Båda ackorden klingar efter varandra.'),
     r('treklang-bygg-alla', 4, 'Ta alla sorter', 'Ta ackordet B♭dim. Alla sorter, inga namn.', 'Tre tangenter + Svara', ACK,
       'Tersstaplingen och tabellen över sorterna.')
+  ],
+  tonart: [
+    r('tonart-fattas', 0, 'Tonen som fattas', 'G-dur: G A B C D ? F♯. Vilken ton fattas? Skalan visas med namn och spelas (C, G, F, D, B♭).', 'Flerval', ACK,
+      'Skalan går upp till oktaven med bågar 2 och 1 och raden hel-hel-halv-hel-hel-hel-halv. Tonen som fattas blir grön.'),
+    r('tonart-ta-skala', 1, 'Ta durskalan', 'Ta G-durskalan. Upp till fyra förtecken. Sju tangenter, sedan Svara.', 'Sju tangenter + Svara', ACK,
+      'Fel tangenter blir röda, sedan skalvandringen med mönstret. Tonerna spelas en i taget.'),
+    r('tonart-fortecken', 2, 'Antal förtecken', 'Hur många förtecken har D-dur? (2 ♯, 3 ♯, 1 ♯, 2 ♭)', 'Flerval', ACK,
+      'Skalvandringen där tangenterna med ♯ eller ♭ blir gröna, och raden "D-dur har F♯ C♯".'),
+    r('tonart-cirkel', 3, 'Kvintcirkeln', 'Vilken durtonart har tre b (♭)? Upp till fem förtecken.', 'Flerval', ACK,
+      'Kvintcirkeln: från C ett steg i taget medsols (♯) eller motsols (♭) med räkningen, tills rätt tonart blir grön. Tonartens förtecken tänds på klaviaturen.'),
+    r('tonart-parallell', 3, 'Parallell moll', 'Vilken är parallell moll till F-dur? Durackordet visas och spelas.', 'Flerval', ACK,
+      'Tre halvtonssteg ner från grundtonen (bågar 1, 2, 3), mollackordet blir grönt och klingar. Raden: samma toner, samma förtecken.'),
+    r('tonart-moll-fortecken', 4, 'Förtecken i moll', 'Hur många förtecken har F♯m?', 'Flerval', ACK,
+      'Tre halvtonssteg upp till parallell dur, sedan kvintcirkeln fram till den.'),
+    r('tonart-ta-moll', 4, 'Ta mollskalan', 'Ta skalan E-moll (naturlig moll). Sju tangenter, sedan Svara.', 'Sju tangenter + Svara', ACK,
+      'Skalvandringen med mollens mönster hel-halv-hel-hel-halv-hel-hel.')
+  ],
+  steg: [
+    r('steg-c-dur', 0, 'Steget i C-dur', 'I C-dur: vilket steg är det här ackordet? Ackordet visas med namn och spelas.', 'Flerval (I–vii°)', ACK,
+      'Skalan tänds ton för ton med stegen under, fram till grundtonen. Sedan staplas ackordet av skalans toner med bågar.'),
+    r('steg-ackord-latt', 1, 'Ackordet på ett steg', 'I G-dur: vilket ackord är vi? Tonarterna C, G och F.', 'Flerval', ACK,
+      'Stegräkningen och staplingen, och raden "vi i G-dur = Em (moll)".'),
+    r('steg-ackord', 2, 'Alla tonarter', 'I D-dur: vilket ackord är V? Alla durtonarter upp till fem förtecken.', 'Flerval', ACK,
+      'Som Lärling.'),
+    r('steg-ta', 2, 'Ta steget', 'I F-dur: ta IV. Tre tangenter, sedan Svara.', 'Tre tangenter + Svara', ACK,
+      'Fel tangenter blir röda, sedan stegräkningen och staplingen. Ackordet klingar.'),
+    r('steg-vilket', 3, 'Vilket steg', 'Am i C-dur: vilket steg? Alla durtonarter.', 'Flerval (I–vii°)', ACK,
+      'Stegräkningen fram till ackordets grundton, och staplingen.'),
+    r('steg-funktion', 3, 'Funktionen', 'I C-dur: vilken funktion har Am (vi)? Tonika, Subdominant eller Dominant.', 'Flerval', ACK,
+      'Funktionens huvudackord (I, IV eller V) tänds och klingar, sedan ackordet. De gemensamma tonerna märks, och tabellen visar grupperna.'),
+    r('steg-transponera', 4, 'Samma följd i en annan tonart', 'I–V–vi–IV i C-dur är C G Am F. Vad blir det i D-dur?', 'Flerval', ACK,
+      'Tabellen: stegen, C-dur och den nya tonarten ackord för ackord. Klaviaturen visar den nya skalan med stegen, och följden spelas.'),
+    r('steg-tonart', 4, 'Hitta tonarten', 'Dm, G och C: vilken durtonart hör de hemma i? Bara en durtonart rymmer alla tre.', 'Flerval', ACK,
+      'Rätt tonart med stegen under tangenterna. Ackorden tänds ett i taget med sina steg: Dm = ii, G = V, C = I.')
   ]
 };
 
