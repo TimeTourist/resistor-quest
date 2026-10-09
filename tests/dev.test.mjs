@@ -124,3 +124,34 @@ test('dev.html: Visa öppnar spelet i en panel på sidan, och Stäng tar bort de
   d.$('#viewer .vclose').click();
   assert.ok(d.$('#viewer').hidden);
 });
+
+test('dev.html: spelväljaren byter till Ackordkartan, med egen katalog, egna flikar och egen lagring', () => {
+  const d = dev();
+  d.$('[data-game="ackord"]').click();
+  assert.equal(d.$('[data-game="ackord"]').getAttribute('aria-pressed'), 'true');
+  assert.match(d.$('#title').textContent, /Ackordkartan/);
+  assert.deepEqual(d.$$('[role=tab]').map(b => b.dataset.tab), ['tangent', 'treklang']);
+  edit(d, d.$('tr[data-id="tangent-namn"] [data-f="comment"]'), 'Fler namn');
+  d.$('#gen').click();
+  const p = d.$('#prompt').value;
+  assert.match(p, /för Ackordkartan\. Uppdatera ackord\.html/);
+  assert.match(p, /Kommentar: "Fler namn"/);
+  assert.ok(d.g("localStorage.getItem('ackord-dev')").includes('Fler namn'));
+  assert.ok(!(d.g("localStorage.getItem('fargkoden-dev')") || '').includes('Fler namn'), 'Färgkodens lagring rörs inte');
+  // Valet av spel sparas
+  const d2 = dev({ 'dev-game': 'ackord' });
+  assert.match(d2.$('#title').textContent, /Ackordkartan/);
+});
+
+test('dev.html: Ackordkartans katalog har exakt spelets frågetyper på rätt grader, och Visa öppnar frågetypen', async () => {
+  const { load: loadA } = await import('./ackord-harness.mjs');
+  const game = loadA({ start: true }), d = dev({ 'dev-game': 'ackord' });
+  const types = JSON.parse(game.g("JSON.stringify(BUILT.flatMap(t => allTypes(t).map(x => ({t, id: x.id, g: x.g}))))"));
+  const cat = JSON.parse(d.g('JSON.stringify(CATALOG)'));
+  assert.deepEqual(Object.keys(cat).sort(), JSON.parse(game.g('JSON.stringify(BUILT)')).sort());
+  const rows = Object.entries(cat).flatMap(([t, rs]) => rs.filter(r => r.g < 5).map(r => ({t, id: r.id, g: r.g})));
+  const key = x => `${x.t}/${x.id}/${x.g}`;
+  assert.deepEqual(rows.map(key).sort(), types.map(key).sort());
+  d.$('[data-tab="treklang"]').click();
+  assert.match(d.$('tr[data-id="treklang-bygg"] a.show').getAttribute('href'), /^ackord\.html\?test=true&topic=treklang&grade=2&q=treklang-bygg$/);
+});

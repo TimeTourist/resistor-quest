@@ -22,7 +22,9 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
 header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:16px;max-width:1500px;margin:0 auto}
-h1{font-size:18px;margin:0 auto 0 0}
+h1{font-size:18px;margin:0}
+.games{display:flex;gap:4px;margin-right:auto}
+.games button[aria-pressed=true]{background:var(--strong);color:var(--bg);border-color:var(--strong)}
 button,.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer;text-decoration:none}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 main{max-width:1500px;margin:0 auto;padding:0 16px 40px}
@@ -72,7 +74,8 @@ body.viewing main,body.viewing header{margin-right:410px}
 </head>
 <body>
 <header>
-  <h1>Färgkoden · dev</h1>
+  <h1 id="title">Färgkoden · dev</h1>
+  <div class="games" role="group" aria-label="Spel"><button data-game="fargkoden">Färgkoden</button><button data-game="ackord">Ackordkartan</button></div>
   <button id="reset" title="Släng alla ändringar och börja om från spelets katalog">Återställ</button>
   <button id="gen" class="primary">Generera prompt</button>
 </header>
@@ -96,9 +99,9 @@ body.viewing main,body.viewing header{margin-right:410px}
   </section>
 </main>
 <script>
-// Översikt över spelets frågetyper. Katalogen nedan beskriver fargkoden.html och uppdateras när spelet ändras.
-// Dina ändringar sparas i webbläsaren. "Generera prompt" skriver ut det som skiljer sig från katalogen.
-const TABS = [
+// Översikt över spelens frågetyper. Varje spel har en katalog som beskriver spelets fil och uppdateras när spelet ändras.
+// Dina ändringar sparas i webbläsaren, för varje spel för sig. "Generera prompt" skriver ut det som skiljer sig från katalogen.
+const FARG_TABS = [
   {id:'body', name:'Motståndet'}, {id:'ohm', name:'Resistansen'}, {id:'tol', name:'Toleransen'},
   {id:'tc', name:'Temperaturen'}, {id:'e', name:'E-serierna'}, {id:'ultra', name:'Eldprovet'}
 ];
@@ -115,7 +118,7 @@ const STD = 'Standard';
 const POP = 'Ballongen poppar, de tre kvar blir gröna, nästa själv';
 const VSB = 'Vilken ska bort?';
 const r = (id, g, name, q, kind, right, wrong, status = 'klar') => ({id, g, name, q, kind, right, wrong, status, comment: ''});
-const CATALOG = {
+const FARG_CATALOG = {
   body: [
     r('body-rakna', 0, 'Räkna banden', 'Hur många färgband har motståndet? Svaret och valen är alltid 4, 5 eller 6.', 'Flerval', STD,
       'Banden numreras ett i taget och rätt antal landar.'),
@@ -229,15 +232,74 @@ const CATALOG = {
   ]
 };
 
-const KEY = 'fargkoden-dev';
+// Ackordkartan (ackord.html). Raderna har samma id som frågetyperna i spelet, så Visa öppnar exakt den frågan.
+const ACK = 'Gnista längs klaviaturen, grön lampa och priing, nästa fråga själv';
+const ACKORD_TABS = [{id:'tangent', name:'Klaviaturen'}, {id:'treklang', name:'Treklangerna'}];
+const ACKORD_CATALOG = {
+  tangent: [
+    r('tangent-namn', 0, 'Vit tangent', 'En vit tangent är markerad. Vad heter den? C-tangenterna har sina namn som stöd.', 'Flerval', ACK,
+      'Räknar från C uppåt: tangenterna tänds en i taget med namn och klingar, tills rätt tangent blir grön.'),
+    r('tangent-peka-vit', 1, 'Peka på en vit', 'Peka på F. Vita tangenter, C-namnen som stöd. Tangenten klingar när man trycker.', 'Peka på tangent', ACK,
+      'Din tangent blir röd, sedan samma räkning från C i den oktaven.'),
+    r('tangent-svart', 2, 'Svart tangent', 'En svart tangent är markerad. Vad heter den? Alternativen är par, till exempel C♯ / D♭.', 'Flerval', ACK,
+      'Vita grannen till vänster + ♯ (båge), vita grannen till höger + ♭ (båge), och den svarta får båda namnen. Tonerna klingar.'),
+    r('tangent-steg', 2, 'Halv- eller helton', 'Två tangenter är markerade och spelas. Halvtonssteg eller heltonssteg? Hälften av gångerna E–F eller B–C.', 'Flerval', ACK,
+      'En numrerad båge per halvtonssteg. Vid två vita tangenter: raden om att det inte finns någon svart tangent mellan E–F och B–C.'),
+    r('tangent-peka-alla', 3, 'Peka på alla tolv', 'Peka på D♭. Alla tolv namn, med ♯ och ♭, inga namn på tangenterna.', 'Peka på tangent', ACK,
+      'Utan förtecken: räkningen från C. Med förtecken: bokstavens tangent och en båge ♯ +1 eller ♭ −1 till rätt tangent.'),
+    r('tangent-halvton-upp', 3, 'Halvtonssteg upp', 'Ett halvtonssteg upp från E. Vad kommer du till? Hälften av gångerna från E eller B.', 'Flerval', ACK,
+      'En båge från starttangenten till nästa tangent, och raden om E–F och B–C.'),
+    r('tangent-hoppa', 4, 'Hoppa halvtoner', 'Gå tre halvtonssteg upp (eller ner) från A. Peka. 2–5 steg.', 'Peka på tangent', ACK,
+      'Numrerade bågar steg för steg från starttangenten, och tonerna klingar.'),
+    r('tangent-enharm', 4, 'E♯ och C♭', 'Peka på tangenten som också heter E♯ (eller B♯, F♭, C♭).', 'Peka på tangent', ACK,
+      'Bokstavens tangent, en båge ♯ +1 eller ♭ −1, och den vita tangenten får båda namnen.')
+  ],
+  treklang: [
+    r('treklang-durmoll', 0, 'Dur eller moll', 'Ett ackord med vit grundton visas med namn på tangenterna och spelas. Dur eller moll?', 'Dur / Moll', ACK,
+      'Bågar halvton för halvton från grundtonen till tersen: 4 = stor ters (dur), 3 = liten ters (moll). Sedan klingar ackordet.'),
+    r('treklang-namn', 1, 'Namnge ackordet', 'Vilket ackord är det här? Vit grundton, dur eller moll, namn på tangenterna. Fel alternativ är grannackord (parallellen, ackorden på tersen och kvinten).', 'Flerval', ACK,
+      'Samma som Dur eller moll: bågarna till tersen, och raden som sätter ihop namnet.'),
+    r('treklang-bygg', 2, 'Ta dur och moll', 'Ta ackordet D. Alla tolv grundtoner, dur och moll, inga namn. Vilken oktav som helst räknas. Tre tangenter, sedan Svara.', 'Tre tangenter + Svara', ACK,
+      'Tersstaplingen: grundtonen, båge +4 eller +3 till tersen, båge till kvinten. Tonerna klingar en i taget, sedan ackordet. Fel tangenter är röda.'),
+    r('treklang-sort', 3, 'Alla sorter', 'Vilket ackord är det här? Dur, moll, förminskat, överstigande, sus2, sus4. Inga namn.', 'Flerval', ACK,
+      'Tersstaplingen med avstånden, och tabellen över sorterna med rätt rad markerad.'),
+    r('treklang-stava', 3, 'Stava ackordet', 'Vilka toner ingår i F♯m? Ett fel alternativ är en felstavning (samma tangenter, fel bokstav).', 'Flerval', ACK,
+      'Bokstäverna i rad där varannan tänds (grundton, ters, kvint), och tersstaplingen på klaviaturen.'),
+    r('treklang-flytta', 4, 'Flytta en ton', 'Du spelar C. Sänk tersen ett halvtonssteg. Vilket ackord spelar du nu? (Ters eller kvint upp eller ner.)', 'Flerval', ACK,
+      'Tonen som flyttas blir röd, en båge till den nya platsen, och det nya ackordet blir grönt. Båda ackorden klingar efter varandra.'),
+    r('treklang-bygg-alla', 4, 'Ta alla sorter', 'Ta ackordet B♭dim. Alla sorter, inga namn.', 'Tre tangenter + Svara', ACK,
+      'Tersstaplingen och tabellen över sorterna.')
+  ]
+};
+
+// Spelen. Spelväljaren överst byter katalog, flikar och sparad lagring.
+const GAMES = {
+  fargkoden: {name: 'Färgkoden', file: 'fargkoden.html', key: 'fargkoden-dev', tabs: FARG_TABS, catalog: FARG_CATALOG, pinQ: false},
+  ackord: {name: 'Ackordkartan', file: 'ackord.html', key: 'ackord-dev', tabs: ACKORD_TABS, catalog: ACKORD_CATALOG, pinQ: true}
+};
 const clone = x => JSON.parse(JSON.stringify(x));
-let state = {base: clone(CATALOG), rows: clone(CATALOG), tab: 'body'};
-try {
-  const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-  if (saved && saved.base && saved.rows) state = {tab: 'body', ...saved};
-} catch(e) {}
+let GAME, TABS, CATALOG, KEY, state;
+function useGame(id){
+  GAME = GAMES[id] ? id : 'fargkoden';
+  const G = GAMES[GAME];
+  TABS = G.tabs; CATALOG = G.catalog; KEY = G.key;
+  state = {base: clone(CATALOG), rows: clone(CATALOG), tab: TABS[0].id};
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved && saved.base && saved.rows) state = {tab: TABS[0].id, ...saved};
+  } catch(e) {}
+  if (!TABS.some(t => t.id === state.tab)) state.tab = TABS[0].id;
+  try { localStorage.setItem('dev-game', GAME); } catch(e) {}
+  document.getElementById('notice').hidden = JSON.stringify(state.base) === JSON.stringify(CATALOG);
+  document.getElementById('title').textContent = `${G.name} · dev`;
+  document.querySelectorAll('[data-game]').forEach(b => b.setAttribute('aria-pressed', b.dataset.game === GAME));
+  document.querySelector('#viewer iframe').title = G.name;
+  document.getElementById('out').hidden = true;
+}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} };
-document.getElementById('notice').hidden = JSON.stringify(state.base) === JSON.stringify(CATALOG);
+// Visa: spelets fil i testläge på rätt ämne och grad. Ackordkartan öppnar dessutom exakt frågetypen.
+const showHref = (tab, row) => `${GAMES[GAME].file}?test=true&topic=${tab}${tab === 'ultra' ? '' : `&grade=${row.g}`}` +
+  (GAMES[GAME].pinQ && baseRow(tab, row.id) ? `&q=${row.id}` : '');
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 const ta = (f, v) => `<textarea data-f="${f}" rows="1" aria-label="${FIELDS.find(x => x[0] === f)[1]}">${esc(v)}</textarea>`;
@@ -260,7 +322,7 @@ function render(){
       <td>${ta('right', x.right)}</td><td>${ta('wrong', x.wrong)}</td>
       <td><select data-f="status" aria-label="Status">${STATUS.concat(STATUS.includes(x.status) ? [] : [x.status]).map(s => `<option${s === x.status ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select></td>
       <td>${ta('comment', x.comment)}</td>
-      <td class="acts">${g === IDEA ? '' : `<a class="btn show" href="fargkoden.html?test=true&topic=${tab}${tab === 'ultra' ? '' : `&grade=${g}`}" title="Visa spelet i en panel">Visa</a>`}<button class="del" title="Ta bort">✕</button></td>
+      <td class="acts">${g === IDEA ? '' : `<a class="btn show" href="${showHref(tab, x)}" title="Visa spelet i en panel">Visa</a>`}<button class="del" title="Ta bort">✕</button></td>
     </tr>`).join('');
   }).join('');
 }
@@ -313,7 +375,8 @@ function genPrompt(){
     if (lines.length) out.push(`## ${t.name}\n${lines.join('\n')}`);
   }
   if (!out.length) return 'Inga ändringar.';
-  return 'Ändringar från dev.html för Färgkoden. Uppdatera fargkoden.html så att spelet följer dem, ' +
+  const G = GAMES[GAME];
+  return `Ändringar från dev.html för ${G.name}. Uppdatera ${G.file} så att spelet följer dem, ` +
     'och uppdatera katalogen i dev.html så att den beskriver det nya spelet. Fråga om något är oklart.\n\n' + out.join('\n\n');
 }
 
@@ -418,6 +481,12 @@ document.getElementById('reset').addEventListener('click', e => {
   document.getElementById('notice').hidden = true;
   document.getElementById('out').hidden = true;
 });
+document.querySelector('.games').addEventListener('click', e => {
+  const b = e.target.closest('[data-game]');
+  if (!b || b.dataset.game === GAME) return;
+  useGame(b.dataset.game); render();
+});
+useGame((() => { try { return localStorage.getItem('dev-game'); } catch(e) { return null; } })());
 render();
 </script>
 </body>
