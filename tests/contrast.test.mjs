@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { load } from './harness.mjs';
 
-// Färgerna läses ur index.html: :root för ljust läge och [data-theme="dark"] för mörkt
-const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+// Färgerna läses ur fargkoden.html: :root för ljust läge och [data-theme="dark"] för mörkt
+const html = readFileSync(new URL('../fargkoden.html', import.meta.url), 'utf8');
 const block = re => Object.fromEntries([...html.match(re)[1].matchAll(/--([\w-]+):(#[0-9a-f]{3,6})/gi)].map(m => [m[1], m[2]]));
 const light = block(/:root\{([^}]*)\}/), dark = block(/:root\[data-theme="dark"\]\{([^}]*)\}/);
 const rgb = h => { h = h.slice(1); if (h.length === 3) h = [...h].map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };

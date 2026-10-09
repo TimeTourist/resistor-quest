@@ -33,7 +33,7 @@ test('Eldprovet: mitt i ett prov fortsätter man utan ritual', () => {
 });
 
 test('Förhandsvisningen från dev.html går direkt till spelkortet', () => {
-  const t = load({ start: true, url: 'http://localhost/index.html?test=true&topic=ohm&grade=2' });
+  const t = load({ start: true, url: 'http://localhost/fargkoden.html?test=true&topic=ohm&grade=2' });
   assert.equal(t.g('S.screen'), 'play');
   assert.equal(t.g('S.open'), 'ohm');
   assert.ok(['point', 'order'].includes(t.g('S.type')));
@@ -42,7 +42,7 @@ test('Förhandsvisningen från dev.html går direkt till spelkortet', () => {
 });
 
 test('Testraden: Dölj rätt svar tar bort pilarna, Visa rätt svar tar tillbaka dem, och valet sparas', () => {
-  const t = load({ url: 'http://localhost/index.html?test=true&topic=tol&grade=3' });
+  const t = load({ url: 'http://localhost/fargkoden.html?test=true&topic=tol&grade=3' });
   const btn = t.$('#tCheat');
   assert.ok(btn, 'knappen finns');
   assert.equal(btn.textContent, 'Dölj rätt svar');
@@ -54,7 +54,7 @@ test('Testraden: Dölj rätt svar tar bort pilarna, Visa rätt svar tar tillbaka
   assert.equal(t.$('#q .cheat'), null, 'gäller nästa fråga också');
   btn.click();
   assert.ok(t.$('#q .cheat'));
-  const u = load({ url: 'http://localhost/index.html?test=true', storage: { 'fargkoden2-cheat': 'off' } });
+  const u = load({ url: 'http://localhost/fargkoden.html?test=true', storage: { 'fargkoden2-cheat': 'off' } });
   assert.equal(u.$('#tCheat').textContent, 'Visa rätt svar');
   assert.equal(u.$('#q .cheat'), null);
 });

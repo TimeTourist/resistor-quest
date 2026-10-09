@@ -63,7 +63,7 @@ test('Eldprovet som låser upp två ämnen delar ut två nycklar', () => {
 });
 
 test('Förhandsvisningen från dev.html har inga nycklar och ingen snabbkoll', () => {
-  const t = load({ start: true, url: 'http://localhost/index.html?test=true&topic=ohm&grade=2' });
+  const t = load({ start: true, url: 'http://localhost/fargkoden.html?test=true&topic=ohm&grade=2' });
   assert.deepEqual(Array.from(t.g('S.keys')), []);
   assert.deepEqual(Array.from(t.g('S.seen')).sort(), ['body', 'e', 'ohm', 'tc', 'tol']);
 });
