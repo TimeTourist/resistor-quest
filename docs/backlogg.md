@@ -42,9 +42,11 @@ Sammanställt 2026-10-06 när sessionen avslutades. Spelet ligger i `index.html`
 
 ## Ackordkartan (tillagd 2026-10-09)
 
-Spec: `docs/superpowers/specs/2026-10-09-ackordkartan-design.md`. Omgång 1 är byggd: startsidan, Klaviaturen och Treklangerna.
+Spec: `docs/superpowers/specs/2026-10-09-ackordkartan-design.md`. Omgång 1 är byggd: startsidan, Klaviaturen och Treklangerna. Omgång 2 är byggd: Tonarterna och Stegen.
 
-- **Nästa omgång:** Tonarterna och Stegen. Skalorna behöver en Ordna-frågetyp, som inte finns i ackord.html än.
+- **Nästa omgång:** Fyrklangerna och Vägarna. Frågekatalogen ska skrivas i specen först. Fyrklangerna med fyra toner ryms på klaviaturen, men omvändningar och närmaste grepp behöver kanske tre oktaver.
+- **Skalor utan Ordna:** skalor tas med sju tangenter och Svara, så det behövdes ingen Ordna-frågetyp i omgång 2.
+- **Täta etiketter:** bågarnas siffror i skalvandringen ligger tätt där en svart och en vit tangent följer på varandra. De går att läsa men kan putsas.
 - **Öppen fråga:** B eller H? Spelet använder internationellt B (tonen under C). Det var ett antagande och är inte bekräftat.
 - **Länken "Alla spel"** i dev-sidans panel går till dev-sidan själv, eftersom startsidan inte är en fil där. Det är ofarligt men lite förvirrande.
 - **Telefonbredd:** två oktaver ger små tangenter och liten text. Ett alternativ är en oktav på smala skärmar.
