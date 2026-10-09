@@ -86,3 +86,18 @@ test('Efter ett fel spelar Spela igen det rätta svaret', () => {
   assert.ok(log.osc > n);
   assert.equal(t.g('S.answered'), true, 'Spela igen går inte vidare');
 });
+
+test('Varje fråga visar en klaviatur, och i flerval klingar tangenterna utan att vara svaret', () => {
+  for (const { id, g, topic } of types) {
+    const t = pinned(topic, g, id);
+    assert.ok(t.$('#q .kb svg'), `${id} har ingen klaviatur`);
+    if (t.g('S.Q.kind') !== 'mc') continue;
+    tap(t, t.$('#q [data-key="64"]'));
+    assert.equal(t.g('S.answered'), false, id);
+    assert.equal(t.$('#q [data-key="64"]').getAttribute('aria-pressed'), 'true', id);
+    tap(t, t.$('#q [data-key="64"]'));
+    assert.equal(t.$('#q [data-key="64"]').getAttribute('aria-pressed'), 'false', id);
+    answer(t, true);
+    assert.equal(t.g('S.ok'), true, id);
+  }
+});

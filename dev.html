@@ -234,7 +234,7 @@ const FARG_CATALOG = {
 
 // Ackordkartan (ackord.html). Raderna har samma id som frågetyperna i spelet, så Visa öppnar exakt den frågan.
 const ACK = 'Gnista längs klaviaturen, grön lampa och priing, nästa fråga själv';
-const ACKORD_TABS = [{id:'tangent', name:'Klaviaturen'}, {id:'treklang', name:'Treklangerna'}, {id:'tonart', name:'Tonarterna'}, {id:'steg', name:'Stegen'}];
+const ACKORD_TABS = [{id:'tangent', name:'Klaviaturen'}, {id:'treklang', name:'Treklangerna'}, {id:'tonart', name:'Tonarterna'}, {id:'steg', name:'Stegen'}, {id:'fyrklang', name:'Fyrklangerna'}, {id:'vag', name:'Vägarna'}];
 const ACKORD_CATALOG = {
   tangent: [
     r('tangent-namn', 0, 'Vit tangent', 'En vit tangent är markerad. Vad heter den? C-tangenterna har sina namn som stöd.', 'Flerval', ACK,
@@ -303,6 +303,42 @@ const ACKORD_CATALOG = {
       'Tabellen: stegen, C-dur och den nya tonarten ackord för ackord. Klaviaturen visar den nya skalan med stegen, och följden spelas.'),
     r('steg-tonart', 4, 'Hitta tonarten', 'Dm, G och C: vilken durtonart hör de hemma i? Bara en durtonart rymmer alla tre.', 'Flerval', ACK,
       'Rätt tonart med stegen under tangenterna. Ackorden tänds ett i taget med sina steg: Dm = ii, G = V, C = I.')
+  ],
+  fyrklang: [
+    r('fyrklang-maj7-7', 0, 'maj7 eller 7', 'Cmaj7 eller C7? Vit grundton, namn på tangenterna, ackordet spelas.', 'Flerval', ACK,
+      'Oktaven tänds och en båge från septimen upp till den: 1 = maj7 (stor septima), 2 = 7 (liten septima). Septiman och oktaven klingar.'),
+    r('fyrklang-namn', 1, 'Namnge fyrklangen', 'Vilket ackord är det här? maj7, 7 eller m7, vit grundton, namn på tangenterna.', 'Flerval', ACK,
+      'Tersstaplingen med fyra toner, och tabellen över sorterna.'),
+    r('fyrklang-bygg', 2, 'Ta fyrklangen', 'Ta G7 (maj7, 7, m7, alla tolv grundtoner). Fyra tangenter, sedan Svara.', 'Fyra tangenter + Svara', ACK,
+      'Fel tangenter blir röda, sedan tersstaplingen och tabellen.'),
+    r('fyrklang-sort', 2, 'Alla sorter', 'Vilket ackord är det här? maj7, 7, m7, m7♭5, add9. Inga namn.', 'Flerval', ACK,
+      'Tersstaplingen och tabellen över alla fem sorterna.'),
+    r('fyrklang-omvand', 3, 'Omvändningen', 'Det här är Am7. Vilken omvändning? Grundläge, 1:a, 2:a (3:e för fyrklanger). Namn på tangenterna.', 'Flerval', ACK,
+      'Bastonen blir grön med "bas: ters" och de andra tonerna får sina roller. Tabellen visar vilken ton som ligger i basen.'),
+    r('fyrklang-nara', 3, 'Närmaste greppet', 'Du håller C E G (C). Vilket grepp av F ligger närmast? Alternativen är omvändningarna nerifrån och upp.', 'Flerval', ACK,
+      'Tonerna glider till närmaste greppet med bågar och antal halvtoner, och tonerna som står kvar märks "kvar". Båda ackorden klingar.'),
+    r('fyrklang-nara-ta', 4, 'Ta närmaste greppet', 'Du håller C E G. Ta F med så små rörelser som möjligt. Det hållna greppet syns svagt.', 'Tre tangenter + Svara', ACK,
+      'Samma glidning till det närmaste greppet.'),
+    r('fyrklang-bygg-alla', 4, 'Ta alla sorter', 'Ta F♯m7♭5 eller Dadd9. Alla fem sorter, inga namn.', 'Fyra tangenter + Svara', ACK,
+      'Tersstaplingen och tabellen över alla fem sorterna.')
+  ],
+  vag: [
+    r('vag-hem', 0, 'Hem från V', 'I C-dur spelar du G (V). Vart vill det gå hem? (C, G, F)', 'Flerval', ACK,
+      'G glider till C: ledtonen går upp ett halvtonssteg och de andra tonerna till närmaste ton. G och C klingar.'),
+    r('vag-kvintfall', 1, 'Kvintfall', 'Kvintfall: grundtonen faller en kvint. Vilken grundton kommer efter D?', 'Flerval', ACK,
+      'En båge +5 (eller −7) på klaviaturen, och kvintcirkeln ett steg motsols. Båda ackorden klingar.'),
+    r('vag-iiVI', 2, 'ii–V–I', 'ii–V–I i F-dur: vilka ackord? Alla durtonarter.', 'Flerval', ACK,
+      'Skalan med stegen under. Ackorden tänds och spelas ett i taget, och raden Gm = ii → C = V → F = I.'),
+    r('vag-pop', 2, 'I–V–vi–IV', 'I–V–vi–IV i G-dur: G D ? C. Vilket ackord fattas? Följden spelas utan det.', 'Flerval', ACK,
+      'Samma, med fyra ackord.'),
+    r('vag-kedja', 3, 'Funktionskedjan', 'Tonika → subdominant → dominant → tonika. Du spelar F (IV) i C-dur. Vad kommer härnäst? Bara ett alternativ passar.', 'Flerval', ACK,
+      'Kedjan som rutor där nästa steg lyser. Det nuvarande ackordet och nästa klingar efter varandra.'),
+    r('vag-sken', 3, 'Skenkadens', 'G ska gå hem till C men går till ett ackord som delar två toner med C. Vilket?', 'Flerval', ACK,
+      'C och Am, med raden om vilka toner de delar. G → Am klingar.'),
+    r('vag-sekundar', 4, 'Sekundärdominant', 'Vilket ackord är dominant till Am i C-dur (V/vi)?', 'Flerval', ACK,
+      'Från målackordet en kvint upp till septimackordet. Tersen får en båge +1 till målets grundton och etiketten "ledton". Målet, dominanten och målet klingar.'),
+    r('vag-sekundar-namn', 4, 'Känna igen V/x', 'D7 i C-dur: vad är det? V/ii, V/iii, V/IV, V/V eller V/vi.', 'Flerval', ACK,
+      'Samma som Sekundärdominant.')
   ]
 };
 

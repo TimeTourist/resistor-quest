@@ -130,7 +130,7 @@ test('dev.html: spelväljaren byter till Ackordkartan, med egen katalog, egna fl
   d.$('[data-game="ackord"]').click();
   assert.equal(d.$('[data-game="ackord"]').getAttribute('aria-pressed'), 'true');
   assert.match(d.$('#title').textContent, /Ackordkartan/);
-  assert.deepEqual(d.$$('[role=tab]').map(b => b.dataset.tab), ['tangent', 'treklang', 'tonart', 'steg']);
+  assert.deepEqual(d.$$('[role=tab]').map(b => b.dataset.tab), ['tangent', 'treklang', 'tonart', 'steg', 'fyrklang', 'vag']);
   edit(d, d.$('tr[data-id="tangent-namn"] [data-f="comment"]'), 'Fler namn');
   d.$('#gen').click();
   const p = d.$('#prompt').value;

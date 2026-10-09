@@ -42,9 +42,10 @@ Sammanställt 2026-10-06 när sessionen avslutades. Spelet ligger i `index.html`
 
 ## Ackordkartan (tillagd 2026-10-09)
 
-Spec: `docs/superpowers/specs/2026-10-09-ackordkartan-design.md`. Omgång 1 är byggd: startsidan, Klaviaturen och Treklangerna. Omgång 2 är byggd: Tonarterna och Stegen.
+Spec: `docs/superpowers/specs/2026-10-09-ackordkartan-design.md`. Omgång 1 är byggd: startsidan, Klaviaturen och Treklangerna. Omgång 2 är byggd: Tonarterna och Stegen. Omgång 3 är byggd: Fyrklangerna och Vägarna.
 
-- **Nästa omgång:** Fyrklangerna och Vägarna. Frågekatalogen ska skrivas i specen först. Fyrklangerna med fyra toner ryms på klaviaturen, men omvändningar och närmaste grepp behöver kanske tre oktaver.
+- **Nästa omgång:** Lånade ackord och Eldprovet. Frågekatalogen ska skrivas i specen först. Med i den: "Vad är det här, och vilka tre ackord är rimliga härnäst?"
+- **Förklara det felaktiga svaret i fler frågor:** förtecken och skalor gör det redan. Ackordnamn ("du valde Cm, det är C E♭ G") kan få samma sak.
 - **Skalor utan Ordna:** skalor tas med sju tangenter och Svara, så det behövdes ingen Ordna-frågetyp i omgång 2.
 - **Täta etiketter:** bågarnas siffror i skalvandringen ligger tätt där en svart och en vit tangent följer på varandra. De går att läsa men kan putsas.
 - **Öppen fråga:** B eller H? Spelet använder internationellt B (tonen under C). Det var ett antagande och är inte bekräftat.

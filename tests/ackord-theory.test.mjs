@@ -93,3 +93,22 @@ test('En skala: samma ton två gånger är fel, en annan oktav är rätt', () =>
   assert.equal(t.g("(() => { const ms = scaleMidi(N('G')); return samePcs(ms.map(m => m + 12 > 83 ? m : m + 12), ms); })()"), true);
   assert.equal(t.g("(() => { const ms = scaleMidi(N('G')); return samePcs([...ms.slice(0, 6), ms[0] + 12], ms); })()"), false);
 });
+
+test('Fel antal förtecken förklaras: vilken tonart svaret hör till, och att ♯ och ♭ inte är samma', () => {
+  const w = JSON.parse(t.g("JSON.stringify(accWhy('2 ♭', 2))"));
+  assert.match(w.text, /B♭-dur: B♭ E♭/);
+  assert.match(w.text, /♯ och ♭ är inte samma sak/);
+  assert.match(w.text, /F♯ C♯ är andra tangenter än B♭ E♭/);
+  assert.equal(w.bad, 10);
+  assert.match(t.g("accWhy('3 ♯', 2).text"), /A-dur: F♯ C♯ G♯\. Varje steg medsols/);
+  assert.match(t.g("accWhy('1 ♭', -3, true).text"), /F-dur och Dm/);
+  assert.equal(t.g("accWhy('2 ♯', 2).text"), '');
+});
+
+test('En fel tagen skala får sitt namn om den är en skala, annars listas felen', () => {
+  assert.match(t.g("scaleWhy(scaleMidi(N('D')), scaleMidi(N('A')))"), /D-durskalan<\/b> \(samma toner som B-moll\)/);
+  assert.match(t.g("scaleWhy([...scaleMidi(N('A')).slice(0, 6), 67], scaleMidi(N('A')))"), /D-durskalan/, 'G i stället för G♯ ger D-dur');
+  assert.match(t.g("(() => { const ms = scaleMidi(N('A')); return scaleWhy([ms[0], ms[1] - 1, ...ms.slice(2)], ms); })()"), /ingen durskala.*Fel: A♯\/B♭\. Saknas: B\./);
+  assert.match(t.g("scaleWhy([60, 60 + 12, 62, 64, 65, 67, 69], scaleMidi(N('C')))"), /samma ton två gånger/);
+  assert.equal(t.g("accList(N('E♭')).join(' ')"), 'B♭ E♭ A♭');
+});

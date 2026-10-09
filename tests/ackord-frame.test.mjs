@@ -6,7 +6,7 @@ test('Ny spelare: åtta kort, nyckeln i Klaviaturens lås, och ämnen som inte �
   const t = load({ start: true });
   assert.equal(t.$$('#grid .tile').length, 8);
   assert.ok(t.$('#grid [data-id="tangent"] .inkey'), 'nyckeln sitter i låset');
-  for (const id of ['fyrklang', 'vag', 'lan', 'ultra']) {
+  for (const id of ['lan', 'ultra']) {
     assert.match(t.$(`#grid [data-id="${id}"]`).textContent, /Kommer snart/);
     t.$(`#grid [data-id="${id}"]`).click();
     assert.equal(t.g('S.screen'), 'grid', id);
@@ -31,14 +31,14 @@ test('Trappan: tre rätt upp en grad, tre fel ner igen', () => {
   assert.equal(t.g("JSON.parse(localStorage.getItem('ackord1-grade')).tangent"), 0);
 });
 
-test('Mästare i Stegen ger nyckeln till Fyrklangerna, som kommer snart', () => {
-  const t = load({ storage: { 'ackord1-topic': 'steg', 'ackord1-done': JSON.stringify({ tangent: 5, treklang: 5, tonart: 5, steg: 2 }), 'ackord1-grade': JSON.stringify({ steg: 2 }) } });
+test('Mästare i Vägarna ger nyckeln till Lånade ackord, som kommer snart', () => {
+  const t = load({ storage: { 'ackord1-topic': 'vag', 'ackord1-done': JSON.stringify({ tangent: 5, treklang: 5, tonart: 5, steg: 5, fyrklang: 5, vag: 2 }), 'ackord1-grade': JSON.stringify({ vag: 2 }) } });
   for (let i = 0; i < 3; i++) { answer(t, true); if (i < 2) cont(t); }
-  assert.equal(t.g('S.done.steg'), 3);
-  assert.ok(t.g("S.keys.includes('fyrklang')"));
+  assert.equal(t.g('S.done.vag'), 3);
+  assert.ok(t.g("S.keys.includes('lan')"));
   cont(t);
   assert.equal(t.g('S.screen'), 'grid', 'nyckeln visas och kortet stängs');
-  const tile = t.$('#grid [data-id="fyrklang"]');
+  const tile = t.$('#grid [data-id="lan"]');
   assert.ok(tile.querySelector('.inkey'), 'nyckeln sitter i låset');
   tile.click();
   assert.equal(t.g('S.screen'), 'grid', 'men ämnet går inte att öppna än');

@@ -1,6 +1,6 @@
 # Ackordkartan: ett spel om ackord, steg och lånade ackord
 
-Datum: 2026-10-09. Status: godkänd i chatten. Omgång 1 är byggd, omgång 2 byggs.
+Datum: 2026-10-09. Status: godkänd i chatten. Omgång 1–3 är byggda.
 
 ## Syfte
 
@@ -131,6 +131,53 @@ Stegen i dur är I ii iii IV V vi vii°: dur, moll, moll, dur, dur, moll, förmi
 | Stormästare | Flerval | Dm, G och C: vilken durtonart hör de hemma i? | Rätt tonart visas med steg under tangenterna, och varje ackord får sitt steg: Dm = ii, G = V, C = I. |
 
 Snabbkoll: "Vilket steg är hemma, där en låt brukar sluta?" Svaren är I (rätt), V, IV och vi.
+
+## Alltid ett piano (tillagt 2026-10-09)
+
+Varje fråga visar en klaviatur, också frågor som går att svara på utan den, till exempel "Vilka toner ingår i Cm?". Klaviaturen visar något som hjälper utan att avslöja svaret, till exempel grundtonen, ackordet eller tonartens ackord. I flervalsfrågor kan man pröva på tangenterna: de klingar och markeras, men räknas inte som svar. Användaren är visuell och vill se pianot.
+
+## Förklara det man svarade (tillagt 2026-10-09)
+
+När det går ska förklaringen säga vad det felaktiga svaret betyder, inte bara vad som är rätt:
+
+- **Förtecken:** "Du valde 1 ♭. 1 ♭ har F-dur: B♭." Om man har valt ♭ i stället för ♯, eller tvärtom, förklaras att ♯ höjer och ♭ sänker, att det blir andra tangenter och att ♯-tonarter ligger medsols och ♭-tonarter motsols. Tonarten man valde blir röd i kvintcirkeln.
+- **Skalor:** om tangenterna man tog är en annan skala får den sitt namn: "Du tog D-durskalan (samma toner som B-moll)". Annars listas tonerna som är fel och tonerna som saknas.
+
+## Omgång 3: frågekatalog
+
+Fyrklangernas sorter: maj7 (4+3+4), 7 (4+3+3), m7 (3+4+3), m7♭5 (3+3+4) och add9 (dur + nian). En ton som hamnar över B5 läggs en oktav ner.
+
+### Fyrklangerna (`fyrklang`)
+
+| Grad | Frågetyp | Fråga | Felanimering |
+|---|---|---|---|
+| Nykomling | Flerval | Cmaj7 eller C7? Vit grundton, namn på tangenterna. | Oktaven ovanför grundtonen visas, med en båge från septimen upp till den: 1 halvton är maj7 (stor septima) och 2 är 7 (liten septima). |
+| Lärling | Flerval | Vilket ackord är det här? maj7, 7 eller m7, vit grundton, namn. | Tersstaplingen med fyra toner och tabellen över sorterna. |
+| Gesäll | Peka (fyra tangenter) | Ta G7 (maj7, 7, m7, alla tolv grundtoner). | Tersstaplingen, och sedan klingar ackordet. |
+| Gesäll | Flerval | Vilket ackord är det här? Alla fem sorter, inga namn. | Tersstaplingen och tabellen. |
+| Mästare | Flerval | Vilken omvändning är det här? Grundläge, 1:a, 2:a (eller 3:e för fyrklanger). Namn på tangenterna. | Bastonen märks med "bas" och sin roll (grundton, ters, kvint, sept), och ackordet staplas i grundläge. |
+| Mästare | Flerval | Du håller C E G. Vilket grepp av F ligger närmast? Alternativen är omvändningarna, nerifrån och upp. | Varje ton glider till sin närmaste ton i nästa ackord med en båge och antal halvtoner. Toner som står kvar märks "kvar". |
+| Stormästare | Peka (tre tangenter, exakt läge) | Du håller C E G. Ta F så nära som möjligt. | Samma glidning till det närmaste greppet. |
+| Stormästare | Peka (fyra tangenter) | Ta F♯m7♭5 eller Dadd9 (alla sorter). | Tersstaplingen och tabellen. |
+
+Snabbkoll: "Hur många toner har en fyrklang?" Svaren är 4 (rätt), 3, 5 och 7.
+
+### Vägarna (`vag`)
+
+Funktionskedjan är tonika → subdominant → dominant → tonika. Kvintfall är ett steg motsols i kvintcirkeln.
+
+| Grad | Frågetyp | Fråga | Felanimering |
+|---|---|---|---|
+| Nykomling | Flerval | I C-dur spelar du G (V). Vart vill det gå hem? | V och sedan I: ledtonen (B) går upp ett halvtonssteg till C, och de andra tonerna glider till närmaste ton. |
+| Lärling | Flerval | Kvintfall: vilket ackord kommer efter D? | Kvintcirkeln ett steg motsols, och en båge på klaviaturen: grundtonen fem halvtoner upp (eller sju ner). |
+| Gesäll | Flerval | ii–V–I i F-dur: vilka ackord? | Skalan med stegen under, och de tre ackorden tänds och spelas i tur och ordning. |
+| Gesäll | Flerval | I–V–vi–IV i G-dur: G D ? C. Vilket ackord fattas? | Samma, med fyra ackord. |
+| Mästare | Flerval | Funktionskedjan: du spelar F (IV, subdominant) i C-dur. Vad kommer härnäst? Bara ett alternativ passar kedjan. | Kedjan T → S → D → T som rutor, där steget lyser. Det nuvarande ackordet och nästa klingar efter varandra. |
+| Mästare | Flerval | Skenkadens: G ska gå hem till C, men går till ett ackord som delar två toner med C. Vilket? | C och Am, där de gemensamma tonerna lyser. G → Am klingar. |
+| Stormästare | Flerval | Vilket ackord är dominant till Am i C-dur (V/vi)? | Från Am fem halvtoner upp (en kvint) till E. E-durackordets ters, G♯, får en båge +1 till A och etiketten "ledton". E7 → Am klingar. |
+| Stormästare | Flerval | D7 i C-dur: vad är det? V/ii, V/iii, V/IV, V/V eller V/vi. | Dominanten och målackordet en kvint ner, med ledtonen. |
+
+Snabbkoll: "Vart vill V (dominanten) helst gå?" Svaren är I (rätt), IV, ii och vii°.
 
 ## Testning
 
