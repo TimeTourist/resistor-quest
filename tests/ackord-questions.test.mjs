@@ -101,3 +101,31 @@ test('Varje fråga visar en klaviatur, och i flerval klingar tangenterna utan at
     assert.equal(t.g('S.ok'), true, id);
   }
 });
+
+test('Smal skärm: klaviaturen visar en del, och svaret går alltid att ta inom den', () => {
+  const t = load({ start: true });
+  const bad = JSON.parse(t.g(`JSON.stringify(BUILT.flatMap(topic => allTypes(topic).flatMap(type => {
+    const out = [];
+    for (let n = 0; n < 40; n++) {
+      const Q = type.make(), [i0, i1] = kbWindow(Q.show || {}, true), lo = WHITES[i0], hi = WHITES[i1];
+      const vis = KEYS.filter(m => m >= lo && m <= hi);
+      if (i1 - i0 + 1 < KB_MIN || hi - lo < 11) out.push(type.id + ': för smal');
+      if (Q.kind !== 'keys') continue;
+      const ok = Q.need === 1 ? vis.some(k => Q.check([k]))
+        : Q.check(Q.answer.map(m => vis.filter(k => (k - m) % 12 === 0).sort((a, b) => Math.abs(a - m) - Math.abs(b - m))[0]));
+      if (!ok) out.push(type.id + ': ' + Q.prompt.replace(/<[^>]+>/g, '') + ' [' + lo + '-' + hi + '] ' + Q.answer);
+    }
+    return out.slice(0, 2);
+  })))`));
+  assert.deepEqual(bad, []);
+});
+
+test('Smal skärm: frågan ritas med färre tangenter, bred skärm med alla', () => {
+  const narrowLoad = () => load({ url: 'http://localhost/ackord.html?test=true&topic=treklang&grade=2&q=treklang-bygg' });
+  const t = narrowLoad();
+  assert.equal(t.$$('#q .kb [data-key]').length, 24);
+  t.w.matchMedia = q => ({ matches: /max-width/.test(q), addEventListener() {} });
+  t.g('render()');
+  const n = t.$$('#q .kb [data-key]').length;
+  assert.ok(n >= 17 && n < 24, `${n} tangenter`);
+});

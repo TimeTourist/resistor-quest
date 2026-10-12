@@ -525,11 +525,31 @@ function keyX(m){
   return isBlack(m) ? o * 7 * KW + (NAT.indexOf(p - 1) + 1) * KW : o * 7 * KW + NAT.indexOf(p) * KW + KW / 2;
 }
 // Etiketter vid klaviaturens kanter hänger inåt i stället för utanför
-const edge = m => ` text-anchor="${keyX(m) < 45 ? 'start' : keyX(m) > WHITES.length * KW - 45 ? 'end' : 'middle'}"`;
+const edge = (m, x0 = 0, x1 = WHITES.length * KW) => ` text-anchor="${keyX(m) < x0 + 45 ? 'start' : keyX(m) > x1 - 45 ? 'end' : 'middle'}"`;
+// På smal skärm visas bara den del av klaviaturen som frågan använder: minst tio vita tangenter (en oktav och lite till),
+// och minst en vit tangent till på var sida. Valda tangenter och facitpilar räknas inte, så att klaviaturen står still medan man svarar.
+const narrow = () => !!(window.matchMedia && matchMedia('(max-width: 600px)').matches);
+const KB_MIN = 10;
+function kbWindow(o = {}, small = narrow()){
+  if (!small) return [0, WHITES.length - 1];
+  const used = [...Object.keys(o.lit || {}), ...Object.keys(o.names || {}), ...(o.arcs || []).flatMap(x => [x.a, x.b]),
+    ...(o.under || []).map(u => u.m)].map(Number);
+  let i0 = 0, i1 = KB_MIN - 1;
+  if (used.length) {
+    const a = Math.min(...used), b = Math.max(...used);
+    i0 = WHITES.filter(w => w <= a).length - 2; i1 = WHITES.findIndex(w => w >= b) + 1;
+    while (i1 - i0 + 1 < KB_MIN) { if ((i1 - i0) % 2) i1++; else i0--; }
+  }
+  if (i0 < 0) { i1 -= i0; i0 = 0; }
+  if (i1 > WHITES.length - 1) { i0 -= i1 - (WHITES.length - 1); i1 = WHITES.length - 1; }
+  return [Math.max(0, i0), i1];
+}
 const dl = at => at != null ? ` style="animation-delay:${at.toFixed(2)}s"` : '';
 const mkc = at => at != null ? ' mk' : '';
 function kbd(o = {}){
   const lit = o.lit || {}, names = o.names || {}, sel = o.sel || [], cheat = o.cheat || [];
+  const [i0, i1] = kbWindow(o), lo = WHITES[i0], hi = WHITES[i1], x0 = i0 * KW, x1 = (i1 + 1) * KW;
+  const inside = m => m >= lo && m <= hi;
   const key = m => {
     const b = isBlack(m), x = keyX(m) - (b ? BW / 2 : KW / 2), w = b ? BW : KW - 1, h = b ? BH : KH;
     // En tangent kan tändas flera gånger i en animering: lit[m] får vara en lista, och den senare ritas över
@@ -551,14 +571,14 @@ function kbd(o = {}){
       (text ? `<text x="${tx}" y="${-8 - h}">${text}</text>` : '') + '</g>';
   }).join('');
   const under = (o.under || []).map(({m, text, at, cls = '', row = 0}) =>
-    `<text class="under ${cls}${mkc(at)}"${dl(at)} x="${keyX(m)}" y="${KH + 17 + row * 15}"${edge(m)}>${text}</text>`).join('');
+    `<text class="under ${cls}${mkc(at)}"${dl(at)} x="${keyX(m)}" y="${KH + 17 + row * 15}"${edge(m, x0, x1)}>${text}</text>`).join('');
   const marks = cheat.map(m => `<path class="cheatmark" d="M${keyX(m) - 6} -14 L${keyX(m) + 6} -14 L${keyX(m)} -5 Z"/>`).join('');
   const label = o.label || 'Klaviatur';
   // Plats ovanför för bågar och pilar, och under för etiketter, bara när de finns
   const top = (o.arcs || []).length ? 48 : cheat.length ? 18 : 4, rows = Math.max(-1, ...(o.under || []).map(u => u.row || 0));
   const bottom = rows < 0 ? 4 : 26 + rows * 15;
-  return `<svg viewBox="0 ${-top} ${WHITES.length * KW} ${KH + bottom + top}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}">` +
-    WHITES.map(key).join('') + BLACKS.map(key).join('') + nameEls + arcs + under + marks + '</svg>';
+  return `<svg viewBox="${x0} ${-top} ${x1 - x0} ${KH + bottom + top}" role="${o.tap ? 'group' : 'img'}" aria-label="${label}">` +
+    WHITES.filter(inside).map(key).join('') + BLACKS.filter(inside).map(key).join('') + nameEls + arcs + under + marks + '</svg>';
 }
 
 // ===================== Ljud =====================
